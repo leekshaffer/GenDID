@@ -1,0 +1,2 @@
+# GenDID
+Generalized DID Estimators
