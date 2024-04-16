@@ -35,12 +35,6 @@ gen_A <- function(N,J) {
                                                  FUN=function(n2) gen_Arow(N,J,n1,n2,J2,Adot)))))
 }
 
-gen_A_rank <- function(N,J) {
-  A <- gen_A(N,J)
-  return(list(A=A,
-              A.rank=qr(A)$rank))
-}
-
 ## Create a data frame where each row corresponds to an entry in vector D
 ### The columns give i, i', j, and j' corresponding to that D
 ### Can be run either with integers N and J that represent the number of unique
