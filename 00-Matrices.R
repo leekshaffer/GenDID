@@ -20,7 +20,7 @@ gen_Arow <- function(N,J,n1,n2,J2,Adot) {
   cbind(matrix(data=0, nrow=J2, ncol=(n1-1)*J),
         Adot,
         matrix(data=0, nrow=J2, ncol=(n2-n1-1)*J),
-        Adot,
+        -1*Adot,
         matrix(data=0, nrow=J2, ncol=(N-n2)*J))
 }
 
@@ -33,6 +33,12 @@ gen_A <- function(N,J) {
                  FUN=function(n1) do.call(rbind,
                                           lapply(X=(n1+1):N,
                                                  FUN=function(n2) gen_Arow(N,J,n1,n2,J2,Adot)))))
+}
+
+gen_A_rank <- function(N,J) {
+  A <- gen_A(N,J)
+  return(list(A=A,
+              A.rank=qr(A)$rank))
 }
 
 ## Create a data frame where each row corresponds to an entry in vector D
