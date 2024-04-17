@@ -8,6 +8,7 @@
 ## Load packages
 require(dplyr)
 require(tibble)
+require(tidyr)
 
 ## Create a data frame where each row corresponds to an entry in vector D
 ### The columns give i, i', j, and j' corresponding to that D
@@ -97,41 +98,6 @@ gen_Start_js <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
   return(list(Start_js=Start_js,OrderedPds=OrderedPds))
 }
 
-gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
-  SJ <- gen_Start_js(Clusters, StartPeriods, J, PeriodOrder)
-  Start_js <- SJ$Start_js
-  OrderedPds <- SJ$OrderedPds
-  
-  Theta <- gen_Theta(SJ$Start_js, SJ$OrderedPds, Assumption)
-  
-  D <- gen_D(N,J) %>% 
-    left_join(SJ$Start_js %>%
-                dplyr::rename(i=Cl.Num,Start.i=Start_j,
-                              Cl.i=Clusters), by="i") %>%
-    left_join(SJ$Start_js %>% 
-                dplyr::rename(i.prime=Cl.Num,Start.i.prime=Start_j,
-                              Cl.i.prime=Clusters), by="i.prime") %>%
-    mutate(i.j.leadlag=j-Start.i+1,
-           ip.j.leadlag=j-Start.i.prime+1,
-           i.jp.leadlag=j.prime-Start.i+1,
-           ip.jp.leadlag=j.prime-Start.i.prime+1,
-           i.type=if_else(i.j.leadlag > 0,"Always-Treated",
-                          if_else(i.jp.leadlag <= 0, "Always-Control","Switch")),
-           ip.type=if_else(ip.j.leadlag > 0,"Always-Treated",
-                          if_else(ip.jp.leadlag <= 0, "Always-Control","Switch")),
-           Type=factor(if_else(i.type=="Always-Control",1,
-                        if_else(i.type=="Switch",
-                                if_else(ip.type=="Switch",4,2),
-                                if_else(ip.type=="Always-Control",3,
-                                        if_else(ip.type=="Switch",5,6)))),
-           levels=1:6, labels=c("Both Always-Control",
-                                "Switch vs. Always-Control",
-                                "Always-Treated vs. Always-Control",
-                                "Both Switch",
-                                "Always-Treated vs. Switch",
-                                "Both Always-Treated")))
-}
-
 gen_Theta <- function(Start_js,OrderedPds,Assumption) {
   Theta <- Start_js %>% dplyr::cross_join(OrderedPds) %>%
     dplyr::filter(Periods >= Start_j) %>%
@@ -150,10 +116,12 @@ gen_Theta <- function(Start_js,OrderedPds,Assumption) {
   } else {
     stop(simpleError("Assumption must be a value 1 through 5 corresponding to the assumption setting desired."))
   }
+  
   Theta_All <- Theta %>% dplyr::select(all_of(JoinBy)) %>% 
     dplyr::arrange(across(JoinBy)) %>%
     dplyr::distinct() %>%
     mutate(Theta=row_number())
+  
   if(is.null(JoinBy)) {
     Theta_Full <- Theta %>%
       dplyr::cross_join(Theta_All)
@@ -161,8 +129,79 @@ gen_Theta <- function(Start_js,OrderedPds,Assumption) {
     Theta_Full <- Theta %>% 
       dplyr::left_join(Theta_All, by=JoinBy)
   }
-  return(Theta_All=Theta_All,
-         Theta_Full=Theta_Full)
+  
+  return(list(Theta_All=Theta_All,
+         Theta_Full=Theta_Full))
+}
+
+gen_F <- function(D,Theta,Assumption) {
+  ThetaF <- Theta$Theta_Full %>% dplyr::select(Cl.Num,Periods,Theta)
+  D_aug <- D %>% dplyr::select(i,i.prime,j,j.prime,Type,TypeLabel) %>%
+    dplyr::left_join(ThetaF %>% 
+                       dplyr::rename(i=Cl.Num,
+                                     j.prime=Periods,
+                                     Pos.i=Theta)) %>%
+    dplyr::left_join(ThetaF %>%
+                       dplyr::rename(i=Cl.Num,
+                                     j=Periods,
+                                     Neg.i=Theta)) %>%
+    dplyr::left_join(ThetaF %>% 
+                       dplyr::rename(i.prime=Cl.Num,
+                                     j.prime=Periods,
+                                     Neg.i.prime=Theta)) %>%
+    dplyr::left_join(ThetaF %>%
+                       dplyr::rename(i.prime=Cl.Num,
+                                     j=Periods,
+                                     Pos.i.prime=Theta)) %>%
+    tidyr::replace_na(list(Pos.i=0,Neg.i=0,
+                           Neg.i.prime=0,Pos.i.prime=0))
+  
+  U <- length(Theta$Theta_All$Theta)
+  if (DRow$Type==1) {
+    FRow <- rep(0,U)
+  } else if (DRow$Type==2) {
+    
+  }
+  if (Assumption==5) {
+    FRow <- if_else(DRow$Type==2,1,
+                    if_else(DRow$Type==5,-1,0))
+  } else if (Assumption==4) {
+    FRow <- 
+  }
+}
+
+gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
+  SJ <- gen_Start_js(Clusters, StartPeriods, J, PeriodOrder)
+  
+  Theta <- gen_Theta(SJ$Start_js, SJ$OrderedPds, Assumption)
+  
+  D <- gen_D(length(SJ$Start_js$Clusters),J) %>% 
+    left_join(SJ$Start_js %>%
+                dplyr::rename(i=Cl.Num,Start.i=Start_j,
+                              Cl.i=Clusters), by="i") %>%
+    left_join(SJ$Start_js %>% 
+                dplyr::rename(i.prime=Cl.Num,Start.i.prime=Start_j,
+                              Cl.i.prime=Clusters), by="i.prime") %>%
+    mutate(i.j.leadlag=j-Start.i+1,
+           ip.j.leadlag=j-Start.i.prime+1,
+           i.jp.leadlag=j.prime-Start.i+1,
+           ip.jp.leadlag=j.prime-Start.i.prime+1,
+           i.type=if_else(i.j.leadlag > 0,"Always-Treated",
+                          if_else(i.jp.leadlag <= 0, "Always-Control","Switch")),
+           ip.type=if_else(ip.j.leadlag > 0,"Always-Treated",
+                          if_else(ip.jp.leadlag <= 0, "Always-Control","Switch")),
+           Type=if_else(i.type=="Always-Control",1,
+                        if_else(i.type=="Switch",
+                                if_else(ip.type=="Switch",4,2),
+                                if_else(ip.type=="Always-Control",3,
+                                        if_else(ip.type=="Switch",5,6)))),
+           TypeLabel=factor(Type,
+           levels=1:6, labels=c("Both Always-Control",
+                                "Switch vs. Always-Control",
+                                "Always-Treated vs. Always-Control",
+                                "Both Switch",
+                                "Always-Treated vs. Switch",
+                                "Both Always-Treated")))
 }
 
 
