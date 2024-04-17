@@ -95,10 +95,12 @@ gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
   }
   
   D <- gen_D(N,J) %>% 
-    left_join(Start_js %>% dplyr::select(!(Clusters)) %>% 
-                dplyr::rename(i=Cl.Num,Start.i=Start_j), by="i") %>%
-    left_join(Start_js %>% dplyr::select(!(Clusters)) %>% 
-                dplyr::rename(i.prime=Cl.Num,Start.i.prime=Start_j), by="i.prime") %>%
+    left_join(Start_js %>%
+                dplyr::rename(i=Cl.Num,Start.i=Start_j,
+                              Cl.i=Clusters), by="i") %>%
+    left_join(Start_js %>% 
+                dplyr::rename(i.prime=Cl.Num,Start.i.prime=Start_j,
+                              Cl.i.prime=Clusters), by="i.prime") %>%
     mutate(i.j.leadlag=j-Start.i+1,
            ip.j.leadlag=j-Start.i.prime+1,
            i.jp.leadlag=j.prime-Start.i+1,
@@ -118,6 +120,33 @@ gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
                                 "Both Switch",
                                 "Always-Treated vs. Switch",
                                 "Both Always-Treated")))
+  
+  Theta <- Start_js %>% dplyr::cross_join(tibble(Periods=1:J)) %>%
+    dplyr::filter(Periods >= Start_j) %>%
+    mutate(Diff=Periods - Start_j + 1)
+  
+  if (Assumption==5) {
+    Theta_All <- Theta %>% mutate(Theta=1)
+  } else if (Assumption==4) {
+    Theta_All <- Theta %>% 
+      dplyr::left_join(Theta %>% dplyr::select(Periods) %>% 
+                         dplyr::distinct() %>%
+                         mutate(Theta=row_number()),
+                       by="Periods")
+  } else if (Assumption==3) {
+    Theta_All <- Theta %>% 
+      dplyr::left_join(Theta %>% dplyr::select(Diff) %>% 
+                         dplyr::distinct() %>%
+                         mutate(Theta=row_number()),
+                       by="Diff")
+  } else if (Assumption==2) {
+    Theta_All <- Theta %>%
+      dplyr::left_join()
+  } else if (Assumption==1) {
+    
+  } else {
+    stop(simpleError("Assumption must be a value 1 through 5 corresponding to the assumption setting desired."))
+  }
 }
 
 
