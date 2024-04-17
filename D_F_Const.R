@@ -164,7 +164,8 @@ gen_F <- function(D,Theta) {
     Fmat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i.prime) %>% dplyr::filter(!is.na(Neg.i.prime)))]-1
   Fmat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i.prime) %>% dplyr::filter(!is.na(Pos.i.prime)))] <- 
     Fmat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i.prime) %>% dplyr::filter(!is.na(Pos.i.prime)))]+1
-  return(D_aug)
+  return(D_aug=D_aug,
+         Fmat=Fmat)
 }
 
 gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
@@ -199,6 +200,8 @@ gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
                                 "Both Switch",
                                 "Always-Treated vs. Switch",
                                 "Both Always-Treated")))
+  
+  Fres <- gen_F(D, Theta)
 }
 
 
