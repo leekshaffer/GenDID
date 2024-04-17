@@ -117,25 +117,33 @@ gen_Theta <- function(Start_js,OrderedPds,Assumption) {
     stop(simpleError("Assumption must be a value 1 through 5 corresponding to the assumption setting desired."))
   }
   
-  Theta_All <- Theta %>% dplyr::select(all_of(JoinBy)) %>% 
+  All <- Theta %>% dplyr::select(all_of(JoinBy)) %>% 
     dplyr::arrange(across(JoinBy)) %>%
     dplyr::distinct() %>%
     mutate(Theta=row_number())
   
   if(is.null(JoinBy)) {
-    Theta_Full <- Theta %>%
-      dplyr::cross_join(Theta_All)
+    Full <- Theta %>%
+      dplyr::cross_join(All)
   } else {
-    Theta_Full <- Theta %>% 
-      dplyr::left_join(Theta_All, by=JoinBy)
+    Full <- Theta %>% 
+      dplyr::left_join(All, by=JoinBy)
   }
   
-  return(list(Theta_All=Theta_All,
-         Theta_Full=Theta_Full))
+  Schematic <- matrix(data=0,
+                      nrow=length(Start_js$Clusters),
+                      ncol=length(OrderedPds$Labels),
+                      dimnames=list(Start_js$Clusters,
+                                    OrderedPds$Labels))
+  Schematic[as.matrix(Full %>% dplyr::select(Clusters,Labels))] <- Full$Theta
+  
+  return(list(All=All,
+         Full=Full,
+         Schematic=Schematic))
 }
 
 gen_F <- function(D,Theta) {
-  ThetaF <- Theta$Theta_Full %>% dplyr::select(Cl.Num,Periods,Theta)
+  ThetaF <- Theta$Full %>% dplyr::select(Cl.Num,Periods,Theta)
   D_aug <- D %>% dplyr::select(i,i.prime,j,j.prime,Type,TypeLabel) %>%
     dplyr::left_join(ThetaF %>% 
                        dplyr::rename(i=Cl.Num,
@@ -155,17 +163,16 @@ gen_F <- function(D,Theta) {
                                      Pos.i.prime=Theta)) %>%
     mutate(Row=row_number())
   
-  Fmat <- matrix(0,nrow=dim(D_aug)[1], ncol=length(Theta$Theta_All$Theta))
-  Fmat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i) %>% dplyr::filter(!is.na(Pos.i)))] <- 
-    Fmat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i) %>% dplyr::filter(!is.na(Pos.i)))]+1
-  Fmat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i) %>% dplyr::filter(!is.na(Neg.i)))] <- 
-    Fmat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i) %>% dplyr::filter(!is.na(Neg.i)))]-1
-  Fmat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i.prime) %>% dplyr::filter(!is.na(Neg.i.prime)))] <- 
-    Fmat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i.prime) %>% dplyr::filter(!is.na(Neg.i.prime)))]-1
-  Fmat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i.prime) %>% dplyr::filter(!is.na(Pos.i.prime)))] <- 
-    Fmat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i.prime) %>% dplyr::filter(!is.na(Pos.i.prime)))]+1
-  return(D_aug=D_aug,
-         Fmat=Fmat)
+  F_mat <- matrix(0,nrow=dim(D_aug)[1], ncol=length(Theta$All$Theta))
+  F_mat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i) %>% dplyr::filter(!is.na(Pos.i)))] <- 
+    F_mat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i) %>% dplyr::filter(!is.na(Pos.i)))]+1
+  F_mat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i) %>% dplyr::filter(!is.na(Neg.i)))] <- 
+    F_mat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i) %>% dplyr::filter(!is.na(Neg.i)))]-1
+  F_mat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i.prime) %>% dplyr::filter(!is.na(Neg.i.prime)))] <- 
+    F_mat[as.matrix(D_aug %>% dplyr::select(Row,Neg.i.prime) %>% dplyr::filter(!is.na(Neg.i.prime)))]-1
+  F_mat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i.prime) %>% dplyr::filter(!is.na(Pos.i.prime)))] <- 
+    F_mat[as.matrix(D_aug %>% dplyr::select(Row,Pos.i.prime) %>% dplyr::filter(!is.na(Pos.i.prime)))]+1
+  return(list(D_aug=D_aug, F_mat=F_mat))
 }
 
 gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
@@ -202,6 +209,7 @@ gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
                                 "Both Always-Treated")))
   
   Fres <- gen_F(D, Theta)
+  return(list(Theta=Theta, D_aug=Fres$D_aug, F_mat=Fres$F_mat))
 }
 
 
