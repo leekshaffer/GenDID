@@ -44,7 +44,7 @@ gen_D <- function(N,J) {
 ### If list of periods is anything other than 1:J, 
 #### a vector giving the ordered period names should be included as PeriodOrder
 ### Otherwise J should indicate the largest period
-gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
+gen_Start_js <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
   N <- length(Clusters)
   if (N < 2) {
     stop(simpleError("There must be at least 2 clusters."))
@@ -91,14 +91,24 @@ gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
       Start_js <- tibble(Clusters=Clusters,Start_j=StartPeriods) %>%
         dplyr::arrange(Start_j) %>%
         mutate(Cl.Num=1:N)
+      OrderedPds <- tibble(Labels=1:J, Periods=1:J)
     }
   }
+  return(list(Start_js=Start_js,OrderedPds=OrderedPds))
+}
+
+gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
+  SJ <- gen_Start_js(Clusters, StartPeriods, J, PeriodOrder)
+  Start_js <- SJ$Start_js
+  OrderedPds <- SJ$OrderedPds
+  
+  Theta <- gen_Theta(SJ$Start_js, SJ$OrderedPds, Assumption)
   
   D <- gen_D(N,J) %>% 
-    left_join(Start_js %>%
+    left_join(SJ$Start_js %>%
                 dplyr::rename(i=Cl.Num,Start.i=Start_j,
                               Cl.i=Clusters), by="i") %>%
-    left_join(Start_js %>% 
+    left_join(SJ$Start_js %>% 
                 dplyr::rename(i.prime=Cl.Num,Start.i.prime=Start_j,
                               Cl.i.prime=Clusters), by="i.prime") %>%
     mutate(i.j.leadlag=j-Start.i+1,
@@ -120,33 +130,39 @@ gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
                                 "Both Switch",
                                 "Always-Treated vs. Switch",
                                 "Both Always-Treated")))
-  
-  Theta <- Start_js %>% dplyr::cross_join(tibble(Periods=1:J)) %>%
+}
+
+gen_Theta <- function(Start_js,OrderedPds,Assumption) {
+  Theta <- Start_js %>% dplyr::cross_join(OrderedPds) %>%
     dplyr::filter(Periods >= Start_j) %>%
     mutate(Diff=Periods - Start_j + 1)
   
   if (Assumption==5) {
-    Theta_All <- Theta %>% mutate(Theta=1)
+    JoinBy <- NULL
   } else if (Assumption==4) {
-    Theta_All <- Theta %>% 
-      dplyr::left_join(Theta %>% dplyr::select(Periods) %>% 
-                         dplyr::distinct() %>%
-                         mutate(Theta=row_number()),
-                       by="Periods")
+    JoinBy <- c("Periods")
   } else if (Assumption==3) {
-    Theta_All <- Theta %>% 
-      dplyr::left_join(Theta %>% dplyr::select(Diff) %>% 
-                         dplyr::distinct() %>%
-                         mutate(Theta=row_number()),
-                       by="Diff")
+    JoinBy <- c("Diff")
   } else if (Assumption==2) {
-    Theta_All <- Theta %>%
-      dplyr::left_join()
+    JoinBy=c("Periods","Diff")
   } else if (Assumption==1) {
-    
+    JoinBy=c("Cl.Num","Periods","Diff")
   } else {
     stop(simpleError("Assumption must be a value 1 through 5 corresponding to the assumption setting desired."))
   }
+  Theta_All <- Theta %>% dplyr::select(all_of(JoinBy)) %>% 
+    dplyr::arrange(across(JoinBy)) %>%
+    dplyr::distinct() %>%
+    mutate(Theta=row_number())
+  if(is.null(JoinBy)) {
+    Theta_Full <- Theta %>%
+      dplyr::cross_join(Theta_All)
+  } else {
+    Theta_Full <- Theta %>% 
+      dplyr::left_join(Theta_All, by=JoinBy)
+  }
+  return(Theta_All=Theta_All,
+         Theta_Full=Theta_Full)
 }
 
 
