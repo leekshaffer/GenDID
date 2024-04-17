@@ -131,11 +131,10 @@ gen_Theta <- function(Start_js,OrderedPds,Assumption) {
   }
   
   Schematic <- matrix(data=0,
-                      nrow=length(Start_js$Clusters),
-                      ncol=length(OrderedPds$Labels),
-                      dimnames=list(Start_js$Clusters,
-                                    OrderedPds$Labels))
-  Schematic[as.matrix(Full %>% dplyr::select(Clusters,Labels))] <- Full$Theta
+                      nrow=length(Start_js$Cl.Num),
+                      ncol=length(OrderedPds$Periods))
+  Schematic[as.matrix(Full %>% dplyr::select(Cl.Num,Periods))] <- Full$Theta
+  dimnames(Schematic) <- list(Start_js$Clusters,OrderedPds$Labels)
   
   return(list(All=All,
          Full=Full,
