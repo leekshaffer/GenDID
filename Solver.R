@@ -53,11 +53,26 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=TRUE) {
     v <- matrix(data=v, ncol=1)
   }
   
-  if (dim(v)[1] != dim(DFT_obj$F_mat)[2]) {
+  ## Check for column of all zero's in F and corresponding 0 row in v
+  ZeroCols <- apply(DFT_obj$F_mat, MARGIN=2,
+                    FUN=function(col) sum(col==0) == nrow(DFT_obj$F_mat))
+  if (sum(ZeroCols) > 0) {
+    if (sum(v[ZeroCols,]==0) != ncol(v)) {
+      stop(simpleError("v has values that cannot be achieved with this F matrix."))
+    } else {
+      F_mat <- DFT_obj$F_mat[,!ZeroCols,drop=FALSE]
+      v <- v[!ZeroCols,,drop=FALSE]
+    }
+  } else {
+    F_mat <- DFT_obj$F_mat
+  }
+
+  
+  if (dim(v)[1] != dim(F_mat)[2]) {
     stop(simpleError("v must be a vector with length corresponding to the number of columns in F_mat, or a matrix of such column vectors."))
   } else {
     ## find a single solution for w:
-    F_qr <- qr(x=t(DFT_obj$F_mat))
+    F_qr <- qr(x=t(F_mat))
     w <- qr.solve(a=F_qr, b=v)
     DID.weights <- data.frame(w.base=w)
     
@@ -73,33 +88,26 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=TRUE) {
       RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
       kerAT_basis <- AT_svd$v[,(RankAT+1):ncol(AT_svd$v),drop=FALSE]
       
-      if (F_qr$rank == RankAT) {
-        if (DID_full) {
-          DID.weights <- cbind(DID.weights,Add.DID.weights=kerAT_basis)
-        } else {
-          print("Note: returning only a single solution for the DID estimator weights, althoughs others may exist that yield equivalent observation weights.")
-        }
-      } else if (F_qr$rank < RankAT) {
-        FT_svd <- svd(x=t(DFT_obj$F_mat),
-                      nu=0, nv=dim(DFT_obj$F_mat)[1])
+      if (F_qr$rank < RankAT) {
+        FT_svd <- svd(x=t(F_mat),
+                      nu=0, nv=dim(F_mat)[1])
         kerFT_basis <- FT_svd$v[,(F_qr$rank+1):ncol(FT_svd$v), drop=FALSE]
         kerFT_only <- qr.Q(qr(cbind(kerAT_basis,kerFT_basis)))[,(dim(kerAT_basis)[2]+1):(dim(kerFT_basis)[2]), drop=FALSE]
         ATw.weights <- t(A_mat) %*% kerFT_only
         Obs.weights <- cbind(Obs.weights,Add.Obs.weights=ATw.weights)
         DID.weights <- cbind(DID.weights,Add.Obs.weights=kerFT_only)
-        
-        if (DID_full) {
-         DID.weights <- cbind(DID.weights,Add.DID.weights=kerAT_basis)
-        } else {
-          print("Note: returning only a single solution for the DID estimator weights, althoughs others may exist that yield equivalent observation weights.")
-        }
-      } else {
-        print("Error: Rank(F) calculated to be greater than Rank(A). Please check inputs.")
+      } else if (F_qr$rank > RankAT) {
+        stop(simpleError("Rank(F) calculated to be greater than Rank(A). Please check inputs."))
       }
-    }
+      
+      if (DID_full) {
+        DID.weights <- cbind(DID.weights,Add.DID.weights=kerAT_basis)
+      } else {
+        print("Note: returning only a single solution for the DID estimator weights, althoughs others may exist that yield equivalent observation weights.")
+      }
     return(list(DID.weights=DID.weights,
-                Obs.weights=Obs.weights,
-                D_aug=D_aug))
+                Obs.weights=Obs.weights))
+    }
   }
 }
 
