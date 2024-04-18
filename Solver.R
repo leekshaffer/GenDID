@@ -5,109 +5,97 @@
 ###### Updated 2024/04/18 #############
 #######################################
 
-## Method for getting the solutions when dim(WA) = 0 and dim(W) >= 0
-## Should use only when Rank(A) = Rank(F) = Rank(F'|v):
 ## Note v can be a vector to solve for one target,
 ### or it can be a matrix of column vectors to solve for.
-solve_WA0 <- function(DFT_obj,A_mat,v,DID_full=TRUE) {
+solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
+  ## If v is a vector, put it into matrix form:
   if (is.vector(v)) {
     v <- matrix(data=v, ncol=1)
   }
   
-  if (dim(v)[1] != dim(DFT_obj$F_mat)[2]) {
-    stop(simpleError("v must be a vector with length corresponding to the number of columns in F_mat, or a matrix of such column vectors."))
+  ## Get the key info from A and F
+  F_mat <- DFT_obj$F_mat
+  F_qr <- qr(x=t(F_mat))
+  RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
+  
+  ## Check Rank Conditions for each v
+  FTv.Check <- apply(v, MARGIN=2,
+        FUN=function(col) qr(x=cbind(t(F_mat),col))$rank > F_qr$rank)
+  if (sum(FTv.Check)==0) {
+  } else if (sum(FTv.Check==ncol(v))) {
+    stop(simpleError("No columns of v have solutions."))
   } else {
-    ## find a single solution for w:
-    F_qr <- qr(x=t(DFT_obj$F_mat))
-    w <- qr.solve(a=F_qr, b=v)
-    
-    ## find unique weights for observations:
-    ATw <- t(A_mat) %*% w
-    
-    ## find full DID weights solution set if requested:
-    if (DID_full) {
-      if (F_qr$rank==dim(w)[1]) {
-        print("There is a unique solution for the DID estimator weights.")
-        D_aug <- cbind(Weights=w,DFT_obj$D_aug)
-      } else {
-        AT_svd <- svd(x=t(A_mat),
-                      nu=0,
-                      nv=dim(A_mat)[1])
-        RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
-        kerAT_basis <- AT_svd$v[,(RankAT+1):ncol(AT_svd$v),drop=FALSE]
-        D_aug <- cbind(Weights=w, Addl.Weight=kerAT_basis,
-                       DFT_obj$D_aug)
-      }
-    } else {
-      print("Returning only a single solution for the DID estimator weights.")
-      D_aug <- cbind(Weights=w,DFT_obj$D_aug)
-    }
-    return(list(DID.weights=w,
-                Obs.weights=ATw,
-                D_aug=D_aug))
-  }
-}
-
-solve_WA <- function(DFT_obj,A_mat,v,DID_full=TRUE) {
-  if (is.vector(v)) {
-    v <- matrix(data=v, ncol=1)
+    v <- v[,!FTv.Check,drop=FALSE]
+    warning(simpleWarning(paste0("The following column of v has no solutions and was dropped: ",(1:ncol(v))[FTv.Check])))
+    warning(simpleWarning(paste0("The remaining columns have been shifted accordingly. Interpret results accordingly.")))
   }
   
   ## Check for column of all zero's in F and corresponding 0 row in v
-  ZeroCols <- apply(DFT_obj$F_mat, MARGIN=2,
-                    FUN=function(col) sum(col==0) == nrow(DFT_obj$F_mat))
+  ZeroCols <- apply(F_mat, MARGIN=2,
+                    FUN=function(col) sum(col==0) == nrow(F_mat))
   if (sum(ZeroCols) > 0) {
     if (sum(v[ZeroCols,]==0) != ncol(v)) {
       stop(simpleError("v has values that cannot be achieved with this F matrix."))
     } else {
-      F_mat <- DFT_obj$F_mat[,!ZeroCols,drop=FALSE]
+      F_mat <- F_mat[,!ZeroCols,drop=FALSE]
       v <- v[!ZeroCols,,drop=FALSE]
     }
   } else {
-    F_mat <- DFT_obj$F_mat
+    F_mat <- F_mat
   }
 
   
-  if (dim(v)[1] != dim(F_mat)[2]) {
+  if (nrow(v) != ncol(F_mat)) {
     stop(simpleError("v must be a vector with length corresponding to the number of columns in F_mat, or a matrix of such column vectors."))
   } else {
     ## find a single solution for w:
-    F_qr <- qr(x=t(F_mat))
     w <- qr.solve(a=F_qr, b=v)
     DID.weights <- data.frame(w.base=w)
     
-    ## find a single solution for weights for observations:
+    ## find a single solution for weights for observations via A' * w:
     Obs.weights <- data.frame(ATw.base=t(A_mat) %*% w)
     
-    if (F_qr$rank==dim(w)[1]) {
+    if (F_qr$rank==nrow(w)) { ## Prints note for single solution and jumps to return
       print("There is a unique solution for the DID estimator weights.")
-    } else {
+    } else { ## If there are non-unique DID estimator weights
+      ## Use SVD of A' to find basis for its kernel
       AT_svd <- svd(x=t(A_mat),
                     nu=0,
-                    nv=dim(A_mat)[1])
-      RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
+                    nv=nrow(A_mat))
       kerAT_basis <- AT_svd$v[,(RankAT+1):ncol(AT_svd$v),drop=FALSE]
       
+      ## If rank(F) < rank(A), get basis of ker(F') that is orthogonal to ker(A')
       if (F_qr$rank < RankAT) {
+        ## Use SVD of F' to find basis for its kernel
         FT_svd <- svd(x=t(F_mat),
-                      nu=0, nv=dim(F_mat)[1])
+                      nu=0, nv=nrow(F_mat))
         kerFT_basis <- FT_svd$v[,(F_qr$rank+1):ncol(FT_svd$v), drop=FALSE]
+        
+        ## Use QR decomposition on (A' basis | F' basis) to get Q, 
+        ### whose first nullity(F') columns are an orthonormal basis for F',
+        ### the first nullity(A') columns of which are an orthonormal basis for A',
+        ### so the nullity(F')-nullity(A') columns between are an orthonormal basis for F'\A'
         kerFT_only <- qr.Q(qr(cbind(kerAT_basis,kerFT_basis)))[,(dim(kerAT_basis)[2]+1):(dim(kerFT_basis)[2]), drop=FALSE]
+        
+        ## Get observation weights of these F'\A' basis vectors
         ATw.weights <- t(A_mat) %*% kerFT_only
+        
+        ## Append F'\A' basis vector weights to Obs.weights and DID.weights as "Add.Obs.weights"
         Obs.weights <- cbind(Obs.weights,Add.Obs.weights=ATw.weights)
         DID.weights <- cbind(DID.weights,Add.Obs.weights=kerFT_only)
       } else if (F_qr$rank > RankAT) {
-        stop(simpleError("Rank(F) calculated to be greater than Rank(A). Please check inputs."))
+        stop(simpleError("F has greater rank than A. Please check inputs for accuracy."))
       }
       
-      if (DID_full) {
+      if (DID_full) { ## Add DID-estimator-only weights (that do not affect observation weights) if requested
+        print("Note: adding in the weights labelled Add.DID.weights affect the estimator weights but not the observation weights.")
         DID.weights <- cbind(DID.weights,Add.DID.weights=kerAT_basis)
-      } else {
+      } else { ## Otherwise print a note
         print("Note: returning only a single solution for the DID estimator weights, althoughs others may exist that yield equivalent observation weights.")
       }
+    }
     return(list(DID.weights=DID.weights,
                 Obs.weights=Obs.weights))
-    }
   }
 }
 
