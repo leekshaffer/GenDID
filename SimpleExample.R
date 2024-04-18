@@ -15,6 +15,8 @@ J <- 3
 Clusters <- c("A","B")
 StartPeriods <- c(2,3)
 
+A_mat <- gen_A(N,J)
+
 ### Assumption (5): Homogeneity ###
 v.5 <- 1
 
