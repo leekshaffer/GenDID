@@ -2,7 +2,7 @@
 ###### File: A_Const.R ################
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/16 #############
-###### Updated 2024/04/16 #############
+###### Updated 2024/04/18 #############
 #######################################
 
 ## Load packages
@@ -117,15 +117,15 @@ gen_Theta <- function(Start_js,OrderedPds,Assumption) {
     stop(simpleError("Assumption must be a value 1 through 5 corresponding to the assumption setting desired."))
   }
   
-  All <- Theta %>% dplyr::select(all_of(JoinBy)) %>% 
-    dplyr::arrange(across(JoinBy)) %>%
-    dplyr::distinct() %>%
-    mutate(Theta=row_number())
-  
   if(is.null(JoinBy)) {
+    All <- tibble(Theta=1)
     Full <- Theta %>%
       dplyr::cross_join(All)
   } else {
+    All <- Theta %>% dplyr::select(all_of(JoinBy)) %>% 
+      dplyr::arrange(across(JoinBy)) %>%
+      dplyr::distinct() %>%
+      mutate(Theta=row_number())
     Full <- Theta %>% 
       dplyr::left_join(All, by=JoinBy)
   }
@@ -174,7 +174,7 @@ gen_F <- function(D,Theta) {
   return(list(D_aug=D_aug, F_mat=F_mat))
 }
 
-gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
+gen_DFT <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=5) {
   SJ <- gen_Start_js(Clusters, StartPeriods, J, PeriodOrder)
   
   Theta <- gen_Theta(SJ$Start_js, SJ$OrderedPds, Assumption)
@@ -208,7 +208,8 @@ gen_ED <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=1) {
                                 "Both Always-Treated")))
   
   Fres <- gen_F(D, Theta)
-  return(list(Theta=Theta, D_aug=Fres$D_aug, F_mat=Fres$F_mat))
+  return(list(D_aug=Fres$D_aug, F_mat=Fres$F_mat, Theta=Theta, 
+              N=length(SJ$Start_js$Clusters),J=J))
 }
 
 

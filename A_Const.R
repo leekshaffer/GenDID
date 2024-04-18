@@ -2,7 +2,7 @@
 ###### File: A_Const.R ################
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/16 #############
-###### Updated 2024/04/16 #############
+###### Updated 2024/04/18 #############
 #######################################
 
 ## Create the matrix A that converts between observations and DID estimators
