@@ -65,7 +65,7 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
       kerAT_basis <- AT_svd$v[,(RankAT+1):ncol(AT_svd$v),drop=FALSE]
       ### Re-normalize the basis to sum (in abs. value) to 1 and smooth near-zeros:
       kerAT_norm <- apply(kerAT_basis, MARGIN=2,
-                          FUN=function(col) if_else(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
+                          FUN=function(col) ifelse(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
       
       ## If rank(F) < rank(A), get basis of ker(F') that is orthogonal to ker(A')
       if (F_qr$rank < RankAT) {
@@ -81,13 +81,16 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
         kerFT_only <- qr.Q(qr(cbind(kerAT_basis,kerFT_basis)))[,(dim(kerAT_basis)[2]+1):(dim(kerFT_basis)[2]), drop=FALSE]
         ### Re-normalize them to sum (in abs. value) to 1 and smooth near-zeros:
         kerFT_norm <- apply(kerFT_only, MARGIN=2,
-                            FUN=function(col) if_else(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
+                            FUN=function(col) ifelse(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
         
         ## Get observation weights of these F'\A' basis vectors
         ATw.weights <- t(A_mat) %*% kerFT_only
         ### Re-normalize them to sum (in abs. value) to 1 and smooth near-zeros:
-        ATw_norm <- apply(ATw.weights, MARGIN=2,
-                            FUN=function(col) if_else(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
+        # ATw_norm <- apply(ATw.weights, MARGIN=2,
+        #                     FUN=function(col) ifelse(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
+        ## Use normalized DID weights to get observation weights:
+        ATw_norm <- apply(t(A_mat) %*% kerFT_norm, MARGIN=2,
+                          FUN=function(col) ifelse(abs(col) < .Machine$double.eps, 0, col))
         
         ## Append F'\A' basis vector weights to Obs.weights and DID.weights as "Add.Obs.weights"
         Obs.weights <- cbind(Obs.weights,Add.Obs.weights=ATw_norm)
