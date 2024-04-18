@@ -46,6 +46,6 @@ rank_an <- function(DFT_obj, v) {
               Rank_F=Rank_F,
               Rank_Fv=Rank_Fv,
               Length_w=Length_w,
-              Dimensions=c(W=Dim_W,WA=Dim_WA)
+              Dimensions=c(W=dim_W,WA=dim_WA)
               ))
 }
