@@ -36,13 +36,14 @@ Rank_Res.4 <- rank_an(DFT_list.4, v.4)
 
 v.4.alt <- c(1,0)
 Rank_Res.4.alt <- rank_an(DFT_list.4, v.4.alt)
-Solve.4.alt <- solve_WA(DFT_obj=DFT_list.4,
-                        A_mat=A_mat,
-                        v=v.4.alt,
-                        DID_full=TRUE)
 
 v.4.alt.2 <- c(0,1)
 Rank_Res.4.alt.2 <- rank_an(DFT_list.4, v.4.alt.2)
+
+Solve.4 <- solve_WA(DFT_obj=DFT_list.4,
+                    A_mat=A_mat,
+                    v=cbind(v.4,v.4.alt,v.4.alt.2),
+                    DID_full=TRUE)
 
 ### Assumption (3): Exposure-Time Heterogeneity ###
 v.3 <- c(1/2,1/2)

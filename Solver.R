@@ -22,12 +22,13 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
   FTv.Check <- apply(v, MARGIN=2,
         FUN=function(col) qr(x=cbind(t(F_mat),col))$rank > F_qr$rank)
   if (sum(FTv.Check)==0) {
-  } else if (sum(FTv.Check==ncol(v))) {
+  } else if (sum(FTv.Check)==ncol(v)) {
     stop(simpleError("No columns of v have solutions."))
   } else {
+    warning(simpleWarning(paste0("The following columns of v have no solutions and were dropped: ",
+                                 paste((1:ncol(v))[FTv.Check], collapse=", "),
+                                 ". The remaining columns have been shifted accordingly. Interpret results accordingly.")))
     v <- v[,!FTv.Check,drop=FALSE]
-    warning(simpleWarning(paste0("The following column of v has no solutions and was dropped: ",(1:ncol(v))[FTv.Check])))
-    warning(simpleWarning(paste0("The remaining columns have been shifted accordingly. Interpret results accordingly.")))
   }
   
   ## Check for column of all zero's in F and corresponding 0 row in v
@@ -38,10 +39,9 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
       stop(simpleError("v has values that cannot be achieved with this F matrix."))
     } else {
       F_mat <- F_mat[,!ZeroCols,drop=FALSE]
+      F_qr <- qr(x=t(F_mat))
       v <- v[!ZeroCols,,drop=FALSE]
     }
-  } else {
-    F_mat <- F_mat
   }
 
   
@@ -63,6 +63,9 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
                     nu=0,
                     nv=nrow(A_mat))
       kerAT_basis <- AT_svd$v[,(RankAT+1):ncol(AT_svd$v),drop=FALSE]
+      ### Re-normalize the basis to sum (in abs. value) to 1 and smooth near-zeros:
+      kerAT_norm <- apply(kerAT_basis, MARGIN=2,
+                          FUN=function(col) if_else(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
       
       ## If rank(F) < rank(A), get basis of ker(F') that is orthogonal to ker(A')
       if (F_qr$rank < RankAT) {
@@ -76,20 +79,26 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
         ### the first nullity(A') columns of which are an orthonormal basis for A',
         ### so the nullity(F')-nullity(A') columns between are an orthonormal basis for F'\A'
         kerFT_only <- qr.Q(qr(cbind(kerAT_basis,kerFT_basis)))[,(dim(kerAT_basis)[2]+1):(dim(kerFT_basis)[2]), drop=FALSE]
+        ### Re-normalize them to sum (in abs. value) to 1 and smooth near-zeros:
+        kerFT_norm <- apply(kerFT_only, MARGIN=2,
+                            FUN=function(col) if_else(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
         
         ## Get observation weights of these F'\A' basis vectors
         ATw.weights <- t(A_mat) %*% kerFT_only
+        ### Re-normalize them to sum (in abs. value) to 1 and smooth near-zeros:
+        ATw_norm <- apply(ATw.weights, MARGIN=2,
+                            FUN=function(col) if_else(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
         
         ## Append F'\A' basis vector weights to Obs.weights and DID.weights as "Add.Obs.weights"
-        Obs.weights <- cbind(Obs.weights,Add.Obs.weights=ATw.weights)
-        DID.weights <- cbind(DID.weights,Add.Obs.weights=kerFT_only)
+        Obs.weights <- cbind(Obs.weights,Add.Obs.weights=ATw_norm)
+        DID.weights <- cbind(DID.weights,Add.Obs.weights=kerFT_norm)
       } else if (F_qr$rank > RankAT) {
         stop(simpleError("F has greater rank than A. Please check inputs for accuracy."))
       }
       
       if (DID_full) { ## Add DID-estimator-only weights (that do not affect observation weights) if requested
-        print("Note: adding in the weights labelled Add.DID.weights affect the estimator weights but not the observation weights.")
-        DID.weights <- cbind(DID.weights,Add.DID.weights=kerAT_basis)
+        print("Note: the weights labelled Add.DID.weights affect the estimator weights but not the observation weights.")
+        DID.weights <- cbind(DID.weights,Add.DID.weights=kerAT_norm)
       } else { ## Otherwise print a note
         print("Note: returning only a single solution for the DID estimator weights, althoughs others may exist that yield equivalent observation weights.")
       }
