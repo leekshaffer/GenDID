@@ -11,8 +11,10 @@ min_var <- function(DFT_obj,A_mat,v,solve_obj,Sigma) {
   if (nrow(Sigma) != ncol(Sigma) | nrow(Sigma) != ncol(A_mat)) {
     stop(simpleError("Sigma must be a square matrix with the same number of columns as A."))
   }
+  
   base.w <- solve_obj$DID.weights %>% dplyr::select(starts_with("w.base"))
   Add.Obs.w <- solve_obj$DID.weights %>% dplyr::select(starts_with("Add.Obs.weights"))
+
   if (ncol(Add.Obs.w) == 0) {
     print("There is a unique solution to the constraint.")
     return(list(DID.weights=base.w,
@@ -41,5 +43,9 @@ min_var <- function(DFT_obj,A_mat,v,solve_obj,Sigma) {
     } else {
       ## Need to iterate through each v
     }
+    return(list(Cvec=c(1,Min),
+                Variance=Var,
+                DID.weights=W_mat %*% matrix(c(1,Min),ncol=1),
+                Obs.weights=t(A_mat) %*% W_mat %*% matrix(c(1,Min),ncol=1)))
   }
 }

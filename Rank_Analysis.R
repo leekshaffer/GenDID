@@ -23,12 +23,12 @@ rank_an <- function(DFT_obj, v) {
   Length_w <- (DFT_obj$N)*(DFT_obj$N-1)*(DFT_obj$J)*(DFT_obj$J-1)/4
   
   FTv_Rank_Res <- function(v) {
-    FTv_Rank <- qr(x=cbind(t(F_mat),col))$rank
+    FTv_Rank <- qr(x=cbind(t(F_mat),v))$rank
     if (FTv_Rank > FT_qr$rank) {
       Dim_W <- -1
       Dim_WA <- -1
     } else if (FTv_Rank == FT_qr$rank) {
-      Dim_W <- FTv_Rank - Length_w
+      Dim_W <- Length_w - FTv_Rank
       Dim_WA <- RankAT - FTv_Rank
       if (Dim_WA < 0) {
         stop(simpleError(paste0("An error has occurred, giving rank(F) = ",FTv_Rank,
@@ -38,51 +38,40 @@ rank_an <- function(DFT_obj, v) {
       stop(simpleError(paste0("An error has occurred, giving rank(F'|v) = ",FTv_Rank," < rank(F') = ",
                               FT_qr$rank,". Please check inputs.")))
     }
-    return(rbind(FTv_Rank=FTv_Rank,
-                 Dim_W=Dim_W,
-                 Dim_WA=Dim_WA))
+    return(c(FTv_Rank,Dim_W,Dim_WA))
   }
 
   ## Check ranks across v columns:
   FTv_Ranks <- apply(v, MARGIN=2,
-                     FUN=##apply above function
-  )
+                     FUN=FTv_Rank_Res)
+  rownames(FTv_Ranks) <- c("FTv_Rank","Dim_W","Dim_WA")
   
+  if (ncol(FTv_Ranks)==1) {
+    if (FTv_Ranks["Dim_W",1] < 0) {
+      print(paste0("There are no unique solutions for v"))
+    } else if (FTv_Ranks["Dim_W",1]==0) {
+      print(paste0("There is one unique solution for v"))
+    } else if (FTv_Ranks["Dim_WA",1]==0) {
+      print(paste0("There are ",FTv_Ranks["Dim_W",1]," dimensions of DID weight solutions but only one unique observation weight solution for v"))
+    } else {
+      print(paste0("There are ",FTv_Ranks["Dim_W",1]," dimensions of DID weight solutions and ",FTv_Ranks["Dim_WA",1]," dimensions of observation weight solutions for v"))
+    }
+  } else {
+    for (i in 1:ncol(FTv_Ranks)) {
+      if (FTv_Ranks["Dim_W",i] < 0) {
+        print(paste0("There are no unique solutions for column ",i))
+      } else if (FTv_Ranks["Dim_W",i]==0) {
+        print(paste0("There is one unique solution for column ",i))
+      } else if (FTv_Ranks["Dim_WA",i]==0) {
+        print(paste0("There are ",FTv_Ranks["Dim_W",i]," dimensions of DID weight solutions but only one unique observation weight solution for column ",i))
+      } else {
+        print(paste0("There are ",FTv_Ranks["Dim_W",i]," dimensions of DID weight solutions and ",FTv_Ranks["Dim_WA",i],"dimensions of observation weight solutions for column ",i))
+      }
+    }
+  }
   
-  # if (Rank_Fv > Rank_F) {
-  #   print("The constraint has no solutions.")
-  #   ## Sets dimension variables to negative 1 to indicate no solutions.
-  #   dim_W <- -1
-  #   dim_WA <- -1
-  # } else if (Rank_Fv == Rank_F) {
-  #   if (Rank_F == Length_w) {
-  #     print("The constraint has a unique solution.")
-  #     ## Sets dimension variables to 0 to indicate unique solution.
-  #     dim_W <- 0
-  #     dim_WA <- 0
-  #   } else if (Rank_F < Length_w) {
-  #     dim_W <- Length_w - Rank_F
-  #     print(paste0("The constraint has an infinite number of solutions, dimension ",dim_W," in terms of the DID estimator weights."))
-  #     dim_WA <- Rank_A - Rank_F
-  #     if (dim_WA == 0) {
-  #       print("There is a unique solution in terms of the observation weights.")
-  #     } else if (dim_WA > 0) {
-  #       print(paste0("The constraint has an infinite number of solutions, dimension ",dim_WA," in terms of the observation weights."))
-  #     } else {
-  #       
-  #     }
-  #   } else {
-  #     stop(simpleError(paste0("An error has occurred, giving rank(F) = ",Rank_F," > dim(w) = ",Length_w,". Please check inputs.")))
-  #   }
-  # } else {
-  #   
-  # }
-  
-  ## Update return to keep the ranks and stuff.
-  return(list(Rank_A=Rank_A,
-              Rank_F=Rank_F,
-              Rank_Fv=Rank_Fv,
+  return(list(FT_qr=FT_qr,
+              RankAT=RankAT,
               Length_w=Length_w,
-              Dimensions=c(W=dim_W,WA=dim_WA)
-              ))
+              FTv_Ranks=FTv_Ranks))
 }

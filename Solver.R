@@ -7,28 +7,47 @@
 
 ## Note v can be a vector to solve for one target,
 ### or it can be a matrix of column vectors to solve for.
-solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
+### If Rank_Analysis has been done, the rank_an output can be inputted to avoid repeating rank-finding.
+solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
   ## If v is a vector, put it into matrix form:
   if (is.vector(v)) {
     v <- matrix(data=v, ncol=1)
   }
   
-  ## Get the key info from A and F
   F_mat <- DFT_obj$F_mat
-  FT_qr <- qr(x=t(F_mat))
-  RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
   
-  ## Check Rank Conditions for each v
-  FTv.Check <- apply(v, MARGIN=2,
-        FUN=function(col) qr(x=cbind(t(F_mat),col))$rank > FT_qr$rank)
-  if (sum(FTv.Check)==0) {
-  } else if (sum(FTv.Check)==ncol(v)) {
-    stop(simpleError("No columns of v have solutions."))
-  } else {
-    warning(simpleWarning(paste0("The following columns of v have no solutions and were dropped: ",
-                                 paste((1:ncol(v))[FTv.Check], collapse=", "),
-                                 ". The remaining columns have been shifted accordingly. Interpret results accordingly.")))
-    v <- v[,!FTv.Check,drop=FALSE]
+  if (!is.null(rank_obj)) { # if given a rank object, use it:
+    if (ncol(v) != ncol(rank_obj$FTv_Ranks)) {
+      stop(simpleError("v and FTv_Ranks do not come from the same dimension of v."))
+    }
+    FT_qr <- rank_obj$FT_qr
+    RankAT <- rank_obj$RankAT
+    if (sum(rank_obj$FTv_Ranks["Dim_W",] < 0)==ncol(v)) {
+      stop(simpleError("No columns of v have solutions."))
+    } else if (sum(rank_obj$FTv_Ranks["Dim_W",] < 0) > 0) {
+      DefCols <- FTv_Ranks["Dim_W",] < 0
+      warning(simpleWarning(paste0("The following columns of v have no solutions and were dropped: ",
+                                   paste((1:ncol(FTv_Ranks))[DefCols], collapse=", "),
+                                   ". The remaining columns have been shifted accordingly. Interpret results accordingly.")))
+      v <- v[,!DefCols,drop=FALSE]
+    }
+  } else { # otherwise:
+    ## Get the key info from A and F
+    FT_qr <- qr(x=t(F_mat))
+    RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
+    
+    ## Check Rank Conditions for each v
+    FTv.Check <- apply(v, MARGIN=2,
+          FUN=function(col) qr(x=cbind(t(F_mat),col))$rank > FT_qr$rank)
+    if (sum(FTv.Check)==0) {
+    } else if (sum(FTv.Check)==ncol(v)) {
+      stop(simpleError("No columns of v have solutions."))
+    } else {
+      warning(simpleWarning(paste0("The following columns of v have no solutions and were dropped: ",
+                                   paste((1:ncol(v))[FTv.Check], collapse=", "),
+                                   ". The remaining columns have been shifted accordingly. Interpret results accordingly.")))
+      v <- v[,!FTv.Check,drop=FALSE]
+    }
   }
   
   ## Check for column of all zero's in F and corresponding 0 row in v
@@ -50,10 +69,12 @@ solve_WA <- function(DFT_obj,A_mat,v,DID_full=FALSE) {
   } else {
     ## find a single solution for w:
     w <- qr.solve(a=FT_qr, b=v)
-    DID.weights <- data.frame(w.base=w)
+    DID.weights <- data.frame(w)
+    colnames(DID.weights) <- paste("w.base",colnames(w),sep=".")
     
     ## find a single solution for weights for observations via A' * w:
-    Obs.weights <- data.frame(ATw.base=t(A_mat) %*% w)
+    Obs.weights <- data.frame(t(A_mat) %*% w)
+    colnames(Obs.weights) <- paste("ATw.base",colnames(w),sep=".")
     
     if (FT_qr$rank==nrow(w)) { ## Prints note for single solution and jumps to return
       print("There is a unique solution for the DID estimator weights.")
