@@ -25,9 +25,9 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
     if (sum(rank_obj$FTv_Ranks["Dim_W",] < 0)==ncol(v)) {
       stop(simpleError("No columns of v have solutions."))
     } else if (sum(rank_obj$FTv_Ranks["Dim_W",] < 0) > 0) {
-      DefCols <- FTv_Ranks["Dim_W",] < 0
+      DefCols <- rank_obj$FTv_Ranks["Dim_W",] < 0
       warning(simpleWarning(paste0("The following columns of v have no solutions and were dropped: ",
-                                   paste((1:ncol(FTv_Ranks))[DefCols], collapse=", "),
+                                   paste((1:ncol(rank_obj$FTv_Ranks))[DefCols], collapse=", "),
                                    ". The remaining columns have been shifted accordingly. Interpret results accordingly.")))
       v <- v[,!DefCols,drop=FALSE]
     }
@@ -69,6 +69,9 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
   } else {
     ## find a single solution for w:
     w <- qr.solve(a=FT_qr, b=v)
+    if (is.null(colnames(w))) {
+      colnames(w) <- 1:ncol(w)
+    }
     DID.weights <- data.frame(w)
     colnames(DID.weights) <- paste("w.base",colnames(w),sep=".")
     

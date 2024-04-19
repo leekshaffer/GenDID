@@ -65,7 +65,7 @@ rank_an <- function(DFT_obj, v) {
       } else if (FTv_Ranks["Dim_WA",i]==0) {
         print(paste0("There are ",FTv_Ranks["Dim_W",i]," dimensions of DID weight solutions but only one unique observation weight solution for column ",i))
       } else {
-        print(paste0("There are ",FTv_Ranks["Dim_W",i]," dimensions of DID weight solutions and ",FTv_Ranks["Dim_WA",i],"dimensions of observation weight solutions for column ",i))
+        print(paste0("There are ",FTv_Ranks["Dim_W",i]," dimensions of DID weight solutions and ",FTv_Ranks["Dim_WA",i]," dimensions of observation weight solutions for column ",i))
       }
     }
   }

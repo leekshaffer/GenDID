@@ -119,16 +119,13 @@ gen_Theta <- function(Start_js,OrderedPds,Assumption) {
   
   if(is.null(JoinBy)) {
     All <- tibble(Theta=1)
-    Full <- Theta %>%
-      dplyr::cross_join(All)
   } else {
     All <- Theta %>% dplyr::select(all_of(JoinBy)) %>% 
       dplyr::arrange(across(JoinBy)) %>%
       dplyr::distinct() %>%
       mutate(Theta=row_number())
-    Full <- Theta %>% 
-      dplyr::left_join(All, by=JoinBy)
   }
+  Full <- merge(Theta, All, by=JoinBy)
   
   Schematic <- matrix(data=0,
                       nrow=length(Start_js$Cl.Num),
