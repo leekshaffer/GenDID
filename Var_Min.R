@@ -23,6 +23,7 @@ min_var <- function(DFT_obj,A_mat,v,solve_obj,Sigma) {
     dim_C <- ncol(Add.Obs.w)
     if (is.vector(v)) {
       v <- matrix(data=v, ncol=1)
+      ### Make a function out of this as a function of v, use that to vectorize
       W_mat <- as.matrix(cbind(base.w,Add.Obs.w))
       Inn_mat <- t(W_mat) %*% A_mat %*% Sigma %*% t(A_mat) %*% W_mat
       opt_fn <- function(x) {matrix(data=c(1,x), nrow=1) %*% Inn_mat %*% matrix(data=c(1,x), ncol=1)}
