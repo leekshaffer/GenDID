@@ -63,7 +63,7 @@ SO5 <- Solve_Assumption(Amat,StartTimes,J,
 
 ### Independence:
 for (i in 3:5) {
-  assign(x=paste0("MV",i),
+  assign(x=paste0("MV",i,"_Ind"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
                              Sigma=create_Sigma_Ind(N=N,J=J),
@@ -73,7 +73,7 @@ for (i in 3:5) {
 
 ### Exchangeable (rho = 0.003 from Thompson et al. 2018):
 for (i in 3:5) {
-  assign(x=paste0("MV",i),
+  assign(x=paste0("MV",i,"_CS_0_003"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
                              Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
@@ -84,7 +84,7 @@ for (i in 3:5) {
 
 ### AR(1) (rho = 0.012 gives average ICC within a cluster ~0.003):
 for (i in 3:5) {
-  assign(x=paste0("MV",i),
+  assign(x=paste0("MV",i,"_AR1_0_012"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
                              Sigma=create_Sigma_AR1(rho=0.012,N=N,J=J),
