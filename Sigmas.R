@@ -65,4 +65,3 @@ create_Sigma_AR1 <- function(rho,N,J,SDvec=NULL) {
   Corr_Cl <- do.call(rbind, lapply(1:J, FUN=function(i) rho^(abs((1-i):(J-i)))))
   return(cluster_to_full(corr_to_cov(Corr_Cl,SDvec), N))
 }
-  
