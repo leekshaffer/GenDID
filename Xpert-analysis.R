@@ -89,9 +89,9 @@ MV_Assumption <- function(SolveOut, Sigma, Assumption,
   }
 }
 
-system.time(SO3 <- Solve_Assumption(Amat,StartTimes,J,
-                 Assumption=3,
-                 v.Mat=cbind(Avg=rep(1/7,7),
+SO3 <- Solve_Assumption(Amat,StartTimes,J,
+                        Assumption=3,
+                        v.Mat=cbind(Avg=rep(1/7,7),
                              AvgEx7=c(rep(1/6,6),0),
                              D.1=c(1,rep(0,6)),
                              D.2=c(0,1,rep(0,5)),
@@ -100,10 +100,10 @@ system.time(SO3 <- Solve_Assumption(Amat,StartTimes,J,
                              D.5=c(rep(0,4),1,0,0),
                              D.6=c(rep(0,5),1,0),
                              D.7=c(rep(0,6),1),
-                             Middle=c(0,1,1,1,0,0,0))))
-system.time(SO4 <- Solve_Assumption(Amat,StartTimes,J,
-                 Assumption=4,
-                 v.Mat=cbind(AvgEx7=c(rep(1/6,6),0),
+                             Middle=c(0,1/3,1/3,1/3,0,0,0)))
+SO4 <- Solve_Assumption(Amat,StartTimes,J,
+                        Assumption=4,
+                        v.Mat=cbind(AvgEx7=c(rep(1/6,6),0),
                              T.1=c(1,rep(0,6)),
                              T.2=c(0,1,rep(0,5)),
                              T.3=c(0,0,1,rep(0,4)),
@@ -111,25 +111,25 @@ system.time(SO4 <- Solve_Assumption(Amat,StartTimes,J,
                              T.5=c(rep(0,4),1,0,0),
                              T.6=c(rep(0,5),1,0),
                              T.7=c(rep(0,6),1),
-                             Middle=c(0,1,1,1,0,0,0))))
-system.time(SO5 <- Solve_Assumption(Amat,StartTimes,J,
-                 Assumption=5,
-                 v.Mat=c(1)))
+                             Middle=c(0,1/3,1/3,1/3,0,0,0)))
+SO5 <- Solve_Assumption(Amat,StartTimes,J,
+                        Assumption=5,
+                        v.Mat=1)
 ## Timing (desktop) notes: <1min each for A3/A4/A5
 
-system.time(MV3 <- MV_Assumption(SolveOut=SO3,
-                                 Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
-                                 Assumption=3,
-                                 SigmaName="CS0_003",
-                                 Observations=Obs_Y))
-system.time(MV4 <- MV_Assumption(SolveOut=SO3,
-                                 Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
-                                 Assumption=4,
-                                 SigmaName="CS0_003",
-                                 Observations=Obs_Y))
-system.time(MV5 <- MV_Assumption(SolveOut=SO3,
-                                 Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
-                                 Assumption=5,
-                                 SigmaName="CS0_003",
-                                 Observations=Obs_Y))
+MV3 <- MV_Assumption(SolveOut=SO3,
+                     Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
+                     Assumption=3,
+                     SigmaName="CS0_003",
+                     Observations=Obs_Y)
+MV4 <- MV_Assumption(SolveOut=SO4,
+                     Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
+                     Assumption=4,
+                     SigmaName="CS0_003",
+                     Observations=Obs_Y)
+MV5 <- MV_Assumption(SolveOut=SO5,
+                     Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
+                     Assumption=5,
+                     SigmaName="CS0_003",
+                     Observations=Obs_Y)
 ## Timing (desktop) notes: ~3sec each for A3/A4/A5
