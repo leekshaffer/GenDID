@@ -8,6 +8,7 @@
 source("A_Const.R")
 source("D_F_Const.R")
 source("Rank_Analysis.R")
+source("Sigmas.R")
 source("Solver.R")
 source("Var_Min.R")
 
