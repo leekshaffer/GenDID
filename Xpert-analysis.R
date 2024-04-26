@@ -24,58 +24,112 @@ J <- length(Periods)
 
 StartTimes <- trajclust2 %>% dplyr::filter(Interv==1) %>%
   group_by(Cluster) %>% dplyr::summarize(StartPd=min(Period)) %>%
-  dplyr::arrange(StartPd)
+  dplyr::arrange(StartPd,Cluster)
 N <- length(StartTimes$Cluster)
 
-## Generate A,D,F,Theta matrices:
+## Prep Outcome Data in appropriate order:
+Ord_Data <- trajclust2 %>% left_join(StartTimes, by="Cluster") %>%
+  dplyr::arrange(StartPd,Cluster,Period)
+Obs_Y <- matrix(data=c(Ord_Data$Outcome, Ord_Data$logOdds), ncol=2)
+colnames(Obs_Y) <- c("Probability","Log Odds")
+
+## Generate A matrix:
 Amat <- gen_A(N,J)
 
-###
-DFT_4 <- gen_DFT(Clusters=StartTimes$Cluster,
-                 StartPeriods=StartTimes$StartPd,
-                 J=J,
-                 Assumption=4)
-v.4 <- c(rep(1/6,6),0)
+## Function to run solver for any assumption and v matrix
+Solve_Assumption <- function(Amat,StartTimes,J,
+                             Assumption,v.Mat) {
+  ## Generate D,F,Theta matrices:
+  DFT_int <- gen_DFT(Clusters=StartTimes$Cluster,
+                     StartPeriods=StartTimes$StartPd,
+                     J=J,
+                     Assumption=Assumption)
+  rank_int <- rank_an(DFT_obj=DFT_int,
+                      v=v.Mat)
+  solve_int <- solve_WA(DFT_obj=DFT_int,
+                        A_mat=Amat,
+                        v=v.Mat,
+                        rank_obj=rank_int,
+                        DID_full=TRUE)
+  assign(x=paste0("SolveOut_",Assumption),
+         value=list(Amat=Amat,
+                    DFT=DFT_int,
+                    Solve=solve_int))
+  save(list=paste0("SolveOut_",Assumption), 
+       file=paste0("../int_large/xpert-solve-a_",Assumption,".Rda"))
+  return(get(paste0("SolveOut_",Assumption)))
+}
 
-## Solve:
-system.time(rank_4 <- rank_an(DFT_obj=DFT_4,
-                              v=v.4))
-## Note: A4 took ~0.2sec on laptop
-system.time(solve_4 <- solve_WA(DFT_obj=DFT_4,
-                                A_mat=Amat,
-                                v=v.4,
-                                rank_obj=rank_4, DID_full=TRUE))
-## Note: A5 took ~3min on laptop, about the same amount of time with DID_full True or False
-## Note: A4 took ~1min on desktop, ~3min on laptop
+## Function to run var minimizer for any assumption and v matrix
+MV_Assumption <- function(SolveOut, Sigma, Assumption,
+                          SigmaName=NULL,
+                          Observations=NULL) {
+  MV_int <- min_var(solve_obj=SolveOut$Solve,
+                    A_mat=SolveOut$Amat,
+                    Sigma=Sigma)
+  if (is.null(Observations)) {
+    assign(x=paste0("MVOut_",Assumption,"_",SigmaName),
+           value=MV_int)
+    save(list=paste0("MV_",Assumption,"_",SigmaName),
+         file=paste0("../int_large/xpert-mv-a_",Assumption,"_",SigmaName,".Rda"))
+    return(MV_int)
+  } else {
+    Estimates <- t(MV_int$Obs.weights) %*% Observations
+    D_Full <- cbind(SolveOut$DFT$D_aug,
+                    SolveOut$Amat %*% Observations,
+                    MV_int$DID.weights)
+    assign(x=paste0("MVOut_",Assumption,"_",SigmaName),
+           value=list(Amat=Amat,
+                      Estimates=Estimates,
+                      D_Full=D_Full,
+                      MV=MV_int))
+    save(list=paste0("MVOut_",Assumption,"_",SigmaName), 
+         file=paste0("int/xpert-mv-a_",Assumption,"_",SigmaName,".Rda"))
+    return(get(paste0("MVOut_",Assumption,"_",SigmaName)))
+  }
+}
 
-## Minimize Variance:
-# Rho = 0.003 comes from Thompson paper analysis of OXTEXT-7 data
-system.time(mv_4_CS <- min_var(solve_obj=solve_4,
-                               A_mat=Amat,
-                               Sigma=create_Sigma_CS(rho=0.003,N=N,J=J)))
-## Note: took ~1.5sec on laptop, .5 on desktop
-## Longer version (full DID vectors) for A4: took 37sec on desktop
+system.time(SO3 <- Solve_Assumption(Amat,StartTimes,J,
+                 Assumption=3,
+                 v.Mat=cbind(Avg=rep(1/7,7),
+                             AvgEx7=c(rep(1/6,6),0),
+                             D.1=c(1,rep(0,6)),
+                             D.2=c(0,1,rep(0,5)),
+                             D.3=c(0,0,1,rep(0,4)),
+                             D.4=c(0,0,0,1,rep(0,3)),
+                             D.5=c(rep(0,4),1,0,0),
+                             D.6=c(rep(0,5),1,0),
+                             D.7=c(rep(0,6),1),
+                             Middle=c(0,1,1,1,0,0,0))))
+system.time(SO4 <- Solve_Assumption(Amat,StartTimes,J,
+                 Assumption=4,
+                 v.Mat=cbind(AvgEx7=c(rep(1/6,6),0),
+                             T.1=c(1,rep(0,6)),
+                             T.2=c(0,1,rep(0,5)),
+                             T.3=c(0,0,1,rep(0,4)),
+                             T.4=c(0,0,0,1,rep(0,3)),
+                             T.5=c(rep(0,4),1,0,0),
+                             T.6=c(rep(0,5),1,0),
+                             T.7=c(rep(0,6),1),
+                             Middle=c(0,1,1,1,0,0,0))))
+system.time(SO5 <- Solve_Assumption(Amat,StartTimes,J,
+                 Assumption=5,
+                 v.Mat=c(1)))
+## Timing (desktop) notes: <1min each for A3/A4/A5
 
-save(list=c("Amat","DFT_4","solve_4","mv_4_CS"), file="../int_large/xpert-a4.Rda")
-
-## Prep Data:
-Ordered_Data_4 <- trajclust2 %>% dplyr::left_join(DFT_4$Theta$Full %>% 
-                                              dplyr::select(Clusters,Cl.Num) %>% distinct(), 
-                                            by=join_by(Cluster==Clusters)) %>%
-  arrange(Cl.Num,Period)
-
-## Apply Analysis:
-Obs_Y <- matrix(data=c(Ordered_Data_4$Outcome, Ordered_Data_4$logOdds), ncol=2)
-colnames(Obs_Y) <- c("Probability","Log Odds")
-Estimate <- t(mv_4_CS$Obs.weights) %*% Obs_Y
-Estimate <- c(Estimate,exp(Estimate[1,"Log Odds"]))
-names(Estimate) = c("Risk Difference","Log Odds Ratio","Odds Ratio")
-
-## Put Weights onto D matrix
-D_Vals <- DFT_4$D_aug
-D_Vals$RD <- Amat %*% Obs_Y[,"Probability"]
-D_Vals$LOR <- Amat %*% Obs_Y[,"Log Odds"]
-D_Vals$OR <- exp(D_Vals$LOR)
-D_Vals$Weight <- mv_4_CS$DID.weights[,1]
-D_Full <- D_Vals %>% arrange(desc(Weight))
-save(list=c("Amat","Obs_Y","Estimate","D_Full"), file="int/xpert-a4-res.Rda")
+system.time(MV3 <- MV_Assumption(SolveOut=SO3,
+                                 Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
+                                 Assumption=3,
+                                 SigmaName="CS0_003",
+                                 Observations=Obs_Y))
+system.time(MV4 <- MV_Assumption(SolveOut=SO3,
+                                 Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
+                                 Assumption=4,
+                                 SigmaName="CS0_003",
+                                 Observations=Obs_Y))
+system.time(MV5 <- MV_Assumption(SolveOut=SO3,
+                                 Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
+                                 Assumption=5,
+                                 SigmaName="CS0_003",
+                                 Observations=Obs_Y))
+## Timing (desktop) notes: ~3sec each for A3/A4/A5
