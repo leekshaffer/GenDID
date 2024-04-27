@@ -2,7 +2,7 @@
 ###### File: Solver.R #################
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/18 #############
-###### Updated 2024/04/19 #############
+###### Updated 2024/04/27 #############
 #######################################
 
 ## Note v can be a vector to solve for one target,
@@ -20,7 +20,8 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
     if (ncol(v) != ncol(rank_obj$FTv_Ranks)) {
       stop(simpleError("v and FTv_Ranks do not come from the same dimension of v."))
     }
-    FT_rank <- rank_obj$FT_qr$rank
+    FT_qr <- rank_obj$FT_qr
+    FT_rank <- FT_qr$rank
     RankAT <- rank_obj$RankAT
     if (sum(rank_obj$FTv_Ranks["Dim_W",] < 0)==ncol(v)) {
       stop(simpleError("No columns of v have solutions."))
@@ -34,7 +35,8 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
   } else { # otherwise:
     ## Get the key info from A and F
     RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
-    FT_rank <- qr(x=t(F_mat), LAPACK=FALSE)$rank
+    FT_qr <- qr(x=t(F_mat), LAPACK=FALSE)
+    FT_rank <- FT_qr$rank
     
     ## Check Rank Conditions for each v
     FTv.Check <- apply(v, MARGIN=2,
@@ -50,21 +52,34 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
     }
   }
   
-  ## Check for column of all zero's in F and corresponding 0 row in v
-  ZeroCols <- apply(F_mat, MARGIN=2,
-                    FUN=function(col) sum(col==0) == nrow(F_mat))
-  if (sum(ZeroCols) > 0) {
-    if (sum(v[ZeroCols,]==0) != ncol(v)) {
-      stop(simpleError("v has values that cannot be achieved with this F matrix."))
-    } else {
-      F_mat <- F_mat[,!ZeroCols,drop=FALSE]
-      v <- v[!ZeroCols,,drop=FALSE]
+  if (FT_rank < ncol(F_mat)) { ## Rank-deficient F:
+    ## Check for column of all zero's in F and corresponding 0 row in v
+    ZeroCols <- apply(F_mat, MARGIN=2,
+                      FUN=function(col) sum(col==0) == nrow(F_mat))
+    if (sum(ZeroCols) > 0) {
+      if (sum(v[ZeroCols,]==0) != ncol(v)) {
+        stop(simpleError("v has values that cannot be achieved with this F matrix."))
+      } else {
+        F_mat <- F_mat[,!ZeroCols,drop=FALSE]
+        FT_qr <- qr(x=t(F_mat), LAPACK=FALSE)
+        v <- v[!ZeroCols,,drop=FALSE]
+      }
+    }
+    
+    # If still rank-deficient, find linear dependent column in F:
+    if (FT_qr$rank < ncol(F_mat)) {
+      RankCols <- sapply(X=1:ncol(F_mat),
+                         FUN=function(i) qr(F_mat[,1:i])$rank)
+      RankPrev <- c(RankCols[1], RankCols[2:length(RankCols)]-RankCols[1:(length(RankCols)-1)])
+      KeepCols <- (1:length(RankPrev))[RankPrev==1]
+      F_mat <- F_mat[,KeepCols,drop=FALSE]
+      FT_qr <- qr(x=t(F_mat), LAPACK=FALSE)
+      v <- v[KeepCols,,drop=FALSE]
     }
   }
   
-  ## In any case, get LAPACK version of FT_qr:
-  FT_qr <- qr(x=t(F_mat), LAPACK=TRUE)
-
+  ## Old approach: In any case, get LAPACK version of FT_qr:
+  # FT_qr <- qr(x=t(F_mat), LAPACK=TRUE)
   
   if (nrow(v) != ncol(F_mat)) {
     stop(simpleError("v must be a vector with length corresponding to the number of columns in F_mat, or a matrix of such column vectors."))
@@ -104,7 +119,7 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
         ### whose first nullity(F') columns are an orthonormal basis for F',
         ### the first nullity(A') columns of which are an orthonormal basis for A',
         ### so the nullity(F')-nullity(A') columns between are an orthonormal basis for F'\A'
-        kerFT_only <- qr.Q(qr(cbind(kerAT_basis,kerFT_basis),LAPACK=TRUE))[,(dim(kerAT_basis)[2]+1):(dim(kerFT_basis)[2]), drop=FALSE]
+        kerFT_only <- qr.Q(qr(cbind(kerAT_basis,kerFT_basis),LAPACK=FALSE))[,(dim(kerAT_basis)[2]+1):(dim(kerFT_basis)[2]), drop=FALSE]
         ### Re-normalize them to sum (in abs. value) to 1 and smooth near-zeros:
         kerFT_norm <- apply(kerFT_only, MARGIN=2,
                             FUN=function(col) ifelse(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))

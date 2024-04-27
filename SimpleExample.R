@@ -2,7 +2,7 @@
 ###### File: SimpleExample.R ##########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/18 #############
-###### Updated 2024/04/25 #############
+###### Updated 2024/04/27 #############
 #######################################
 
 source("A_Const.R")
@@ -60,6 +60,21 @@ Solve.3 <- solve_WA(DFT_obj=DFT_list.3,
                     rank_obj=rank_an(DFT_list.3,cbind(v.3,v.3.alt)),
                     DID_full=TRUE)
 MVar.3 <- min_var(solve_obj=Solve.3,
+                  A_mat=A_mat,
+                  Sigma=diag(1, nrow=ncol(A_mat)))
+
+### Assumption (2): Exposure- and Calendar-Time Heterogeneity ###
+v.2.1 <- c(1,0,0)
+v.2.2 <- c(0,1,0)
+v.2.3 <- c(0,0,1)
+
+DFT_list.2 <- gen_DFT(Clusters, StartPeriods, J, Assumption=2)
+Solve.2 <- solve_WA(DFT_obj=DFT_list.2,
+                    A_mat=A_mat,
+                    v=cbind(v.2.1,v.2.2,v.2.3),
+                    rank_obj=rank_an(DFT_list.2,cbind(v.2.1,v.2.2,v.2.3)),
+                    DID_full=TRUE)
+MVar.2 <- min_var(solve_obj=Solve.2,
                   A_mat=A_mat,
                   Sigma=diag(1, nrow=ncol(A_mat)))
 
