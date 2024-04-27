@@ -124,3 +124,30 @@ for (i in 2:5) {
                              Observations=Obs_Y))
 }
 
+
+
+## Import and Summarize Results:
+Assns <- 2:5
+SigmaNames <- c("Ind","CS_0_003","AR1_0_012")
+
+for (j in SigmaNames) {
+  print(paste0("Variance ",j))
+  for (i in Assns) {
+    print(paste0("Assumption ",i))
+    print((get(paste0("MVOut_",i,"_",j))[["MV"]])[["Variance"]])
+  }
+}
+
+for (i in Assns) {
+  print(paste0("Assumption ",i))
+  ProbEsts <- NULL
+  OREsts <- NULL
+  for (j in SigmaNames) {
+    ProbEsts <- cbind(ProbEsts,(get(paste0("MVOut_",i,"_",j))[["Estimates"]])[,"Probability"])
+    OREsts <- cbind(OREsts,exp((get(paste0("MVOut_",i,"_",j))[["Estimates"]])[,"Log Odds"]))
+  }
+  colnames(ProbEsts) <- SigmaNames
+  colnames(OREsts) <- SigmaNames
+  print(ProbEsts)
+  print(OREsts)
+}
