@@ -20,7 +20,7 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
     if (ncol(v) != ncol(rank_obj$FTv_Ranks)) {
       stop(simpleError("v and FTv_Ranks do not come from the same dimension of v."))
     }
-    FT_qr <- rank_obj$FT_qr
+    FT_rank <- rank_obj$FT_qr$rank
     RankAT <- rank_obj$RankAT
     if (sum(rank_obj$FTv_Ranks["Dim_W",] < 0)==ncol(v)) {
       stop(simpleError("No columns of v have solutions."))
@@ -33,12 +33,12 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
     }
   } else { # otherwise:
     ## Get the key info from A and F
-    FT_qr <- qr(x=t(F_mat))
     RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
+    FT_rank <- qr(x=t(F_mat), LAPACK=FALSE)$rank
     
     ## Check Rank Conditions for each v
     FTv.Check <- apply(v, MARGIN=2,
-          FUN=function(col) qr(x=cbind(t(F_mat),col))$rank > FT_qr$rank)
+          FUN=function(col) qr(x=cbind(t(F_mat),col))$rank > FT_rank)
     if (sum(FTv.Check)==0) {
     } else if (sum(FTv.Check)==ncol(v)) {
       stop(simpleError("No columns of v have solutions."))
@@ -58,10 +58,12 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
       stop(simpleError("v has values that cannot be achieved with this F matrix."))
     } else {
       F_mat <- F_mat[,!ZeroCols,drop=FALSE]
-      FT_qr <- qr(x=t(F_mat))
       v <- v[!ZeroCols,,drop=FALSE]
     }
   }
+  
+  ## In any case, get LAPACK version of FT_qr:
+  FT_qr <- qr(x=t(F_mat), LAPACK=TRUE)
 
   
   if (nrow(v) != ncol(F_mat)) {
@@ -79,7 +81,7 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
     Obs.weights <- data.frame(t(A_mat) %*% w)
     colnames(Obs.weights) <- paste("ATw.base",colnames(w),sep=".")
     
-    if (FT_qr$rank==nrow(w)) { ## Prints note for single solution and jumps to return
+    if (FT_rank==nrow(w)) { ## Prints note for single solution and jumps to return
       print("There is a unique solution for the DID estimator weights.")
     } else { ## If there are non-unique DID estimator weights
       ## Use SVD of A' to find basis for its kernel
@@ -92,17 +94,17 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
                           FUN=function(col) ifelse(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
       
       ## If rank(F) < rank(A), get basis of ker(F') that is orthogonal to ker(A')
-      if (FT_qr$rank < RankAT) {
+      if (FT_rank < RankAT) {
         ## Use SVD of F' to find basis for its kernel
         FT_svd <- svd(x=t(F_mat),
                       nu=0, nv=nrow(F_mat))
-        kerFT_basis <- FT_svd$v[,(FT_qr$rank+1):ncol(FT_svd$v), drop=FALSE]
+        kerFT_basis <- FT_svd$v[,(FT_rank+1):ncol(FT_svd$v), drop=FALSE]
         
         ## Use QR decomposition on (A' basis | F' basis) to get Q, 
         ### whose first nullity(F') columns are an orthonormal basis for F',
         ### the first nullity(A') columns of which are an orthonormal basis for A',
         ### so the nullity(F')-nullity(A') columns between are an orthonormal basis for F'\A'
-        kerFT_only <- qr.Q(qr(cbind(kerAT_basis,kerFT_basis)))[,(dim(kerAT_basis)[2]+1):(dim(kerFT_basis)[2]), drop=FALSE]
+        kerFT_only <- qr.Q(qr(cbind(kerAT_basis,kerFT_basis),LAPACK=TRUE))[,(dim(kerAT_basis)[2]+1):(dim(kerFT_basis)[2]), drop=FALSE]
         ### Re-normalize them to sum (in abs. value) to 1 and smooth near-zeros:
         kerFT_norm <- apply(kerFT_only, MARGIN=2,
                             FUN=function(col) ifelse(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
@@ -119,7 +121,7 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
         ## Append F'\A' basis vector weights to Obs.weights and DID.weights as "Add.Obs.weights"
         Obs.weights <- cbind(Obs.weights,Add.Obs.weights=ATw_norm)
         DID.weights <- cbind(DID.weights,Add.Obs.weights=kerFT_norm)
-      } else if (FT_qr$rank > RankAT) {
+      } else if (FT_rank > RankAT) {
         stop(simpleError("F has greater rank than A. Please check inputs for accuracy."))
       }
       

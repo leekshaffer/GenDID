@@ -19,11 +19,11 @@ rank_an <- function(DFT_obj, v) {
   ## Pull key features that don't depend on v:
   RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
   F_mat <- DFT_obj$F_mat
-  FT_qr <- qr(x=t(F_mat))
+  FT_qr <- qr(x=t(F_mat), LAPACK=FALSE)
   Length_w <- (DFT_obj$N)*(DFT_obj$N-1)*(DFT_obj$J)*(DFT_obj$J-1)/4
   
   FTv_Rank_Res <- function(v) {
-    FTv_Rank <- qr(x=cbind(t(F_mat),v))$rank
+    FTv_Rank <- qr(x=cbind(t(F_mat),v), LAPACK=FALSE)$rank
     if (FTv_Rank > FT_qr$rank) {
       Dim_W <- -1
       Dim_WA <- -1

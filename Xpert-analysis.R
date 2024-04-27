@@ -5,6 +5,9 @@
 ###### Updated 2024/04/26 #############
 #######################################
 
+require(readxl)
+require(tidyverse)
+
 source("A_Const.R")
 source("Sigmas.R")
 source("Full_Analysis.R")
@@ -31,6 +34,35 @@ colnames(Obs_Y) <- c("Probability","Log Odds")
 Amat <- gen_A(N,J)
 
 ## Run Solver for different assumption settings:
+SO2 <- Solve_Assumption(Amat,StartTimes,J,
+                        Assumption=2,
+                        v.Mat=cbind(Avg=c(rep(1/28,28)),
+                                    AvgEx7=c(rep(1/21,21),rep(0,7)),
+                                    D.1=c(1/6,1/6,0,1/6,0,0,1/6,0,0,0,1/6,0,0,0,0,1/6,rep(0,12)),
+                                    D.2=c(0,0,1/5,0,1/5,0,0,1/5,0,0,0,1/5,0,0,0,0,1/5,rep(0,11)),
+                                    D.12=c(1/11,1/11,1/11,1/11,1/11,0,1/11,1/11,0,0,1/11,1/11,0,0,0,1/11,1/11,rep(0,11)),
+                                    T.234=c(rep(1/6,6),rep(0,22)),
+                                    U.1=c(1,rep(0,27)),
+                                    U.2=c(0,1,rep(0,26)),
+                                    U.3=c(0,0,1,rep(0,25)),
+                                    U.4=c(rep(0,3),1,rep(0,24)),
+                                    U.5=c(rep(0,4),1,rep(0,23)),
+                                    U.6=c(rep(0,5),1,rep(0,22)),
+                                    U.7=c(rep(0,6),1,rep(0,21)),
+                                    U.8=c(rep(0,7),1,rep(0,20)),
+                                    U.9=c(rep(0,8),1,rep(0,19)),
+                                    U.10=c(rep(0,9),1,rep(0,18)),
+                                    U.11=c(rep(0,10),1,rep(0,17)),
+                                    U.12=c(rep(0,11),1,rep(0,16)),
+                                    U.13=c(rep(0,12),1,rep(0,15)),
+                                    U.14=c(rep(0,13),1,rep(0,14)),
+                                    U.15=c(rep(0,14),1,rep(0,13)),
+                                    U.16=c(rep(0,15),1,rep(0,12)),
+                                    U.17=c(rep(0,16),1,rep(0,11)),
+                                    U.18=c(rep(0,17),1,rep(0,10)),
+                                    U.19=c(rep(0,18),1,rep(0,9)),
+                                    U.20=c(rep(0,19),1,rep(0,8)),
+                                    U.21=c(rep(0,20),1,rep(0,7))))
 SO3 <- Solve_Assumption(Amat,StartTimes,J,
                         Assumption=3,
                         v.Mat=cbind(Avg=rep(1/7,7),
@@ -62,7 +94,7 @@ SO5 <- Solve_Assumption(Amat,StartTimes,J,
 ## Run variance minimizer for different settings:
 
 ### Independence:
-for (i in 3:5) {
+for (i in 2:5) {
   assign(x=paste0("MV",i,"_Ind"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
@@ -72,7 +104,7 @@ for (i in 3:5) {
 }
 
 ### Exchangeable (rho = 0.003 from Thompson et al. 2018):
-for (i in 3:5) {
+for (i in 2:5) {
   assign(x=paste0("MV",i,"_CS_0_003"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
@@ -83,7 +115,7 @@ for (i in 3:5) {
 ## Timing (desktop) notes: ~3sec each for A3/A4/A5
 
 ### AR(1) (rho = 0.012 gives average ICC within a cluster ~0.003):
-for (i in 3:5) {
+for (i in 2:5) {
   assign(x=paste0("MV",i,"_AR1_0_012"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
