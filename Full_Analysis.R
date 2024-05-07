@@ -10,9 +10,6 @@ source("Rank_Analysis.R")
 source("Var_Min.R")
 source("Solver.R")
 
-## Read in data:
-load("data/Xpert-data.Rda")
-
 ## Inputs to Solve_Assumption function:
 ### Amat is the A matrix for the setting
 ### StartTimes is a data frame/tibble with two columns that will be input to gen_DFT:
