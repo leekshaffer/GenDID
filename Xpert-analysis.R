@@ -108,6 +108,7 @@ for (i in 2:5) {
                              Sigma=create_Sigma_Ind(N=N,J=J),
                              SigmaName="Ind",
                              Observations=Obs_Y,
+                             Permutations=1000,
                              save_loc="int/",
                              save_prefix="xpert-mv-a_"))
 }
@@ -120,6 +121,7 @@ for (i in 2:5) {
                              Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
                              SigmaName="CS_0_003",
                              Observations=Obs_Y,
+                             Permutations=1000,
                              save_loc="int/",
                              save_prefix="xpert-mv-a_"))
 }
@@ -132,6 +134,7 @@ for (i in 2:5) {
                              Sigma=create_Sigma_AR1(rho=0.012,N=N,J=J),
                              SigmaName="AR1_0_012",
                              Observations=Obs_Y,
+                             Permutations=1000,
                              save_loc="int/",
                              save_prefix="xpert-mv-a_"))
 }
@@ -163,3 +166,7 @@ for (i in Assns) {
   print(ProbEsts)
   print(OREsts)
 }
+
+
+### Inference:
+
