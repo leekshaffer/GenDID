@@ -139,12 +139,17 @@ for (i in 2:5) {
                              save_prefix="xpert-mv-a_"))
 }
 
-
-
-## Import and Summarize Results:
+## Import Results:
 Assns <- 2:5
 SigmaNames <- c("Ind","CS_0_003","AR1_0_012")
 
+for (j in SigmaNames) {
+  for (i in Assns) {
+    load(file=paste0("int/xpert-mv-a_",i,"_",j,".Rda"))
+  }
+}
+
+## Summarize Results:
 for (j in SigmaNames) {
   print(paste0("Variance ",j))
   for (i in Assns) {
@@ -169,4 +174,10 @@ for (i in Assns) {
 
 
 ### Inference:
-
+for (i in Assns) {
+  print(paste0("P-Values for Assumption ",i))
+  for (j in SigmaNames) {
+    print(j)
+    print((get(paste0("MVOut_",i,"_",j)))[["P_Values"]])
+  }
+}
