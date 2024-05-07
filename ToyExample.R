@@ -32,6 +32,7 @@ Solve.5 <- solve_WA(DFT_obj=DFT_list.5,
 MVar.5 <- min_var(solve_obj=Solve.5,
                   A_mat=A_mat,
                   Sigma=diag(1, nrow=ncol(A_mat)))
+## Alternate variance options:
 MVar.5.CS <- min_var(solve_obj=Solve.5,
                      A_mat=A_mat,
                      Sigma=create_Sigma_CS(rho=0.1, N=2, J=3))
