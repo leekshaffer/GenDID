@@ -12,7 +12,7 @@ source("A_Const.R")
 source("Sigmas.R")
 source("Full_Analysis.R")
 
-## Read in (simulated) data:
+## Read in (simulated) data from data folder:
 load("data/Xpert-data-sim.Rda")
 
 ## Get unique periods, clusters, start times, N, J:
