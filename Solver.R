@@ -151,20 +151,3 @@ solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
                 Obs.weights=Obs.weights))
   }
 }
-
-# solve_svd <- function(DFT_obj,A_mat,v) {
-#   FTsvd <- svd(x=t(DFT_obj$F_mat),
-#                nu=dim(DFT_obj$F_mat)[2],
-#                nv=dim(DFT_obj$F_mat)[1])
-#   ATsvd <- svd(x=t(A_mat),
-#                nu=dim(A_mat)[2],
-#                nv=dim(A_mat)[1])
-# }
-# 
-# require(MASS)
-# 
-# solve_gen <- function(DFT_obj,A_mat,v) {
-#   MPg <- MASS::ginv(t(DFT_obj$F_mat))
-#   Soln1 <- MPg %*% v
-#   Free <- diag(x=1,nrow=dim(MPg)[1]) - MPg %*% t(DFT_obj$F_mat)
-# }

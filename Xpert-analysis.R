@@ -2,7 +2,7 @@
 ###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/25 #############
-###### Updated 2024/04/27 #############
+###### Updated 2024/05/07 #############
 #######################################
 
 require(readxl)
@@ -12,20 +12,20 @@ source("A_Const.R")
 source("Sigmas.R")
 source("Full_Analysis.R")
 
-## Read in data:
-load("data/Xpert-data.Rda")
+## Read in (simulated) data:
+load("data/Xpert-data-sim.Rda")
 
 ## Get unique periods, clusters, start times, N, J:
-Periods <- unique(trajclust2$Period)
+Periods <- unique(xpert.dat$Period)
 J <- length(Periods)
 
-StartTimes <- trajclust2 %>% dplyr::filter(Interv==1) %>%
+StartTimes <- xpert.dat %>% dplyr::filter(Interv==1) %>%
   group_by(Cluster) %>% dplyr::summarize(StartPd=min(Period)) %>%
   dplyr::arrange(StartPd,Cluster)
 N <- length(StartTimes$Cluster)
 
 ## Prep Outcome Data in appropriate order:
-Ord_Data <- trajclust2 %>% left_join(StartTimes, by="Cluster") %>%
+Ord_Data <- xpert.dat %>% left_join(StartTimes, by="Cluster") %>%
   dplyr::arrange(StartPd,Cluster,Period)
 Obs_Y <- matrix(data=c(Ord_Data$Outcome, Ord_Data$logOdds), ncol=2)
 colnames(Obs_Y) <- c("Probability","Log Odds")
@@ -62,7 +62,9 @@ SO2 <- Solve_Assumption(Amat,StartTimes,J,
                                     U.18=c(rep(0,17),1,rep(0,10)),
                                     U.19=c(rep(0,18),1,rep(0,9)),
                                     U.20=c(rep(0,19),1,rep(0,8)),
-                                    U.21=c(rep(0,20),1,rep(0,7))))
+                                    U.21=c(rep(0,20),1,rep(0,7))),
+                        save_loc="../int_large/",
+                        save_prefix="xpert-solve-a_")
 SO3 <- Solve_Assumption(Amat,StartTimes,J,
                         Assumption=3,
                         v.Mat=cbind(Avg=rep(1/7,7),
@@ -74,7 +76,9 @@ SO3 <- Solve_Assumption(Amat,StartTimes,J,
                              D.5=c(rep(0,4),1,0,0),
                              D.6=c(rep(0,5),1,0),
                              D.7=c(rep(0,6),1),
-                             Middle=c(0,1/3,1/3,1/3,0,0,0)))
+                             Middle=c(0,1/3,1/3,1/3,0,0,0)),
+                        save_loc="../int_large/",
+                        save_prefix="xpert-solve-a_")
 SO4 <- Solve_Assumption(Amat,StartTimes,J,
                         Assumption=4,
                         v.Mat=cbind(AvgEx7=c(rep(1/6,6),0),
@@ -85,43 +89,51 @@ SO4 <- Solve_Assumption(Amat,StartTimes,J,
                              T.5=c(rep(0,4),1,0,0),
                              T.6=c(rep(0,5),1,0),
                              T.7=c(rep(0,6),1),
-                             Middle=c(0,1/3,1/3,1/3,0,0,0)))
+                             Middle=c(0,1/3,1/3,1/3,0,0,0)),
+                        save_loc="../int_large/",
+                        save_prefix="xpert-solve-a_")
 SO5 <- Solve_Assumption(Amat,StartTimes,J,
                         Assumption=5,
-                        v.Mat=1)
-## Timing (desktop) notes: <1min each for A3/A4/A5
+                        v.Mat=1,
+                        save_loc="../int_large/",
+                        save_prefix="xpert-solve-a_")
 
 ## Run variance minimizer for different settings:
 
 ### Independence:
 for (i in 2:5) {
-  assign(x=paste0("MV",i,"_Ind"),
+  assign(x=paste0("MVOut_",i,"_Ind"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
                              Sigma=create_Sigma_Ind(N=N,J=J),
                              SigmaName="Ind",
-                             Observations=Obs_Y))
+                             Observations=Obs_Y,
+                             save_loc="int/",
+                             save_prefix="xpert-mv-a_"))
 }
 
 ### Exchangeable (rho = 0.003 from Thompson et al. 2018):
 for (i in 2:5) {
-  assign(x=paste0("MV",i,"_CS_0_003"),
+  assign(x=paste0("MVOut_",i,"_CS_0_003"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
                              Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
                              SigmaName="CS_0_003",
-                             Observations=Obs_Y))
+                             Observations=Obs_Y,
+                             save_loc="int/",
+                             save_prefix="xpert-mv-a_"))
 }
-## Timing (desktop) notes: ~3sec each for A3/A4/A5
 
 ### AR(1) (rho = 0.012 gives average ICC within a cluster ~0.003):
 for (i in 2:5) {
-  assign(x=paste0("MV",i,"_AR1_0_012"),
+  assign(x=paste0("MVOut_",i,"_AR1_0_012"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
                              Sigma=create_Sigma_AR1(rho=0.012,N=N,J=J),
                              SigmaName="AR1_0_012",
-                             Observations=Obs_Y))
+                             Observations=Obs_Y,
+                             save_loc="int/",
+                             save_prefix="xpert-mv-a_"))
 }
 
 

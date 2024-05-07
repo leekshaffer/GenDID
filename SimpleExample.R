@@ -2,7 +2,7 @@
 ###### File: SimpleExample.R ##########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/18 #############
-###### Updated 2024/04/27 #############
+###### Updated 2024/05/07 #############
 #######################################
 
 source("A_Const.R")
@@ -32,6 +32,12 @@ Solve.5 <- solve_WA(DFT_obj=DFT_list.5,
 MVar.5 <- min_var(solve_obj=Solve.5,
                   A_mat=A_mat,
                   Sigma=diag(1, nrow=ncol(A_mat)))
+MVar.5.CS <- min_var(solve_obj=Solve.5,
+                     A_mat=A_mat,
+                     Sigma=create_Sigma_CS(rho=0.1, N=2, J=3))
+MVar.5.AR <- min_var(solve_obj=Solve.5,
+                     A_mat=A_mat,
+                     Sigma=create_Sigma_AR1(rho=0.17, N=2, J=3))
 
 
 ### Assumption (4): Calendar-Time Heterogeneity ###

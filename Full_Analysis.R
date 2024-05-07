@@ -2,7 +2,7 @@
 ###### File: Full_Analysis.R ##########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/26 #############
-###### Updated 2024/04/26 #############
+###### Updated 2024/05/07 #############
 #######################################
 
 source("D_F_Const.R")
@@ -21,10 +21,14 @@ load("data/Xpert-data.Rda")
 ### J is the number of total periods
 ### Assumption is the numbered assumption setting for the treatment effects (1--5)
 ### v.Mat is the v vector of the desired estimand, or a matrix of such column vectors
+### save_loc is the folder to save it in (be sure to end with / if anything other than blank is passed)
+### save_prefix is the prefix to put on the save files
 
 ## Function to run solver for any assumption and v matrix
 Solve_Assumption <- function(Amat,StartTimes,J,
-                             Assumption,v.Mat) {
+                             Assumption,v.Mat,
+                             save_loc="",
+                             save_prefix="solve-a_") {
   ## Generate D,F,Theta matrices:
   DFT_int <- gen_DFT(Clusters=StartTimes$Cluster,
                      StartPeriods=StartTimes$StartPd,
@@ -42,7 +46,7 @@ Solve_Assumption <- function(Amat,StartTimes,J,
                     DFT=DFT_int,
                     Solve=solve_int))
   save(list=paste0("SolveOut_",Assumption), 
-       file=paste0("../int_large/xpert-solve-a_",Assumption,".Rda"))
+       file=paste0(save_loc,save_prefix,Assumption,".Rda"))
   return(get(paste0("SolveOut_",Assumption)))
 }
 
@@ -54,18 +58,22 @@ Solve_Assumption <- function(Amat,StartTimes,J,
 ### Observations: if given, will compute estimates for the minimum-variance estimator using these observations
 #### They must be in order of the A matrix:
 #### by cluster in the order given in Solve_Assumption input StartTimes, then by period within cluster
+### save_loc is the folder to save it in (be sure to end with / if anything other than blank is passed)
+### save_prefix is the prefix to put on the save files
 MV_Assumption <- function(SolveOut, Assumption,
                           Sigma, 
                           SigmaName=NULL,
-                          Observations=NULL) {
+                          Observations=NULL,
+                          save_loc="",
+                          save_prefix="mv-a_") {
   MV_int <- min_var(solve_obj=SolveOut$Solve,
                     A_mat=SolveOut$Amat,
                     Sigma=Sigma)
   if (is.null(Observations)) {
-    assign(x=paste0("MVOut_",Assumption,"_",SigmaName),
+    assign(x=paste0("MV_",Assumption,"_",SigmaName),
            value=MV_int)
     save(list=paste0("MV_",Assumption,"_",SigmaName),
-         file=paste0("../int_large/xpert-mv-a_",Assumption,"_",SigmaName,".Rda"))
+         file=paste0(save_loc,save_prefix,Assumption,"_",SigmaName,".Rda"))
     return(MV_int)
   } else {
     Estimates <- t(MV_int$Obs.weights) %*% Observations
@@ -78,7 +86,7 @@ MV_Assumption <- function(SolveOut, Assumption,
                       D_Full=D_Full,
                       MV=MV_int))
     save(list=paste0("MVOut_",Assumption,"_",SigmaName), 
-         file=paste0("int/xpert-mv-a_",Assumption,"_",SigmaName,".Rda"))
+         file=paste0(save_loc,save_prefix,Assumption,"_",SigmaName,".Rda"))
     return(get(paste0("MVOut_",Assumption,"_",SigmaName)))
   }
 }
