@@ -2,7 +2,7 @@
 ###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/25 #############
-###### Updated 2024/05/07 #############
+###### Updated 2024/05/09 #############
 #######################################
 
 require(readxl)
@@ -42,6 +42,12 @@ SO2 <- Solve_Assumption(Amat,StartTimes,J,
                                     D.2=c(0,0,1/5,0,1/5,0,0,1/5,0,0,0,1/5,0,0,0,0,1/5,rep(0,11)),
                                     D.12=c(1/11,1/11,1/11,1/11,1/11,0,1/11,1/11,0,0,1/11,1/11,0,0,0,1/11,1/11,rep(0,11)),
                                     T.234=c(rep(1/6,6),rep(0,22)),
+                                    T.2=c(1,rep(0,27)),
+                                    T.3=c(rep(0,1),rep(1/2,2),rep(0,25)),
+                                    T.4=c(rep(0,3),rep(1/3,3),rep(0,22)),
+                                    T.5=c(rep(0,6),rep(1/4,4),rep(0,18)),
+                                    T.6=c(rep(0,10),rep(1/5,5),rep(0,13)),
+                                    T.7=c(rep(0,15),rep(1/6,6),rep(0,7)),
                                     U.1=c(1,rep(0,27)),
                                     U.2=c(0,1,rep(0,26)),
                                     U.3=c(0,0,1,rep(0,25)),
@@ -82,13 +88,13 @@ SO3 <- Solve_Assumption(Amat,StartTimes,J,
 SO4 <- Solve_Assumption(Amat,StartTimes,J,
                         Assumption=4,
                         v.Mat=cbind(AvgEx7=c(rep(1/6,6),0),
-                             T.1=c(1,rep(0,6)),
-                             T.2=c(0,1,rep(0,5)),
-                             T.3=c(0,0,1,rep(0,4)),
-                             T.4=c(0,0,0,1,rep(0,3)),
-                             T.5=c(rep(0,4),1,0,0),
-                             T.6=c(rep(0,5),1,0),
-                             T.7=c(rep(0,6),1),
+                             T.2=c(1,rep(0,6)),
+                             T.3=c(0,1,rep(0,5)),
+                             T.4=c(0,0,1,rep(0,4)),
+                             T.5=c(0,0,0,1,rep(0,3)),
+                             T.6=c(rep(0,4),1,0,0),
+                             T.7=c(rep(0,5),1,0),
+                             T.8=c(rep(0,6),1),
                              Middle=c(0,1/3,1/3,1/3,0,0,0)),
                         save_loc="../int_large/",
                         save_prefix="xpert-solve-a_")
@@ -200,7 +206,7 @@ j <- "Ind"
                scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
                scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
                scale_fill_gradient2(low="#542788",high="#b35806") +
-               labs(x="Period", y="Cluster",
+               labs(x="Period", y="Cluster", fill="Weight",
                     title=paste0("Observation Weights, Assumption: ",i)),
              width=6, height=4, units="in", dpi=600)
     }
