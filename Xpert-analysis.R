@@ -181,3 +181,28 @@ for (i in Assns) {
     print((get(paste0("MVOut_",i,"_",j)))[["P_Values"]])
   }
 }
+
+### Observation Weight Heatmaps:
+# for (i in Assns) {
+#   for (j in SigmaNames) {
+## Uncomment preceding two lines to get all heat maps
+
+i <- 5
+j <- "Ind"
+    Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
+    for (n in 1:ncol(Weights)) {
+      Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
+                               Value=Weights[,n])
+      ggsave(filename=paste0("figs/Weights_Heatmap_",i,"_",j,"_Col",n,".png"),
+             plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
+               geom_tile() + theme_bw() + 
+               coord_cartesian(xlim=c(0.5,8.5), ylim=c(14.5,0.5), clip="off", expand=FALSE) +
+               scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
+               scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
+               scale_fill_gradient2(low="#542788",high="#b35806") +
+               labs(x="Period", y="Cluster",
+                    title=paste0("Observation Weights, Assumption: ",i)),
+             width=6, height=4, units="in", dpi=600)
+    }
+#   }
+# }
