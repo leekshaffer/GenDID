@@ -13,7 +13,7 @@ require(tidyr)
 ## From a DFT output object, 
 ### derive the weights for various other estimators
 Comp_Ests <- function(DFT_obj,
-                      estimator=c("CS","SA","CH","CO","NPWP","LM")) {
+                      estimator=c("CS","SA","CH","CO")) {
   ### First, augment D with start times:
   Starts <- DFT_obj$Theta$Full %>% 
     dplyr::select(Cl.Num,Start_j) %>%
@@ -81,7 +81,7 @@ Comp_Ests <- function(DFT_obj,
     SA_l_key <- CATT_el_key %>% dplyr::select(Period,Num) %>% group_by(Period) %>%
       dplyr::summarize(Num=sum(Num)) %>% mutate(Column=1:n()) %>% 
       mutate(Type=if_else(Period >= 0,"Post","Pre"),
-             W_ATT=if_else(Type=="Post",Num,0)/sum(if_else(Type=="Post",Num,0)))
+             W_SA.W_ATT=if_else(Type=="Post",Num,0)/sum(if_else(Type=="Post",Num,0)))
     SA_l_w <- apply(SA_l_key, 
                     MARGIN=1,
                     FUN=function(row) SA_CATT_agg(CATT_el_key,
@@ -89,7 +89,7 @@ Comp_Ests <- function(DFT_obj,
                                                as.numeric(row["Period"]))/as.numeric(row["Num"]))
     res <- c(res,
              list(Key_SA_l=SA_l_key, W_SA_l=SA_l_w,
-             W_SA=SA_l_w %*% as.matrix(SA_l_key %>% dplyr::select(W_ATT))))
+             W_SA=SA_l_w %*% as.matrix(SA_l_key %>% dplyr::select(W_SA.W_ATT))))
   }
   
   if ("CH" %in% estimator) {
@@ -104,7 +104,7 @@ Comp_Ests <- function(DFT_obj,
     CH_Pt_w_int <- apply(CH_Pt_key, MARGIN=1,
                            FUN=function(row) CH_wt_fun(D_use,row["Period"]))
     CH_Pt_w <- apply(CH_Pt_w_int, 2, function(x) x/sum(abs(x)))
-    res <- c(res, list(W_CH=CH_Pt_w %*% CH_Pt_key$Num.Trt/sum(CH_Pt_key$Num.Trt)))
+    res <- c(res, list(W_CH=tibble(W_CH.W_M = CH_Pt_w %*% CH_Pt_key$Num.Trt/sum(CH_Pt_key$Num.Trt))))
   }
   
   if ("CO" %in% estimator) {
@@ -154,10 +154,40 @@ Comp_Ests <- function(DFT_obj,
                       W_CO_Pt_Res=CO_Pt_Res,
                       W_CO=CO_w))
   }
- 
-  return(res) 
+ Weights <- do.call(cbind, res[paste0("W_",estimator)])
+  return(list(Weights=Weights,Full=res))
 }
 
+Comp_Ests_Weights <- function(DFT_obj, Amat,
+                              estimator=c("CS","SA","CH","CO","NP")) {
+  DID.weights <- NULL
+  Obs.weights <- NULL
+  if (sum(c("CS","SA","CH","CO") %in% estimator) > 0) {
+    DID.ests <- estimator[estimator %in% c("CS","SA","CH","CO")]
+    DID.weights <- bind_cols(DID.weights,Comp_Ests(DFT_obj,
+                                                   DID.ests)$Weights)
+    Obs.weights <- bind_cols(Obs.weights, t(Amat) %*% DID.weights)
+  }
+  if ("NP" %in% estimator) {
+    N_Trt <- apply(DFT_obj$Theta$Schematic, 2, sum)
+    N_Ctrl <- dim(DFT_obj$Theta$Schematic)[1] - N_Trt
+    W_Trt <- if_else(N_Trt==0 | N_Ctrl==0,0,1/N_Trt)
+    W_Ctrl <- if_else(N_Trt==0 | N_Ctrl==0,0,-1/N_Ctrl)
+    Ns <- as.vector(matrix(c(N_Trt,N_Ctrl),nrow=2,byrow=TRUE))
+    Ws <- as.vector(matrix(c(W_Trt,W_Ctrl),nrow=2,byrow=TRUE))
+    NP_w_int <- rep(Ws, times=Ns)
+    Mult_Eq <- if_else(N_Trt > 0 & N_Ctrl > 0, 1, 0)/sum(if_else(N_Trt > 0 & N_Ctrl > 0, 1, 0))
+    Mult_ATT <- if_else(N_Trt > 0 & N_Ctrl > 0, N_Trt, 0)/sum(if_else(N_Trt > 0 & N_Ctrl > 0, N_Trt, 0))
+    Mult_IV <- if_else(N_Trt > 0 & N_Ctrl > 0, (1/N_Trt + 1/N_Ctrl)^(-1),0)/sum(if_else(N_Trt > 0 & N_Ctrl > 0, (1/N_Trt + 1/N_Ctrl)^(-1),0))
+    Obs.weights <- bind_cols(Obs.weights, 
+                             W_NP_Eq=NP_w_int * rep(Mult_Eq, times=N_Trt+N_Ctrl),
+                             W_NP_Att=NP_w_int * rep(Mult_ATT, times=N_Trt+N_Ctrl),
+                             W_NP_IV=NP_w_int * rep(Mult_IV, times=N_Trt+N_Ctrl))
+  }
+  
+  return(list(DID.weights=DID.weights,
+              Obs.weights=Obs.weights))
+}
 
 ### Helper functions:
 CS_wt_fun <- function(D_use,group,time) {
