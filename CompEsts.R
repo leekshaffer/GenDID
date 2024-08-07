@@ -166,7 +166,7 @@ Comp_Ests_Weights <- function(DFT_obj, Amat,
     DID.ests <- estimator[estimator %in% c("CS","SA","CH","CO")]
     DID.weights <- bind_cols(DID.weights,Comp_Ests(DFT_obj,
                                                    DID.ests)$Weights)
-    Obs.weights <- bind_cols(Obs.weights, t(Amat) %*% DID.weights)
+    Obs.weights <- bind_cols(Obs.weights, t(Amat) %*% as.matrix(DID.weights))
   }
   if ("NP" %in% estimator) {
     N_Trt <- apply(DFT_obj$Theta$Schematic, 2, sum)
@@ -193,7 +193,9 @@ Comp_Ests_Weights <- function(DFT_obj, Amat,
 CS_wt_fun <- function(D_use,group,time) {
   if (time >= group) {
     apply(D_use, MARGIN=1, 
-          FUN=function(r) if_else(r["Type"] %in% 1:3 & r["i.start"]==group & r["i.prime.start"] != group & r["j.prime"]==time & r["j"]==group-1,1,0))
+          FUN=function(r) if_else(r["Type"] %in% 1:3 & r["i.start"]==group & 
+                                    r["i.prime.start"] != group & r["j.prime"]==time & 
+                                    r["j"]==group-1,1,0))
   } else {
     apply(D_use, MARGIN=1,
           FUN=function(r) if_else(r["Type"]==1 & r["j.prime"]==time & r["j"]==time-1,

@@ -11,6 +11,7 @@ require(tidyverse)
 source("A_Const.R")
 source("Sigmas.R")
 source("Full_Analysis.R")
+source("CompEsts.R")
 
 ## Read in (simulated) data from data folder:
 load("data/Xpert-data-sim.Rda")
@@ -212,3 +213,11 @@ j <- "Ind"
     }
 #   }
 # }
+    
+    
+## Comparisons to other methods:
+DFT <- SO5$DFT
+Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
+                              estimator=c("CS","SA","CH","CO","NP"))
+Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
+Comp_ests
