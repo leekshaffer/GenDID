@@ -1,8 +1,8 @@
 #######################################
-###### File: A_Const.R ################
+###### File: D_F_Const.R ##############
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/16 #############
-###### Updated 2024/04/19 #############
+###### Updated 2024/08/08 #############
 #######################################
 
 ## Load packages
@@ -12,8 +12,6 @@ require(tidyr)
 
 ## Create a data frame where each row corresponds to an entry in vector D
 ### The columns give i, i', j, and j' corresponding to that D
-### Can be run either with integers N and J that represent the number of unique
-#### clusters and periods, resp.
 ### Inputs are N, the number of clusters, and J, the number of periods.
 gen_D <- function(N,J) {
   if (!is.numeric(N) | !is.numeric(J)) {
@@ -42,77 +40,123 @@ gen_D <- function(N,J) {
 ## Take a vector of unique clusters and a corresponding vector of their first periods on intervention,
 ### Plus output from gen_D and return types for E[D]
 ### Note that Clusters and StartPeriods can be labelled however desired
-### If list of periods is anything other than 1:J, 
-#### a vector giving the ordered period names should be included as PeriodOrder
-### Otherwise J should indicate the largest period
-gen_Start_js <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
-  N <- length(Clusters)
+### OrderedPds is a vector of periods where outcomes will be recorded, in order
+gen_js <- function(Clusters,StartPeriods,OrderedPds) {
+  if (length(unique(OrderedPds)) != length(OrderedPds)) {
+    warning(simpleWarning("There are repeated names in OrderedPds. The first occurrence only will be used."))
+    OrderedPds <- unique(OrderedPds)
+  }
+  J <- length(OrderedPds)
+  
+  if (length(Clusters) != length(unique(Clusters))) {
+    stop(simpleError("Each cluster must appear only once."))
+  }
+  N <- length(unique(Clusters))
   if (N < 2) {
     stop(simpleError("There must be at least 2 clusters."))
   } else if (N != length(StartPeriods)) {
     stop(simpleError("The length of Clusters and StartPeriods must match."))
   }
   
-  if (!is.null(PeriodOrder)) {
-    if (length(unique(PeriodOrder) != length(PeriodOrder))) {
-      warning(simpleWarning("There are repeated names in PeriodOrder. The first occurrence only will be used."))
-      PeriodOrder <- unique(PeriodOrder)
-    }
-    if (!is.null(J)) {
-      if (J != length(PeriodOrder)) {
-        warning(simpleWarning("J is not the total number of periods, ignoring J"))
-        J <- length(PeriodOrder)
-      }
-    } else {
-      J <- length(PeriodOrder)
-    }
-    OrderedPds <- tibble(Labels=PeriodOrder, Periods=1:J)
-    Start_js <- tibble(Clusters=Clusters,Labels=StartPeriods) %>% 
-      left_join(OrderedPds,by="Labels") %>% 
-      dplyr::rename(Start_j=Periods) %>%
-      dplyr::select(c(Clusters,Start_j)) %>%
-      dplyr::arrange(Start_j) %>%
-      mutate(Cl.Num=1:N)
-  } else if (is.null(J)) {
-    stop(simpleError("Must specify either the vector of ordered period names PeriodOrder or the total number of periods J"))
-  } else if (!is.numeric(J)) {
-    stop(simpleError("J must be numeric"))
-  } else if (J < 2) {
-    stop(simpleError("J must be at least 2."))
-  } else {
-    if (abs(J-round(J)) > .Machine$double.eps^2) {
-      J <- round(J)
-      warning(simpleWarning(paste0("J must be an integer. Using nearest integer: ",J)))
-    }
-    if (!is.numeric(StartPeriods)) {
-      stop(simpleError("Must either specify numeric StartPeriods or ordered PeriodOrder."))
-    } else if (min(StartPeriods) < 1 | max(StartPeriods) > J) {
-      stop(simpleError("All StartPeriods must be between 1 and J, inclusive."))
-    } else {
-      Start_js <- tibble(Clusters=Clusters,Start_j=StartPeriods) %>%
-        dplyr::arrange(Start_j) %>%
-        mutate(Cl.Num=1:N)
-      OrderedPds <- tibble(Labels=1:J, Periods=1:J)
-    }
+  PdLabels <- tibble(Labels=OrderedPds, Pd.Num=1:J)
+  if (sum(StartPeriods %in% OrderedPds) < length(StartPeriods)) {
+    warning(simpleWarning("All StartPeriods not in OrderedPds are considered never-treated units within this setting."))
   }
-  return(list(Start_js=Start_js,OrderedPds=OrderedPds))
+  
+  Start_js <- tibble(Clusters=Clusters,
+                     Labels=StartPeriods) %>%
+    left_join(PdLabels, by=join_by(Labels)) %>%
+    dplyr::mutate(Pd.Num=if_else(is.na(Pd.Num),Inf,Pd.Num)) %>%
+    dplyr::arrange(Pd.Num) %>%
+    dplyr::mutate(Cl.Num=1:N) %>%
+    dplyr::rename(Start_j = Pd.Num) %>%
+    dplyr::select(Clusters,Cl.Num,Start_j)
+  
+  return(list(Start_js=Start_js,
+              PdLabels=PdLabels %>% dplyr::rename(Periods=Labels) %>% 
+                dplyr::select(Pd.Num,Periods),
+              N=N,
+              J=J))
 }
 
-gen_Theta <- function(Start_js,OrderedPds,Assumption) {
-  Theta <- Start_js %>% dplyr::cross_join(OrderedPds) %>%
-    dplyr::filter(Periods >= Start_j) %>%
-    mutate(Diff=Periods - Start_j + 1)
+
+### If list of periods is anything other than 1:J, 
+#### a vector giving the ordered period names should be included as PeriodOrder
+### Otherwise J should indicate the largest period
+# gen_Start_js <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
+#   N <- length(Clusters)
+#   if (N < 2) {
+#     stop(simpleError("There must be at least 2 clusters."))
+#   } else if (N != length(StartPeriods)) {
+#     stop(simpleError("The length of Clusters and StartPeriods must match."))
+#   }
+#   
+#   if (!is.null(PeriodOrder)) {
+#     if (length(unique(PeriodOrder) != length(PeriodOrder))) {
+#       warning(simpleWarning("There are repeated names in PeriodOrder. The first occurrence only will be used."))
+#       PeriodOrder <- unique(PeriodOrder)
+#     }
+#     if (!is.null(J)) {
+#       if (J != length(PeriodOrder)) {
+#         warning(simpleWarning("J is not the total number of periods, ignoring J"))
+#         J <- length(PeriodOrder)
+#       }
+#     } else {
+#       J <- length(PeriodOrder)
+#     }
+#     OrderedPds <- tibble(Labels=c(PeriodOrder,unique(StartPeriods[!(StartPeriods %in% PeriodOrder)])), 
+#                          Periods=c(1:J,rep(Inf,length(unique(StartPeriods[!(StartPeriods %in% PeriodOrder)])))))
+#     Start_js <- tibble(Clusters=Clusters,Labels=StartPeriods) %>% 
+#       left_join(OrderedPds,by="Labels") %>% 
+#       dplyr::rename(Start_j=Periods) %>%
+#       dplyr::select(c(Clusters,Start_j)) %>%
+#       dplyr::arrange(Start_j) %>%
+#       mutate(Cl.Num=1:N)
+#   } else if (is.null(J)) {
+#     stop(simpleError("Must specify either the vector of ordered period names PeriodOrder or the total number of periods J"))
+#   } else if (!is.numeric(J)) {
+#     stop(simpleError("J must be numeric"))
+#   } else if (J < 2) {
+#     stop(simpleError("J must be at least 2."))
+#   } else {
+#     if (abs(J-round(J)) > .Machine$double.eps^2) {
+#       J <- round(J)
+#       warning(simpleWarning(paste0("J must be an integer. Using nearest integer: ",J)))
+#     }
+#     if (!is.numeric(StartPeriods)) {
+#       stop(simpleError("Must either specify numeric StartPeriods or ordered PeriodOrder."))
+#     } else if (min(StartPeriods) < 1) {
+#       stop(simpleError("All StartPeriods must be at least 1."))
+#     } else {
+#       if (max(StartPeriods) > J) {
+#         warning(simpleWarning(paste0("StartPeriods above J are included. These are considered never-treated units and given a start period value of Inf.")))
+#         StartPeriods[StartPeriods > J] <- Inf
+#       }
+#       Start_js <- tibble(Clusters=Clusters,Start_j=StartPeriods) %>%
+#         dplyr::arrange(Start_j) %>%
+#         mutate(Cl.Num=1:N)
+#       OrderedPds <- tibble(Labels=1:J, Periods=1:J)
+#     }
+#   }
+#   return(list(Start_js=Start_js,OrderedPds=OrderedPds))
+# }
+
+gen_Theta <- function(js_Obj,Assumption) {
+  Theta <- js_Obj$Start_js %>% 
+    dplyr::cross_join(js_Obj$PdLabels) %>%
+    dplyr::filter(Pd.Num >= Start_j) %>%
+    mutate(Diff=Pd.Num - Start_j + 1)
   
   if (Assumption==5) {
     JoinBy <- NULL
   } else if (Assumption==4) {
-    JoinBy <- c("Periods")
+    JoinBy <- c("Pd.Num")
   } else if (Assumption==3) {
     JoinBy <- c("Diff")
   } else if (Assumption==2) {
-    JoinBy=c("Periods","Diff")
+    JoinBy=c("Pd.Num","Diff")
   } else if (Assumption==1) {
-    JoinBy=c("Cl.Num","Periods","Diff")
+    JoinBy=c("Cl.Num","Pd.Num","Diff")
   } else {
     stop(simpleError("Assumption must be a value 1 through 5 corresponding to the assumption setting desired."))
   }
@@ -128,10 +172,10 @@ gen_Theta <- function(Start_js,OrderedPds,Assumption) {
   Full <- merge(Theta, All, by=JoinBy)
   
   Schematic <- matrix(data=0,
-                      nrow=length(Start_js$Cl.Num),
-                      ncol=length(OrderedPds$Periods))
-  Schematic[as.matrix(Full %>% dplyr::select(Cl.Num,Periods))] <- Full$Theta
-  dimnames(Schematic) <- list(Start_js$Clusters,OrderedPds$Labels)
+                      nrow=js_Obj$N,
+                      ncol=js_Obj$J)
+  Schematic[as.matrix(Full %>% dplyr::select(Cl.Num,Pd.Num))] <- Full$Theta
+  dimnames(Schematic) <- list(js_Obj$Start_js$Clusters,js_Obj$PdLabels$Periods)
   
   return(list(All=All,
          Full=Full,
@@ -171,16 +215,17 @@ gen_F <- function(D,Theta) {
   return(list(D_aug=D_aug, F_mat=F_mat))
 }
 
-gen_DFT <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=5) {
-  SJ <- gen_Start_js(Clusters, StartPeriods, J, PeriodOrder)
+gen_DFT <- function(Clusters, StartPeriods, OrderedPds,
+                    Assumption=5) {
+  js_Obj <- gen_js(Clusters, StartPeriods, OrderedPds)
   
-  Theta <- gen_Theta(SJ$Start_js, SJ$OrderedPds, Assumption)
+  Theta <- gen_Theta(js_Obj, Assumption)
   
-  D <- gen_D(length(SJ$Start_js$Clusters),J) %>% 
-    left_join(SJ$Start_js %>%
+  D <- gen_D(js_Obj$N,js_Obj$J) %>% 
+    left_join(js_Obj$Start_js %>%
                 dplyr::rename(i=Cl.Num,Start.i=Start_j,
                               Cl.i=Clusters), by="i") %>%
-    left_join(SJ$Start_js %>% 
+    left_join(js_Obj$Start_js %>% 
                 dplyr::rename(i.prime=Cl.Num,Start.i.prime=Start_j,
                               Cl.i.prime=Clusters), by="i.prime") %>%
     mutate(i.j.leadlag=j-Start.i+1,
@@ -206,98 +251,5 @@ gen_DFT <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL,Assumption=5) 
   
   Fres <- gen_F(D, Theta)
   return(list(D_aug=Fres$D_aug, F_mat=Fres$F_mat, Theta=Theta, 
-              N=length(SJ$Start_js$Clusters),J=J))
+              N=js_Obj$N, J=js_Obj$J))
 }
-
-
-
-### Old gen_D function:
-
-# gen_D <- function(CL=NULL,PD=NULL,N=NULL,J=NULL) {
-#   if (is.null(CL)) {
-#     if (is.null(N)) {
-#       stop(simpleError(message="Must specify either CL or N."))
-#     } else {
-#       if (is.numeric(N)) {
-#         if (N < 2) {
-#           stop(simpleError(message="N must be at least 2."))
-#         } else if (abs(N-round(N)) > .Machine$double.eps^2) {
-#           N <- round(N)
-#           warning(simpleWarning(message=paste0("N must be an integer. Using nearest integer: ",N,".")))
-#           CLu <- 1:N
-#         } else {
-#           CLu <- 1:N
-#         }
-#       } else {
-#         stop(simpleError(message="N must be a positive integer."))
-#       }
-#     }
-#   } else if (is.null(N)) {
-#     CLu <- unique(CL)
-#     N <- length(CLu)
-#     if (N < 2) {
-#       stop(simpleError(message="Must have at least 2 unique clusters."))
-#     }
-#   } else {
-#     CLu <- unique(CL)
-#     if (!is.null(N)) {
-#       if(is.numeric(N)) {
-#         if (N != length(CLu)) {
-#           warning(simpleWarning(message="N does not match number of unique clusters in CL. Using CL."))
-#         }
-#       }
-#     }
-#     N <- length(CLu)
-#     if (N < 2) {
-#       stop(simpleError(message="Must have at least 2 unique clusters."))
-#     }
-#   }
-#   
-#   if (is.null(PD)) {
-#     if (is.null(J)) {
-#       stop(simpleError(message="Must specify either PD or J."))
-#     } else {
-#       if (is.numeric(J)) {
-#         if (J < 2) {
-#           stop(simpleError(message="J must be at least 2."))
-#         } else if (abs(J-round(J)) > .Machine$double.eps^2) {
-#           J <- round(J)
-#           warning(simpleWarning(message=paste0("J must be an integer. Using nearest integer: ",J,".")))
-#           PDu <- 1:J
-#         } else {
-#           PDu <- 1:J
-#         }
-#       } else {
-#         stop(simpleError(message="J must be a positive integer."))
-#       }
-#     }
-#   } else if (is.null(J)) {
-#     PDu <- unique(PD)
-#     J <- length(PDu)
-#     if (J < 2) {
-#       stop(simpleError(message="Must have at least 2 unique time periods."))
-#     }
-#   } else {
-#     PDu <- unique(PD)
-#     if (!is.null(J)) {
-#       if(is.numeric(J)) {
-#         if (J != length(PDu)) {
-#           warning(simpleWarning(message="J does not match number of unique periods in PD. Using PD."))
-#         }
-#       }
-#     }
-#     J <- length(PDu)
-#     if (J < 2) {
-#       stop(simpleError(message="Must have at least 2 unique time periods."))
-#     }
-#   }
-#   
-#   Cl.df <- data.frame(i=CLu[unlist(sapply(1:(N-1), FUN=function(x) rep(x,N-x)))],
-#                       i.prime=CLu[unlist(sapply(1:(N-1), FUN=function(x) (x+1):N))])
-#   Pd.df <- data.frame(j=PDu[unlist(sapply(1:(J-1), FUN=function(x) rep(x,J-x)))],
-#                       j.prime=PDu[unlist(sapply(1:(J-1), FUN=function(x) (x+1):J))])
-#   return(list(Dmat=dplyr::cross_join(Cl.df, Pd.df),
-#               Dlen=N*(N-1)*J*(J-1)/4))
-# }
-
-

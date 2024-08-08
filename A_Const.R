@@ -2,7 +2,7 @@
 ###### File: A_Const.R ################
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/16 #############
-###### Updated 2024/04/19 #############
+###### Updated 2024/08/08 #############
 #######################################
 
 ## Create the matrix A that converts between observations and DID estimators
@@ -38,31 +38,3 @@ gen_A <- function(N,J) {
                                           lapply(X=(n1+1):N,
                                                  FUN=function(n2) gen_Arow(N,J,n1,n2,J2,Adot)))))
 }
-
-## Slower versions of the gen_A function:
-# gen_A <- function(N,J) {
-#   J2 <- J*(J-1)/2
-#   Adot <- gen_Adot(J)
-#   
-#   A <- NULL
-#   for (n1 in 1:(N-1)) {
-#     for (n2 in (n1+1):N) {
-#       A <- rbind(A, gen_Arow(N,J,n1,n2,J2,Adot))
-#     }
-#   }
-#   return(A)
-# }
-# 
-# gen_A2 <- function(N,J) {
-#   J2 <- J*(J-1)/2
-#   Adot <- gen_Adot(J)
-#   
-#   A <- NULL
-#   for (n1 in 1:(N-1)) {
-#     A <- rbind(A, do.call(rbind,
-#                           lapply(X=(n1+1):N,
-#                                  FUN=function(n2) gen_Arow(N,J,n1,n2,J2,Adot))))
-#   }
-#   return(A)
-# }
-

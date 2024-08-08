@@ -2,7 +2,7 @@
 ###### File: Solver.R #################
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/18 #############
-###### Updated 2024/04/27 #############
+###### Updated 2024/08/08 #############
 #######################################
 
 ## Note v can be a vector to solve for one target,
