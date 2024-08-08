@@ -37,8 +37,7 @@ gen_D <- function(N,J) {
   }
 }
 
-## Take a vector of unique clusters and a corresponding vector of their first periods on intervention,
-### Plus output from gen_D and return types for E[D]
+## Take a vector of unique clusters and a corresponding vector of their first periods on intervention
 ### Note that Clusters and StartPeriods can be labelled however desired
 ### OrderedPds is a vector of periods where outcomes will be recorded, in order
 gen_js <- function(Clusters,StartPeriods,OrderedPds) {
@@ -183,23 +182,23 @@ gen_Theta <- function(js_Obj,Assumption) {
 }
 
 gen_F <- function(D,Theta) {
-  ThetaF <- Theta$Full %>% dplyr::select(Cl.Num,Periods,Theta)
+  ThetaF <- Theta$Full %>% dplyr::select(Cl.Num,Pd.Num,Periods,Theta)
   D_aug <- D %>% dplyr::select(i,i.prime,j,j.prime,Type,TypeLabel) %>%
     dplyr::left_join(ThetaF %>% 
                        dplyr::rename(i=Cl.Num,
-                                     j.prime=Periods,
+                                     j.prime=Pd.Num,
                                      Pos.i=Theta)) %>%
     dplyr::left_join(ThetaF %>%
                        dplyr::rename(i=Cl.Num,
-                                     j=Periods,
+                                     j=Pd.Num,
                                      Neg.i=Theta)) %>%
     dplyr::left_join(ThetaF %>% 
                        dplyr::rename(i.prime=Cl.Num,
-                                     j.prime=Periods,
+                                     j.prime=Pd.Num,
                                      Neg.i.prime=Theta)) %>%
     dplyr::left_join(ThetaF %>%
                        dplyr::rename(i.prime=Cl.Num,
-                                     j=Periods,
+                                     j=Pd.Num,
                                      Pos.i.prime=Theta)) %>%
     mutate(Row=row_number())
   
