@@ -2,7 +2,7 @@
 ###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/25 #############
-###### Updated 2024/08/07 #############
+###### Updated 2024/08/08 #############
 #######################################
 
 require(readxl)
@@ -18,7 +18,8 @@ load("data/Xpert-data-sim.Rda")
 
 ## Get unique periods, clusters, start times, N, J:
 Periods <- unique(xpert.dat$Period)
-J <- length(Periods)
+OrderedPds <- Periods[order(Periods)]
+J <- length(OrderedPds)
 
 StartTimes <- xpert.dat %>% dplyr::filter(Interv==1) %>%
   group_by(Cluster) %>% dplyr::summarize(StartPd=min(Period)) %>%
@@ -35,7 +36,7 @@ colnames(Obs_Y) <- c("Probability","Log Odds")
 Amat <- gen_A(N,J)
 
 ## Run Solver for different assumption settings:
-SO2 <- Solve_Assumption(Amat,StartTimes,J,
+SO2 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                         Assumption=2,
                         v.Mat=cbind(Avg=c(rep(1/28,28)),
                                     AvgEx7=c(rep(1/21,21),rep(0,7)),
@@ -72,7 +73,7 @@ SO2 <- Solve_Assumption(Amat,StartTimes,J,
                                     U.21=c(rep(0,20),1,rep(0,7))),
                         save_loc="../int_large/",
                         save_prefix="xpert-solve-a_")
-SO3 <- Solve_Assumption(Amat,StartTimes,J,
+SO3 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                         Assumption=3,
                         v.Mat=cbind(Avg=rep(1/7,7),
                              AvgEx7=c(rep(1/6,6),0),
@@ -86,7 +87,7 @@ SO3 <- Solve_Assumption(Amat,StartTimes,J,
                              Middle=c(0,1/3,1/3,1/3,0,0,0)),
                         save_loc="../int_large/",
                         save_prefix="xpert-solve-a_")
-SO4 <- Solve_Assumption(Amat,StartTimes,J,
+SO4 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                         Assumption=4,
                         v.Mat=cbind(AvgEx7=c(rep(1/6,6),0),
                              T.2=c(1,rep(0,6)),
@@ -99,14 +100,15 @@ SO4 <- Solve_Assumption(Amat,StartTimes,J,
                              Middle=c(0,1/3,1/3,1/3,0,0,0)),
                         save_loc="../int_large/",
                         save_prefix="xpert-solve-a_")
-SO5 <- Solve_Assumption(Amat,StartTimes,J,
+SO5 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                         Assumption=5,
                         v.Mat=1,
                         save_loc="../int_large/",
                         save_prefix="xpert-solve-a_")
 
-## Run variance minimizer for different settings:
+set.seed(413354)
 
+## Run variance minimizer for different settings:
 ### Independence:
 for (i in 2:5) {
   assign(x=paste0("MVOut_",i,"_Ind"),
@@ -195,7 +197,7 @@ for (i in Assns) {
 ## Uncomment preceding two lines to get all heat maps
 
 i <- 5
-j <- "Ind"
+j <- "CS_0_003"
     Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
     for (n in 1:ncol(Weights)) {
       Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
