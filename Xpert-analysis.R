@@ -223,7 +223,7 @@ Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
                               estimator=c("CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
-save(Comp_ests, file="Comparison_estimates.Rda")
+save(Comp_ests, file="int/Comparison_estimates.Rda")
 
 
 ## Check against existing packages for staggered adoption methods:
