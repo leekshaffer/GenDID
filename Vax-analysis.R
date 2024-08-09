@@ -126,7 +126,7 @@ for (i in c(2,5)) {
                              Observations=Obs_Y,
                              Permutations=1000,
                              save_loc="int/",
-                             save_prefix="xpert-mv-a_"))
+                             save_prefix="vax-mv-a_"))
 }
 
 #### Estimate AR correlation on unused non-lottery states
@@ -141,7 +141,7 @@ GEE <- geepack::geeglm(First_18Pop_Pct~as.factor(Period)+as.factor(Cluster),
                        id=Cluster,
                        corstr="ar1")
 
-### AR(1) (rho = 0.95 estimated from above):
+### AR(1) (rho = 0.95 estimated from above; First_Diff has 0.34 instead):
 for (i in c(2,5)) {
   assign(x=paste0("MVOut_",i,"_AR1_0_95"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
@@ -151,7 +151,7 @@ for (i in c(2,5)) {
                              Observations=Obs_Y,
                              Permutations=1000,
                              save_loc="int/",
-                             save_prefix="xpert-mv-a_"))
+                             save_prefix="vax-mv-a_"))
 }
 
 ## Import Results:
@@ -160,7 +160,7 @@ SigmaNames <- c("Ind","AR1_0_95")
 
 for (j in SigmaNames) {
   for (i in Assns) {
-    load(file=paste0("int/xpert-mv-a_",i,"_",j,".Rda"))
+    load(file=paste0("int/vax-mv-a_",i,"_",j,".Rda"))
   }
 }
 
@@ -208,25 +208,25 @@ for (i in Assns) {
 }
 
 ## Print Observation Weight Heatmaps:
-for (i in Assns) {
-  for (j in SigmaNames) {
-    Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
-    for (n in 1:ncol(Weights)) {
-      Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
-                               Value=Weights[,n])
-      ggsave(filename=paste0("figs/Weights_Heatmap_",i,"_",j,"_Col",n,".png"),
-             plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
-               geom_tile() + theme_bw() + 
-               coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
-               scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
-               scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
-               scale_fill_gradient2(low="#542788",high="#b35806") +
-               labs(x="Period", y="Cluster", fill="Weight",
-                    title=paste0("Observation Weights, Assumption: ",i)),
-             width=6, height=4, units="in", dpi=600)
-    }
-  }
-}
+# for (i in Assns) {
+#   for (j in SigmaNames) {
+#     Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
+#     for (n in 1:ncol(Weights)) {
+#       Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
+#                                Value=Weights[,n])
+#       ggsave(filename=paste0("figs/Vax-Weights_Heatmap_",i,"_",j,"_Col",n,".png"),
+#              plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
+#                geom_tile() + theme_bw() + 
+#                coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
+#                scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
+#                scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
+#                scale_fill_gradient2(low="#542788",high="#b35806") +
+#                labs(x="Period", y="Cluster", fill="Weight",
+#                     title=paste0("Observation Weights, Assumption: ",i)),
+#              width=6, height=4, units="in", dpi=600)
+#     }
+#   }
+# }
   
 
 ## Comparisons to other methods:
@@ -235,7 +235,7 @@ Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
                               estimator=c("CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
-save(Comp_ests, file="int/Comparison_estimates.Rda")
+save(Comp_ests, file="int/Vax-Comp-Ests.Rda")
 
 ## Check against existing packages for staggered adoption methods:
 ### Packages:

@@ -2,7 +2,7 @@
 ###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/25 #############
-###### Updated 2024/08/08 #############
+###### Updated 2024/08/09 #############
 #######################################
 
 require(readxl)
@@ -202,7 +202,7 @@ j <- "CS_0_003"
     for (n in 1:ncol(Weights)) {
       Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
                                Value=Weights[,n])
-      ggsave(filename=paste0("figs/Weights_Heatmap_",i,"_",j,"_Col",n,".png"),
+      ggsave(filename=paste0("figs/Xpert-Weights_Heatmap_",i,"_",j,"_Col",n,".png"),
              plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
                geom_tile() + theme_bw() + 
                coord_cartesian(xlim=c(0.5,8.5), ylim=c(14.5,0.5), clip="off", expand=FALSE) +
@@ -223,7 +223,7 @@ Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
                               estimator=c("CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
-save(Comp_ests, file="int/Comparison_estimates.Rda")
+save(Comp_ests, file="int/Xpert-Comp-Ests.Rda")
 
 
 ## Check against existing packages for staggered adoption methods:
