@@ -18,6 +18,11 @@ Comp_Ests <- function(DFT_obj,
   Starts <- DFT_obj$Theta$Full %>% 
     dplyr::select(Cl.Num,Start_j) %>%
     distinct()
+  if (max(Starts$Cl.Num) < DFT_obj$N) {
+    Starts <- Starts %>% 
+      bind_rows(tibble(Cl.Num=(max(Starts$Cl.Num)+1):DFT_obj$N,
+                                   Start_j=Inf))
+  }
   D_use <- DFT_obj$D_aug %>% dplyr::select(i,i.prime,j,j.prime,Type,TypeLabel) %>%
     left_join(Starts %>% rename(i.start=Start_j),
               by=join_by(i == Cl.Num)) %>%
@@ -32,7 +37,7 @@ Comp_Ests <- function(DFT_obj,
     CS_key <- crossing(Group,Time) %>% mutate(Col=1:n())
     CS_gt_w_int <- apply(as.matrix(CS_key),
                           MARGIN=1,
-                          FUN=function(row) CS_wt_fun(D_use, row["Group"],row["Time"])) 
+                          FUN=function(row) CS_wt_fun(D_use, row["Group"], row["Time"])) 
     CS_gt_w <- apply(CS_gt_w_int, 2, FUN=function(x) x/sum(abs(x)))
     CS_key_agg <- CS_key %>% mutate(Type=if_else(Time >= Group,"Post","Pre"),
                                       EventTime=Time-Group) %>%
@@ -192,35 +197,51 @@ Comp_Ests_Weights <- function(DFT_obj, Amat,
 ### Helper functions:
 CS_wt_fun <- function(D_use,group,time) {
   if (time >= group) {
-    apply(D_use, MARGIN=1, 
-          FUN=function(r) if_else(r["Type"] %in% 1:3 & r["i.start"]==group & 
-                                    r["i.prime.start"] != group & r["j.prime"]==time & 
-                                    r["j"]==group-1,1,0))
+    if_else(D_use$Type %in% 1:3 & D_use$i.start==group & D_use$i.prime.start != group & 
+              D_use$j.prime==time & D_use$j==group-1,
+            1,0)
+    # apply(D_use, MARGIN=1, 
+    #       FUN=function(r) if_else(r["Type"] %in% 1:3 & r["i.start"]==group & 
+    #                                 r["i.prime.start"] != group & r["j.prime"]==time & 
+    #                                 r["j"]==group-1,1,0))
   } else {
-    apply(D_use, MARGIN=1,
-          FUN=function(r) if_else(r["Type"]==1 & r["j.prime"]==time & r["j"]==time-1,
-                                  if_else(r["i.start"]==group & r["i.prime.start"] != group,1,
-                                          if_else(r["i.start"] != group & r["i.prime.start"] == group,-1,0)),0))
+    if_else(D_use$Type & D_use$j.prime & D_use$j==time-1,
+            if_else(D_use$i.start==group & D_use$i.prime.start != group, 1,
+                    if_else(D_use$i.start != group & D_use$i.prime.start == group, -1, 0)), 0)
+    # apply(D_use, MARGIN=1,
+    #       FUN=function(r) if_else(r["Type"]==1 & r["j.prime"]==time & r["j"]==time-1,
+    #                               if_else(r["i.start"]==group & r["i.prime.start"] != group,1,
+    #                                       if_else(r["i.start"] != group & r["i.prime.start"] == group,-1,0)),0))
   }
 }
 
 SA_wt_fun <- function(D_use,Ctrl.is,period,cohort) {
   if (period >= 0) {
-    apply(D_use, MARGIN=1, 
-          FUN=function(r) if_else(r["Type"] %in% 1:3 & 
-                                    r["i.start"]==cohort & 
-                                    r["i.prime"] %in% Ctrl.is & 
-                                    as.numeric(r["j.prime"])-as.numeric(r["i.start"])==period & 
-                                    as.numeric(r["j"])-as.numeric(r["i.start"])==-1,
-                                  1,0))
+    if_else(D_use$Type %in% 1:3 & D_use$i.start==cohort & 
+              D_use$i.prime %in% Ctrl.is &
+              as.numeric(D_use$j.prime) - as.numeric(D_use$i.start) == period &
+              as.numeric(D_use$j) - as.numeric(D_use$i.start) == -1,
+            1, 0)
+    # apply(D_use, MARGIN=1, 
+    #       FUN=function(r) if_else(r["Type"] %in% 1:3 & 
+    #                                 r["i.start"]==cohort & 
+    #                                 r["i.prime"] %in% Ctrl.is & 
+    #                                 as.numeric(r["j.prime"])-as.numeric(r["i.start"])==period & 
+    #                                 as.numeric(r["j"])-as.numeric(r["i.start"])==-1,
+    #                               1,0))
   } else {
-    apply(D_use, MARGIN=1,
-          FUN=function(r) if_else(r["Type"] %in% 1:3 & 
-                                    r["i.start"]==cohort & 
-                                    r["i.prime"] %in% Ctrl.is & 
-                                    as.numeric(r["j.prime"])-as.numeric(r["i.start"])==-1 & 
-                                    as.numeric(r["j"])-as.numeric(r["i.start"])==period,
-                                  -1,0))
+    if_else(D_use$Type %in% 1:3 & D_use$i.start==cohort & 
+              D_use$i.prime %in% Ctrl.is &
+              as.numeric(D_use$j.prime) - as.numeric(D_use$i.start) == -1 &
+              as.numeric(D_use$j) - as.numeric(D_use$i.start) == period,
+            -1, 0)
+    # apply(D_use, MARGIN=1,
+    #       FUN=function(r) if_else(r["Type"] %in% 1:3 & 
+    #                                 r["i.start"]==cohort & 
+    #                                 r["i.prime"] %in% Ctrl.is & 
+    #                                 as.numeric(r["j.prime"])-as.numeric(r["i.start"])==-1 & 
+    #                                 as.numeric(r["j"])-as.numeric(r["i.start"])==period,
+    #                               -1,0))
   }
 }
 
@@ -230,24 +251,35 @@ SA_CATT_agg <- function(key_tbl, wt_tbl, period) {
 }
 
 CH_wt_fun <- function(D_use,period) {
-  apply(D_use, MARGIN=1,
-        FUN=function(r) if_else(r["Type"]==2 &
-                                  r["j.prime"]==r["i.start"] &
-                                  r["j.prime"]==period & 
-                                  r["j"]==period-1,
-                                1,0))
+  if_else(D_use$Type==2 & D_use$j.prime==D_use$i.start & 
+            D_use$j.prime==period & D_use$j == period-1,
+          1,0)
+  # apply(D_use, MARGIN=1,
+  #       FUN=function(r) if_else(r["Type"]==2 &
+  #                                 r["j.prime"]==r["i.start"] &
+  #                                 r["j.prime"]==period & 
+  #                                 r["j"]==period-1,
+  #                               1,0))
 }
 
 CO_wt_fun <- function(D_use,period) {
-  apply(D_use, MARGIN=1,
-        FUN=function(r) if_else(r["Type"]==2,
-                                if_else(r["j.prime"]==r["i.start"] &
-                                          r["j.prime"]==period &
-                                          r["j"]==period-1,1,0),
-                                if_else(r["Type"]==5,
-                                        if_else(r["j.prime"]==r["i.prime.start"] &
-                                                  r["j.prime"]==period &
-                                                  r["j"]==period-1,-1,0),0)))
+  if_else(D_use$Type==2,
+          if_else(D_use$j.prime==D_use$i.start &
+                    D_use$j.prime==period & 
+                    D_use$j==period-1, 1, 0),
+          if_else(D_use$Type==5,
+                  if_else(D_use$j.prime == D_use$i.prime.start &
+                            D_use$j.prime == period & D_use$j == period-1,
+                          -1,0),0))
+  # apply(D_use, MARGIN=1,
+  #       FUN=function(r) if_else(r["Type"]==2,
+  #                               if_else(r["j.prime"]==r["i.start"] &
+  #                                         r["j.prime"]==period &
+  #                                         r["j"]==period-1,1,0),
+  #                               if_else(r["Type"]==5,
+  #                                       if_else(r["j.prime"]==r["i.prime.start"] &
+  #                                                 r["j.prime"]==period &
+  #                                                 r["j"]==period-1,-1,0),0)))
 }
 
 

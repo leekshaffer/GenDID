@@ -223,3 +223,50 @@ Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
                               estimator=c("CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
+save(Comp_ests, file="Comparison_estimates.Rda")
+
+
+## Check against existing packages for staggered adoption methods:
+### Packages:
+require(did) ## For CS
+require(fixest) ## For SA
+require(DIDmultiplegt) ## For CH
+
+### Data Prep:
+xpert.dat.2 <- xpert.dat %>% left_join(StartTimes, by="Cluster") %>%
+  mutate(ClusterF=factor(Cluster),
+         LeadLag=Period-StartPd)
+#### A version without Period 8 to create a never-treated group:
+xpert.dat.2.ex8 <- xpert.dat.2  %>% filter(Period != 8) %>%
+  mutate(StartPd=if_else(StartPd==8,0,StartPd))
+
+### Callaway and Sant'Anna (2021):
+CS_gt <- att_gt(yname="Outcome",
+                tname="Period",
+                idname="Cluster",
+                gname="StartPd",
+                data=xpert.dat.2,
+                panel=TRUE,
+                control_group="notyettreated")
+ggdid(CS_gt)
+CS_gt
+aggte(CS_gt, type="simple")
+aggte(CS_gt, type="dynamic")
+aggte(CS_gt, type="group")
+aggte(CS_gt, type="calendar")
+
+### Sun and Abraham (2021):
+SA <- feols(Outcome~sunab(cohort=StartPd,
+                          period=Period,
+                          ref.c=c(8),
+                          ref.p=c(-1,6), att=TRUE) | Cluster + Period,
+            data=xpert.dat.2.ex8)
+summary(SA)
+
+### de Chaisemartin and d'Haultfoeuille (2020):
+CH <- did_multiplegt(df=xpert.dat,
+                     Y="Outcome",
+                     G="Cluster",
+                     T="Period",
+                     D="Interv")
+CH
