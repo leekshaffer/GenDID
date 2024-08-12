@@ -2,7 +2,7 @@
 ###### File: CompEsts.R ###############
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/07/18 #############
-###### Updated 2024/08/07 #############
+###### Updated 2024/08/12 #############
 #######################################
 
 ## Load packages
@@ -13,7 +13,7 @@ require(tidyr)
 ## From a DFT output object, 
 ### derive the weights for various other estimators
 Comp_Ests <- function(DFT_obj,
-                      estimator=c("CS","SA","CH","CO")) {
+                      estimator=c("TW","CS","SA","CH","CO")) {
   ### First, augment D with start times:
   Starts <- DFT_obj$Theta$Full %>% 
     dplyr::select(Cl.Num,Start_j) %>%
@@ -30,6 +30,37 @@ Comp_Ests <- function(DFT_obj,
               by=join_by(i.prime == Cl.Num))
   
   res <- NULL
+  
+  if ("TW" %in% estimator) { ## Based on weights from Goodman-Bacon (2021):
+    Starts_n <- Starts %>% group_by(Start_j) %>% 
+      dplyr::summarize(n.Clust=n()) %>%
+      dplyr::mutate(n=n.Clust/sum(n.Clust),
+                    Dbar=if_else(is.infinite(Start_j),0,
+                            (DFT_obj$J-Start_j+1)/DFT_obj$J)) %>%
+      dplyr::rename(G=Start_j)
+    Cross_starts <- cross_join(Starts_n, Starts_n, 
+                               suffix=c(".k",".l")) %>%
+      dplyr::filter(G.k != G.l, Dbar.k > 0)
+    TW.Weights <- Cross_starts %>% 
+      dplyr::mutate(s.num=if_else(Dbar.l==0, n.k*(n.l)*Dbar.k*(1-Dbar.k),
+                                  if_else(G.k < G.l, n.k*n.l*(Dbar.k-Dbar.l)*(1-Dbar.k),
+                                          -1*n.k*n.l*Dbar.k*(Dbar.l-Dbar.k))),
+                    n.DID=if_else(Dbar.l==0, (DFT_obj$J-G.k+1)*(G.k-1)*n.Clust.k*n.Clust.l,
+                                  if_else(G.k < G.l, (G.l-G.k)*(G.k-1)*n.Clust.k*n.Clust.l,
+                                          (DFT_obj$J-G.k+1)*(G.k-G.l)*n.Clust.k*n.Clust.l))) %>%
+      dplyr::mutate(s=s.num/sum(abs(s.num)),
+                    W_TW=s/n.DID)
+    TW_w <- D_use %>% mutate(G.k=if_else(is.infinite(i.prime.start), i.start,
+                                          if_else(Type==2, i.start,
+                                                  if_else(Type==5, i.prime.start, NA))),
+                              G.l=if_else(is.infinite(i.prime.start), i.prime.start,
+                                          if_else(Type==2, i.prime.start,
+                                                  if_else(Type==5, i.start, NA)))) %>%
+      left_join(TW.Weights %>% dplyr::select(G.k,G.l,W_TW),
+                by=c("G.k","G.l")) %>%
+      dplyr::mutate(W_TW=if_else(is.na(W_TW), 0, W_TW))
+    res <- c(res, list(W_TW=TW_w %>% dplyr::select(W_TW)))
+  }
   
   if ("CS" %in% estimator) {
     Group <- unique(Starts$Start_j[Starts$Start_j < max(Starts$Start_j)])
@@ -164,11 +195,11 @@ Comp_Ests <- function(DFT_obj,
 }
 
 Comp_Ests_Weights <- function(DFT_obj, Amat,
-                              estimator=c("CS","SA","CH","CO","NP")) {
+                              estimator=c("TW","CS","SA","CH","CO","NP")) {
   DID.weights <- NULL
   Obs.weights <- NULL
-  if (sum(c("CS","SA","CH","CO") %in% estimator) > 0) {
-    DID.ests <- estimator[estimator %in% c("CS","SA","CH","CO")]
+  if (sum(c("TW","CS","SA","CH","CO") %in% estimator) > 0) {
+    DID.ests <- estimator[estimator %in% c("TW","CS","SA","CH","CO")]
     DID.weights <- bind_cols(DID.weights,Comp_Ests(DFT_obj,
                                                    DID.ests)$Weights)
     Obs.weights <- bind_cols(Obs.weights, t(Amat) %*% as.matrix(DID.weights))
