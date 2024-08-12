@@ -2,7 +2,7 @@
 ###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/25 #############
-###### Updated 2024/08/09 #############
+###### Updated 2024/08/12 #############
 #######################################
 
 require(readxl)
@@ -258,8 +258,8 @@ xpert.dat.2.ex8 <- xpert.dat.2  %>% filter(Period != 8) %>%
   mutate(StartPd=if_else(StartPd==8,0,StartPd))
 
 ### TWFE:
-TWFE <- lm(Outcome~Interv+factor(Period)+ClusterF, data=xpert.dat.2)
-coef(TWFE)["Interv"]
+TW <- lm(Outcome~Interv+factor(Period)+ClusterF, data=xpert.dat.2)
+coef(TW)["Interv"]
 
 ### Callaway and Sant'Anna (2021):
 CS_gt <- att_gt(yname="Outcome",

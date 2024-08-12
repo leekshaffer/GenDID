@@ -50,12 +50,10 @@ Comp_Ests <- function(DFT_obj,
                                           (DFT_obj$J-G.k+1)*(G.k-G.l)*n.Clust.k*n.Clust.l))) %>%
       dplyr::mutate(s=s.num/sum(abs(s.num)),
                     W_TW=s/n.DID)
-    TW_w <- D_use %>% mutate(G.k=if_else(is.infinite(i.prime.start), i.start,
-                                          if_else(Type==2, i.start,
-                                                  if_else(Type==5, i.prime.start, NA))),
-                              G.l=if_else(is.infinite(i.prime.start), i.prime.start,
-                                          if_else(Type==2, i.prime.start,
-                                                  if_else(Type==5, i.start, NA)))) %>%
+    TW_w <- D_use %>% mutate(G.k=if_else(Type==2, i.start,
+                                         if_else(Type==5, i.prime.start, NA)),
+                              G.l=if_else(Type==2, i.prime.start,
+                                          if_else(Type==5, i.start, NA))) %>%
       left_join(TW.Weights %>% dplyr::select(G.k,G.l,W_TW),
                 by=c("G.k","G.l")) %>%
       dplyr::mutate(W_TW=if_else(is.na(W_TW), 0, W_TW))

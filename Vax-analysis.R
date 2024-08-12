@@ -2,7 +2,7 @@
 ###### File: Vax-analysis.R ###########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/08/09 #############
-###### Updated 2024/08/09 #############
+###### Updated 2024/08/12 #############
 #######################################
 
 require(readxl)
@@ -230,12 +230,26 @@ for (i in Assns) {
   
 
 ## Comparisons to other methods:
+### Get comparison estimates:
 DFT <- SO5$DFT
 Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
-                              estimator=c("CS","SA","CH","CO","NP"))
+                              estimator=c("TW","CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
-save(Comp_ests, file="int/Vax-Comp-Ests.Rda")
+
+### Get comparison perm. p-values
+set.seed(12959)
+Comp_perms <- replicate(n=1000,
+                        expr=Permute_obs(Observations=Obs_Y, 
+                                         N=DFT$N, J=DFT$J, 
+                                         Obs.weights=Comp_wts$Obs.weights))
+Comp_perms2 <- simplify2array(apply(Comp_perms, 3, 
+                                    FUN=function(x) abs(x) >= abs(Comp_ests), simplify=FALSE))
+Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
+Comparisons=list(Estimates=Comp_ests, PValues=Comp_pvals)
+
+### Save comparisons:
+save(Comparisons, file="int/Vax-Comp-Ests.Rda")
 
 ## Check against existing packages for staggered adoption methods:
 ### Packages:
@@ -249,6 +263,10 @@ Cl.labs <- StartTimes %>%
 Vax.dat.2 <- Ord_Data %>%
   left_join(Cl.labs %>% dplyr::select(-c(StartPd)), by=join_by(Cluster)) %>%
   dplyr::mutate(Interv=Interv==1)
+
+### TWFE:
+TW <- lm(First_18Pop_Pct~Interv+factor(Period)+Cluster, data=Vax.dat.2)
+coef(TW)["IntervTRUE"]
 
 ### Callaway and Sant'Anna (2021):
 CS_gt <- att_gt(yname="First_18Pop_Pct",
