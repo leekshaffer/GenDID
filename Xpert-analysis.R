@@ -70,7 +70,10 @@ SO2 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                                     U.18=c(rep(0,17),1,rep(0,10)),
                                     U.19=c(rep(0,18),1,rep(0,9)),
                                     U.20=c(rep(0,19),1,rep(0,8)),
-                                    U.21=c(rep(0,20),1,rep(0,7))),
+                                    U.21=c(rep(0,20),1,rep(0,7)),
+                                    Group=1/7*c(1/7,1/6,1/7,1/5,1/6,1/7,1/4,1/5,1/6,1/7,
+                                                1/3,1/4,1/5,1/6,1/7,1/2,1/3,1/4,1/5,1/6,1/7,
+                                                1,1/2,1/3,1/4,1/5,1/6,1/7)),
                         save_loc="../int_large/",
                         save_prefix="xpert-solve-a_")
 SO3 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
@@ -218,12 +221,26 @@ j <- "CS_0_003"
     
     
 ## Comparisons to other methods:
+### Get comparison estimates:
 DFT <- SO5$DFT
 Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
-                              estimator=c("CS","SA","CH","CO","NP"))
+                              estimator=c("TW","CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
-save(Comp_ests, file="int/Xpert-Comp-Ests.Rda")
+
+### Get comparison perm. p-values
+set.seed(7446)
+Comp_perms <- replicate(n=1000,
+                        expr=Permute_obs(Observations=Obs_Y, 
+                                         N=DFT$N, J=DFT$J, 
+                                         Obs.weights=Comp_wts$Obs.weights))
+Comp_perms2 <- simplify2array(apply(Comp_perms, 3, 
+                                    FUN=function(x) abs(x) >= abs(Comp_ests), simplify=FALSE))
+Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
+Comparisons=list(Estimates=Comp_ests, PValues=Comp_pvals)
+
+### Save comparisons:
+save(Comparisons, file="int/Xpert-Comp-Ests.Rda")
 
 
 ## Check against existing packages for staggered adoption methods:
@@ -240,6 +257,10 @@ xpert.dat.2 <- xpert.dat %>% left_join(StartTimes, by="Cluster") %>%
 xpert.dat.2.ex8 <- xpert.dat.2  %>% filter(Period != 8) %>%
   mutate(StartPd=if_else(StartPd==8,0,StartPd))
 
+### TWFE:
+TWFE <- lm(Outcome~Interv+factor(Period)+ClusterF, data=xpert.dat.2)
+coef(TWFE)["Interv"]
+
 ### Callaway and Sant'Anna (2021):
 CS_gt <- att_gt(yname="Outcome",
                 tname="Period",
@@ -248,8 +269,6 @@ CS_gt <- att_gt(yname="Outcome",
                 data=xpert.dat.2,
                 panel=TRUE,
                 control_group="notyettreated")
-ggdid(CS_gt)
-CS_gt
 aggte(CS_gt, type="simple")
 aggte(CS_gt, type="dynamic")
 aggte(CS_gt, type="group")
