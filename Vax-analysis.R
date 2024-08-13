@@ -2,10 +2,9 @@
 ###### File: Vax-analysis.R ###########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/08/09 #############
-###### Updated 2024/08/12 #############
+###### Updated 2024/08/13 #############
 #######################################
 
-require(readxl)
 require(tidyverse)
 
 source("A_Const.R")
@@ -88,7 +87,7 @@ Theta2 <- gen_Theta(gen_js(StartTimes$Cluster,
                  Assumption=2)
 
 ## Run Solver for different assumption settings:
-SO2 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
+SO2 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                         Assumption=2,
                         v.Mat=cbind(Avg=rep(1/26,26),
                                     D.1=create_V(26, c(1,6,10,19)),
@@ -105,10 +104,28 @@ SO2 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                                     OH2=create_V(26, 2),
                                     IL2=create_V(26, 8),
                                     MI2=create_V(26, 13),
-                                    MO2=create_V(26, 23)),
+                                    MO2=create_V(26, 23),
+                                    Group=1/4*(create_V(26, c(1:5, 7, 9, 12, 15, 18, 22, 26))+
+                                                 create_V(26, c(6, 8, 11, 14, 17, 21, 25))+
+                                                 create_V(26, c(10, 13, 16, 20, 24))+
+                                                 create_V(26, c(19, 23)))),
                         save_loc="../int_large/",
                         save_prefix="vax-solve-a_")
-SO5 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
+SO3 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
+                        Assumption=3,
+                        v.Mat=cbind(D.1=create_V(12, 1),
+                                    D.2=create_V(12, 2),
+                                    D.12=create_V(12, 1:2),
+                                    D.1234=create_V(12, 1:4),
+                                    D.234=create_V(12, 2:4),
+                                    Avg=create_V(12, 1:12)),
+                        save_loc="../int_large/",
+                        save_prefix="vax-solve-a_")
+SO4 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
+                        Assumption=4,
+                        v.Mat=cbind(Avg=create_V(12, 1:12),
+                                    T.30=create_V(12, 12)))
+SO5 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                         Assumption=5,
                         v.Mat=1,
                         save_loc="../int_large/",
@@ -117,7 +134,7 @@ SO5 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
 ## Run variance minimizer for different settings:
 set.seed(1011)
 ### Independence:
-for (i in c(2,5)) {
+for (i in 2:5) {
   assign(x=paste0("MVOut_",i,"_Ind"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
@@ -142,7 +159,7 @@ GEE <- geepack::geeglm(First_18Pop_Pct~as.factor(Period)+as.factor(Cluster),
                        corstr="ar1")
 
 ### AR(1) (rho = 0.95 estimated from above; First_Diff has 0.34 instead):
-for (i in c(2,5)) {
+for (i in 2:5) {
   assign(x=paste0("MVOut_",i,"_AR1_0_95"),
          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
                              Assumption=i,
@@ -155,7 +172,7 @@ for (i in c(2,5)) {
 }
 
 ## Import Results:
-Assns <- c(2,5)
+Assns <- 2:5
 SigmaNames <- c("Ind","AR1_0_95")
 
 for (j in SigmaNames) {
@@ -208,25 +225,27 @@ for (i in Assns) {
 }
 
 ## Print Observation Weight Heatmaps:
-# for (i in Assns) {
-#   for (j in SigmaNames) {
-#     Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
-#     for (n in 1:ncol(Weights)) {
-#       Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
-#                                Value=Weights[,n])
-#       ggsave(filename=paste0("figs/Vax-Weights_Heatmap_",i,"_",j,"_Col",n,".png"),
-#              plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
-#                geom_tile() + theme_bw() + 
-#                coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
-#                scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
-#                scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
-#                scale_fill_gradient2(low="#542788",high="#b35806") +
-#                labs(x="Period", y="Cluster", fill="Weight",
-#                     title=paste0("Observation Weights, Assumption: ",i)),
-#              width=6, height=4, units="in", dpi=600)
-#     }
-#   }
-# }
+
+## To create all heat maps, cycle through different values of i (Assumption Setting),
+### j (Variance setting), and Estimators (estimator)
+i <- 2
+j <- "AR1_0_95"
+Estimators <- c("Avg","D.2","D.234","OH","Group")
+Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
+for (n in Estimators) {
+  Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
+                           Value=Weights[,n])
+  ggsave(filename=paste0("figs/Vax-Weights_Heatmap_",i,"_",j,"_",n,".png"),
+         plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
+           geom_tile() + theme_bw() +
+           coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
+           scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
+           scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
+           scale_fill_gradient2(low="#542788",high="#b35806") +
+           labs(x="Period", y="Cluster", fill="Weight",
+                title=paste0("Observation Weights, Assumption: ",i)),
+         width=6, height=4, units="in", dpi=600)
+}
   
 
 ## Comparisons to other methods:
@@ -244,9 +263,10 @@ Comp_perms <- replicate(n=1000,
                                          N=DFT$N, J=DFT$J, 
                                          Obs.weights=Comp_wts$Obs.weights))
 Comp_perms2 <- simplify2array(apply(Comp_perms, 3, 
-                                    FUN=function(x) abs(x) >= abs(Comp_ests), simplify=FALSE))
+                                    FUN=function(x) abs(x) >= abs(Comp_ests), 
+                                    simplify=FALSE))
 Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
-Comparisons=list(Estimates=Comp_ests, PValues=Comp_pvals)
+Comparisons=list(Estimates=Comp_ests, P_Values=Comp_pvals)
 
 ### Save comparisons:
 save(Comparisons, file="int/Vax-Comp-Ests.Rda")
