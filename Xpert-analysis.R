@@ -2,7 +2,7 @@
 ###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/25 #############
-###### Updated 2024/08/12 #############
+###### Updated 2024/08/13 #############
 #######################################
 
 require(tidyverse)
@@ -194,29 +194,36 @@ for (i in Assns) {
 }
 
 ### Observation Weight Heatmaps:
-# for (i in Assns) {
-#   for (j in SigmaNames) {
-## Uncomment preceding two lines to get all heat maps
-
-i <- 5
-j <- "CS_0_003"
+### To create various heat maps, add rows with 
+### different values of i (Assumption Setting),
+### j (Variance setting), and Estimators (estimator)
+Map_Settings <- tibble(i=5,
+                       j="CS_0_003",
+                       Estimators="1",
+                       Est_labs=c("Overall, Assumption S5"))
+for (row in 1:(dim(Map_Settings)[1])) {
     Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
-    for (n in 1:ncol(Weights)) {
-      Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
-                               Value=Weights[,n])
-      ggsave(filename=paste0("figs/Xpert-Weights_Heatmap_",i,"_",j,"_Col",n,".png"),
-             plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
-               geom_tile() + theme_bw() + 
-               coord_cartesian(xlim=c(0.5,8.5), ylim=c(14.5,0.5), clip="off", expand=FALSE) +
-               scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
-               scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
-               scale_fill_gradient2(low="#542788",high="#b35806") +
-               labs(x="Period", y="Cluster", fill="Weight",
-                    title=paste0("Observation Weights, Assumption: ",i)),
-             width=6, height=4, units="in", dpi=600)
+    Weights <- (get(paste0("MVOut_",Map_Settings[row,] %>% pull("i"),"_",
+                           Map_Settings[row,] %>% pull("j")))[["MV"]])[["Obs.weights"]]
+    if (is.null(colnames(Weights))) {
+      colnames(Weights) <- as.character(1:(dim(Weights)[2]))
     }
-#   }
-# }
+    Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
+                             Value=Weights[,Map_Settings[row,] %>% pull("Estimators")])
+    ggsave(filename=paste0("figs/Xpert-Weights_Heatmap_",Map_Settings[row,"i"],"_",
+                           Map_Settings[row,] %>% pull("j"),"_",
+                           Map_Settings[row,] %>% pull("Estimators"),".png"),
+           plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
+             geom_tile() + theme_bw() + 
+             coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
+             scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
+             scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
+             scale_fill_gradient2(low="#542788",high="#b35806") +
+             labs(x="Period (Month of Study)", y="Cluster", fill="Weight",
+                  title=paste0("Observation Weights: ",
+                               Map_Settings[row,] %>% pull("Est_labs"))),
+           width=6, height=4, units="in", dpi=600)
+}
     
     
 ## Comparisons to other methods:
@@ -236,7 +243,7 @@ Comp_perms <- replicate(n=1000,
 Comp_perms2 <- simplify2array(apply(Comp_perms, 3, 
                                     FUN=function(x) abs(x) >= abs(Comp_ests), simplify=FALSE))
 Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
-Comparisons=list(Estimates=Comp_ests, PValues=Comp_pvals)
+Comparisons=list(Estimates=Comp_ests, P_Values=Comp_pvals)
 
 ### Save comparisons:
 save(Comparisons, file="int/Xpert-Comp-Ests.Rda")
