@@ -5,7 +5,6 @@
 ###### Updated 2024/08/12 #############
 #######################################
 
-require(readxl)
 require(tidyverse)
 
 source("A_Const.R")
