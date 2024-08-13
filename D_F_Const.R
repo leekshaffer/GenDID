@@ -2,7 +2,7 @@
 ###### File: D_F_Const.R ##############
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/16 #############
-###### Updated 2024/08/08 #############
+###### Updated 2024/08/12 #############
 #######################################
 
 ## Load packages
@@ -182,24 +182,24 @@ gen_Theta <- function(js_Obj,Assumption) {
 }
 
 gen_F <- function(D,Theta) {
-  ThetaF <- Theta$Full %>% dplyr::select(Cl.Num,Pd.Num,Periods,Theta)
+  ThetaF <- Theta$Full %>% dplyr::select(Cl.Num,Pd.Num,Theta)
   D_aug <- D %>% dplyr::select(i,i.prime,j,j.prime,Type,TypeLabel) %>%
     dplyr::left_join(ThetaF %>% 
-                       dplyr::rename(i=Cl.Num,
-                                     j.prime=Pd.Num,
-                                     Pos.i=Theta)) %>%
+                       dplyr::rename(Pos.i=Theta),
+                     by=join_by(i==Cl.Num,
+                                j.prime==Pd.Num)) %>%
     dplyr::left_join(ThetaF %>%
-                       dplyr::rename(i=Cl.Num,
-                                     j=Pd.Num,
-                                     Neg.i=Theta)) %>%
+                       dplyr::rename(Neg.i=Theta),
+                     by=join_by(i==Cl.Num,
+                                j==Pd.Num)) %>%
     dplyr::left_join(ThetaF %>% 
-                       dplyr::rename(i.prime=Cl.Num,
-                                     j.prime=Pd.Num,
-                                     Neg.i.prime=Theta)) %>%
+                       dplyr::rename(Neg.i.prime=Theta),
+                     by=join_by(i.prime==Cl.Num,
+                                j.prime==Pd.Num)) %>%
     dplyr::left_join(ThetaF %>%
-                       dplyr::rename(i.prime=Cl.Num,
-                                     j=Pd.Num,
-                                     Pos.i.prime=Theta)) %>%
+                       dplyr::rename(Pos.i.prime=Theta),
+                     by=join_by(i.prime==Cl.Num,
+                                j==Pd.Num)) %>%
     mutate(Row=row_number())
   
   F_mat <- matrix(0,nrow=dim(D_aug)[1], ncol=length(Theta$All$Theta))

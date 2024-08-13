@@ -23,7 +23,8 @@ A_mat <- gen_A(N,J)
 ### Assumption (5): Homogeneity ###
 v.5 <- 1
 
-DFT_list.5 <- gen_DFT(Clusters, StartPeriods, J, Assumption=5)
+DFT_list.5 <- gen_DFT(Clusters, StartPeriods, 
+                      OrderedPds=c(1,2,3), Assumption=5)
 Solve.5 <- solve_WA(DFT_obj=DFT_list.5,
                     A_mat=A_mat,
                     v=v.5,
@@ -46,7 +47,8 @@ v.4 <- c(1/2,1/2)
 v.4.alt <- c(1,0)
 v.4.alt.2 <- c(0,1)
 
-DFT_list.4 <- gen_DFT(Clusters, StartPeriods, J, Assumption=4)
+DFT_list.4 <- gen_DFT(Clusters, StartPeriods, 
+                      1:3, Assumption=4)
 Solve.4 <- solve_WA(DFT_obj=DFT_list.4,
                     A_mat=A_mat,
                     v=cbind(v.4,v.4.alt,v.4.alt.2),
@@ -60,7 +62,8 @@ MVar.4 <- min_var(solve_obj=Solve.4,
 v.3 <- c(1/2,1/2)
 v.3.alt <- c(1,0)
 
-DFT_list.3 <- gen_DFT(Clusters, StartPeriods, J, Assumption=3)
+DFT_list.3 <- gen_DFT(Clusters, StartPeriods, 
+                      1:3, Assumption=3)
 Solve.3 <- solve_WA(DFT_obj=DFT_list.3,
                     A_mat=A_mat,
                     v=cbind(v.3,v.3.alt),
@@ -75,7 +78,8 @@ v.2.1 <- c(1,0,0)
 v.2.2 <- c(0,1,0)
 v.2.3 <- c(0,0,1)
 
-DFT_list.2 <- gen_DFT(Clusters, StartPeriods, J, Assumption=2)
+DFT_list.2 <- gen_DFT(Clusters, StartPeriods, 
+                      1:3, Assumption=2)
 Solve.2 <- solve_WA(DFT_obj=DFT_list.2,
                     A_mat=A_mat,
                     v=cbind(v.2.1,v.2.2,v.2.3),
@@ -98,7 +102,8 @@ A_mat <- gen_A(N,J)
 ### Assumption (5): Homogeneity ###
 v.5 <- 1
 
-DFT_list.5 <- gen_DFT(Clusters, StartPeriods, J, Assumption=5)
+DFT_list.5 <- gen_DFT(Clusters, StartPeriods, 
+                      OrderedPds=1:3, Assumption=5)
 Solve.5 <- solve_WA(DFT_obj=DFT_list.5,
                     A_mat=A_mat,
                     v=v.5,
@@ -112,7 +117,8 @@ MVar.5 <- min_var(solve_obj=Solve.5,
 v.3 <- c(1/2,1/2)
 v.3.alt <- c(1,0)
 
-DFT_list.3 <- gen_DFT(Clusters, StartPeriods, J, Assumption=3)
+DFT_list.3 <- gen_DFT(Clusters, StartPeriods, 
+                      OrderedPds=1:3, Assumption=3)
 Solve.3 <- solve_WA(DFT_obj=DFT_list.3,
                     A_mat=A_mat,
                     v=matrix(c(.5,.5,1,0), ncol=2, nrow=2),

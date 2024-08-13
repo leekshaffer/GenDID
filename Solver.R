@@ -2,14 +2,15 @@
 ###### File: Solver.R #################
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/18 #############
-###### Updated 2024/08/09 #############
+###### Updated 2024/08/12 #############
 #######################################
 
 ## Note v can be a vector to solve for one target,
 ### or it can be a matrix of column vectors to solve for.
 ### If Rank_Analysis has been done, the rank_an output can be inputted to avoid repeating rank-finding.
 ### DFT_obj is an output from the gen_DFT() function
-solve_WA <- function(DFT_obj,A_mat,v,rank_obj=NULL,DID_full=FALSE) {
+solve_WA <- function(DFT_obj,A_mat,v,
+                     rank_obj=NULL,DID_full=FALSE) {
   ## If v is a vector, put it into matrix form:
   if (is.vector(v)) {
     v <- matrix(data=v, ncol=1)
