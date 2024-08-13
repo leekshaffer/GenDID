@@ -124,7 +124,9 @@ SO3 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
 SO4 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                         Assumption=4,
                         v.Mat=cbind(Avg=create_V(12, 1:12),
-                                    T.30=create_V(12, 12)))
+                                    T.30=create_V(12, 12)),
+                        save_loc="../int_large/",
+                        save_prefix="vax-solve-a_")
 SO5 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                         Assumption=5,
                         v.Mat=1,
@@ -225,25 +227,39 @@ for (i in Assns) {
 }
 
 ## Print Observation Weight Heatmaps:
-
-## To create all heat maps, cycle through different values of i (Assumption Setting),
+### To create various heat maps, add rows with 
+### different values of i (Assumption Setting),
 ### j (Variance setting), and Estimators (estimator)
-i <- 2
-j <- "AR1_0_95"
-Estimators <- c("Avg","D.2","D.234","OH","Group")
-Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
-for (n in Estimators) {
+Map_Settings <- tibble(i=c(rep(2,6),5),
+                       j=rep("AR1_0_95",7),
+                       Estimators=c("Avg","D.2","D.1234","D.234","OH","Group",1),
+                       Est_labs=c("Overall ATT", "Second-Period Effect",
+                                  "First Four Weeks Effect", "Weeks 2-4 Effect", "Ohio",
+                                  "State-Averaged","Overall, Assumption S5"))
+for (row in 1:(dim(Map_Settings)[1])) {
+  Weights <- (get(paste0("MVOut_",Map_Settings[row,] %>% pull("i"),"_",
+                         Map_Settings[row,] %>% pull("j")))[["MV"]])[["Obs.weights"]]
+  if (is.null(colnames(Weights))) {
+    colnames(Weights) <- as.character(1:(dim(Weights)[2]))
+  }
   Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
-                           Value=Weights[,n])
-  ggsave(filename=paste0("figs/Vax-Weights_Heatmap_",i,"_",j,"_",n,".png"),
+                           Value=Weights[,Map_Settings[row,] %>% pull("Estimators")])
+  ggsave(filename=paste0("figs/Vax-Weights_Heatmap_",Map_Settings[row,"i"],"_",
+                         Map_Settings[row,] %>% pull("j"),"_",
+                         Map_Settings[row,] %>% pull("Estimators"),".png"),
          plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
            geom_tile() + theme_bw() +
            coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
-           scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
-           scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
+           scale_y_reverse(breaks=1:N, 
+                           labels=StartTimes$Cluster,
+                           minor_breaks=NULL) +
+           scale_x_continuous(breaks=1:J, 
+                              labels=OrderedPds,
+                              minor_breaks=NULL) +
            scale_fill_gradient2(low="#542788",high="#b35806") +
-           labs(x="Period", y="Cluster", fill="Weight",
-                title=paste0("Observation Weights, Assumption: ",i)),
+           labs(x="MMWR Week (2021)", y="State", fill="Weight",
+                title=paste0("Observation Weights, ", 
+                             Map_Settings[row,] %>% pull("Est_labs"))),
          width=6, height=4, units="in", dpi=600)
 }
   
