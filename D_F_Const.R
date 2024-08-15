@@ -58,14 +58,33 @@ gen_js <- function(Clusters,StartPeriods,OrderedPds) {
   }
   
   PdLabels <- tibble(Labels=OrderedPds, Pd.Num=1:J)
+  Start_js <- tibble(Clusters=Clusters,
+                     Labels=StartPeriods)
   if (sum(StartPeriods %in% OrderedPds) < length(StartPeriods)) {
-    warning(simpleWarning("All StartPeriods not in OrderedPds are considered never-treated units within this setting."))
+    if (is.numeric(OrderedPds) & is.numeric(StartPeriods) &
+        sum(OrderedPds[order(OrderedPds)]==OrderedPds)==J) {
+      warning(simpleWarning("Since OrderedPds is numeric, StartPeriods outside this range are treated numerically. NAs/Infs are considered never-treated."))
+      min_Ord <- min(OrderedPds)
+      Start_js <- Start_js %>% 
+        dplyr::mutate(Pd.Num=if_else(is.na(Labels) | is.infinite(Labels), 
+                                     Inf,
+                                     Labels-min_Ord+1))
+    } else {
+      warning(simpleWarning("All StartPeriods not in OrderedPds are considered never-treated units within this setting."))
+      Start_js <- Start_js %>%
+        left_join(PdLabels, by=join_by(Labels)) %>%
+        dplyr::mutate(Pd.Num=if_else(is.na(Pd.Num),Inf,Pd.Num))
+    }
+  } else {
+    Start_js <- Start_js %>%
+      dplyr::left_join(PdLabels, by=join_by(Labels))
   }
   
-  Start_js <- tibble(Clusters=Clusters,
-                     Labels=StartPeriods) %>%
-    left_join(PdLabels, by=join_by(Labels)) %>%
-    dplyr::mutate(Pd.Num=if_else(is.na(Pd.Num),Inf,Pd.Num)) %>%
+  # Start_js <- tibble(Clusters=Clusters,
+  #                    Labels=StartPeriods) %>%
+  #   left_join(PdLabels, by=join_by(Labels)) %>%
+  #   dplyr::mutate(Pd.Num=if_else(is.na(Pd.Num),Inf,Pd.Num)) %>%
+  Start_js <- Start_js %>%
     dplyr::arrange(Pd.Num) %>%
     dplyr::mutate(Cl.Num=1:N) %>%
     dplyr::rename(Start_j = Pd.Num) %>%
@@ -77,68 +96,6 @@ gen_js <- function(Clusters,StartPeriods,OrderedPds) {
               N=N,
               J=J))
 }
-
-
-### If list of periods is anything other than 1:J, 
-#### a vector giving the ordered period names should be included as PeriodOrder
-### Otherwise J should indicate the largest period
-# gen_Start_js <- function(Clusters,StartPeriods,J=NULL,PeriodOrder=NULL) {
-#   N <- length(Clusters)
-#   if (N < 2) {
-#     stop(simpleError("There must be at least 2 clusters."))
-#   } else if (N != length(StartPeriods)) {
-#     stop(simpleError("The length of Clusters and StartPeriods must match."))
-#   }
-#   
-#   if (!is.null(PeriodOrder)) {
-#     if (length(unique(PeriodOrder) != length(PeriodOrder))) {
-#       warning(simpleWarning("There are repeated names in PeriodOrder. The first occurrence only will be used."))
-#       PeriodOrder <- unique(PeriodOrder)
-#     }
-#     if (!is.null(J)) {
-#       if (J != length(PeriodOrder)) {
-#         warning(simpleWarning("J is not the total number of periods, ignoring J"))
-#         J <- length(PeriodOrder)
-#       }
-#     } else {
-#       J <- length(PeriodOrder)
-#     }
-#     OrderedPds <- tibble(Labels=c(PeriodOrder,unique(StartPeriods[!(StartPeriods %in% PeriodOrder)])), 
-#                          Periods=c(1:J,rep(Inf,length(unique(StartPeriods[!(StartPeriods %in% PeriodOrder)])))))
-#     Start_js <- tibble(Clusters=Clusters,Labels=StartPeriods) %>% 
-#       left_join(OrderedPds,by="Labels") %>% 
-#       dplyr::rename(Start_j=Periods) %>%
-#       dplyr::select(c(Clusters,Start_j)) %>%
-#       dplyr::arrange(Start_j) %>%
-#       mutate(Cl.Num=1:N)
-#   } else if (is.null(J)) {
-#     stop(simpleError("Must specify either the vector of ordered period names PeriodOrder or the total number of periods J"))
-#   } else if (!is.numeric(J)) {
-#     stop(simpleError("J must be numeric"))
-#   } else if (J < 2) {
-#     stop(simpleError("J must be at least 2."))
-#   } else {
-#     if (abs(J-round(J)) > .Machine$double.eps^2) {
-#       J <- round(J)
-#       warning(simpleWarning(paste0("J must be an integer. Using nearest integer: ",J)))
-#     }
-#     if (!is.numeric(StartPeriods)) {
-#       stop(simpleError("Must either specify numeric StartPeriods or ordered PeriodOrder."))
-#     } else if (min(StartPeriods) < 1) {
-#       stop(simpleError("All StartPeriods must be at least 1."))
-#     } else {
-#       if (max(StartPeriods) > J) {
-#         warning(simpleWarning(paste0("StartPeriods above J are included. These are considered never-treated units and given a start period value of Inf.")))
-#         StartPeriods[StartPeriods > J] <- Inf
-#       }
-#       Start_js <- tibble(Clusters=Clusters,Start_j=StartPeriods) %>%
-#         dplyr::arrange(Start_j) %>%
-#         mutate(Cl.Num=1:N)
-#       OrderedPds <- tibble(Labels=1:J, Periods=1:J)
-#     }
-#   }
-#   return(list(Start_js=Start_js,OrderedPds=OrderedPds))
-# }
 
 gen_Theta <- function(js_Obj,Assumption) {
   Theta <- js_Obj$Start_js %>% 

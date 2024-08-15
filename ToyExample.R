@@ -24,7 +24,7 @@ A_mat <- gen_A(N,J)
 v.5 <- 1
 
 DFT_list.5 <- gen_DFT(Clusters, StartPeriods, 
-                      OrderedPds=c(1,2,3), Assumption=5)
+                      OrderedPds=1:3, Assumption=5)
 Solve.5 <- solve_WA(DFT_obj=DFT_list.5,
                     A_mat=A_mat,
                     v=v.5,
@@ -48,7 +48,7 @@ v.4.alt <- c(1,0)
 v.4.alt.2 <- c(0,1)
 
 DFT_list.4 <- gen_DFT(Clusters, StartPeriods, 
-                      1:3, Assumption=4)
+                      OrderedPds=1:3, Assumption=4)
 Solve.4 <- solve_WA(DFT_obj=DFT_list.4,
                     A_mat=A_mat,
                     v=cbind(v.4,v.4.alt,v.4.alt.2),
@@ -63,7 +63,7 @@ v.3 <- c(1/2,1/2)
 v.3.alt <- c(1,0)
 
 DFT_list.3 <- gen_DFT(Clusters, StartPeriods, 
-                      1:3, Assumption=3)
+                      OrderedPds=1:3, Assumption=3)
 Solve.3 <- solve_WA(DFT_obj=DFT_list.3,
                     A_mat=A_mat,
                     v=cbind(v.3,v.3.alt),
@@ -79,7 +79,7 @@ v.2.2 <- c(0,1,0)
 v.2.3 <- c(0,0,1)
 
 DFT_list.2 <- gen_DFT(Clusters, StartPeriods, 
-                      1:3, Assumption=2)
+                      OrderedPds=1:3, Assumption=2)
 Solve.2 <- solve_WA(DFT_obj=DFT_list.2,
                     A_mat=A_mat,
                     v=cbind(v.2.1,v.2.2,v.2.3),
@@ -91,7 +91,7 @@ MVar.2 <- min_var(solve_obj=Solve.2,
 
 
 ######
-### New setting: N=4,J=3
+### Second setting: N=4,J=3
 N <- 4
 J <- 3
 Clusters <- c("A","B","C","D")
