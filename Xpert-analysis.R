@@ -2,7 +2,7 @@
 ###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/04/25 #############
-###### Updated 2024/08/13 #############
+###### Updated 2024/08/15 #############
 #######################################
 
 require(tidyverse)
@@ -91,7 +91,7 @@ SO3 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                         save_prefix="xpert-solve-a_")
 SO4 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                         Assumption=4,
-                        v.Mat=cbind(AvgEx7=c(rep(1/6,6),0),
+                        v.Mat=cbind(AvgEx8=c(rep(1/6,6),0),
                              T.2=c(1,rep(0,6)),
                              T.3=c(0,1,rep(0,5)),
                              T.4=c(0,0,1,rep(0,4)),
@@ -197,10 +197,19 @@ for (i in Assns) {
 ### To create various heat maps, add rows with 
 ### different values of i (Assumption Setting),
 ### j (Variance setting), and Estimators (estimator)
-Map_Settings <- tibble(i=5,
-                       j="CS_0_003",
-                       Estimators="1",
-                       Est_labs=c("Overall, Assumption S5"))
+Map_Settings <- tibble(i=c(5,4,3,2,rep(4,6),rep(2,6)),
+                       j=rep("CS_0_003",16),
+                       Estimators=c("1","AvgEx8","Avg","AvgEx7",
+                                    "T.2","T.3","T.4","T.5","T.6","T.7",
+                                    "T.2","T.3","T.4","T.5","T.6","T.7"),
+                       Est_labs=c("Overall, Assumption S5","Avg., Assumption S4",
+                                  "Avg., Assumption S3", "ATT, Assumption S2",
+                                  "Pd. 2, Assumption S4", "Pd. 3, Assumption S4",
+                                  "Pd. 4, Assumption S4", "Pd. 5, Assumption S4",
+                                  "Pd. 6, Assumption S4", "Pd. 7, Assumption S4",
+                                  "Pd. 2, Assumption S2", "Pd. 3, Assumption S2",
+                                  "Pd. 4, Assumption S2", "Pd. 5, Assumption S2",
+                                  "Pd. 6, Assumption S2", "Pd. 7, Assumption S2"))
 for (row in 1:(dim(Map_Settings)[1])) {
     Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
     Weights <- (get(paste0("MVOut_",Map_Settings[row,] %>% pull("i"),"_",
@@ -215,7 +224,8 @@ for (row in 1:(dim(Map_Settings)[1])) {
                            Map_Settings[row,] %>% pull("Estimators"),".png"),
            plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
              geom_tile() + theme_bw() + 
-             coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
+             coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), 
+                             clip="off", expand=FALSE) +
              scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
              scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
              scale_fill_gradient2(low="#542788",high="#b35806") +
