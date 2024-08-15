@@ -2,7 +2,7 @@
 ###### File: Vax-analysis.R ###########
 ###### Lee Kennedy-Shaffer ############
 ###### Created 2024/08/09 #############
-###### Updated 2024/08/13 #############
+###### Updated 2024/08/15 #############
 #######################################
 
 require(tidyverse)
@@ -233,9 +233,13 @@ for (i in Assns) {
 Map_Settings <- tibble(i=c(rep(2,6),5),
                        j=rep("AR1_0_95",7),
                        Estimators=c("Avg","D.2","D.1234","D.234","OH","Group",1),
-                       Est_labs=c("Overall ATT", "Second-Period Effect",
-                                  "First Four Weeks Effect", "Weeks 2-4 Effect", "Ohio",
-                                  "State-Averaged","Overall, Assumption S5"))
+                       Est_labs=c("Assumption S2, Overall ATT", 
+                                  "Assumption S2, Week 2 Effect",
+                                  "Assumption S2, Weeks 1-4 Effect", 
+                                  "Assumption S2, Weeks 2-4 Effect",
+                                  "Assumption S2, Ohio Effect",
+                                  "Assumption S2, State-Averaged Effect",
+                                  "Assumption S5, Overall Effect"))
 for (row in 1:(dim(Map_Settings)[1])) {
   Weights <- (get(paste0("MVOut_",Map_Settings[row,] %>% pull("i"),"_",
                          Map_Settings[row,] %>% pull("j")))[["MV"]])[["Obs.weights"]]
