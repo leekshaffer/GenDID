@@ -230,16 +230,21 @@ for (i in Assns) {
 ### To create various heat maps, add rows with 
 ### different values of i (Assumption Setting),
 ### j (Variance setting), and Estimators (estimator)
-Map_Settings <- tibble(i=c(rep(2,6),5),
-                       j=rep("AR1_0_95",7),
-                       Estimators=c("Avg","D.2","D.1234","D.234","OH","Group",1),
-                       Est_labs=c("Assumption S2, Overall ATT", 
+Map_Settings <- tibble(i=c(rep(2,8),5,2,2),
+                       j=c(rep("AR1_0_95",9),rep("Ind",2)),
+                       Estimators=c("Avg","D.1","D.2","D.1234","D.234",
+                                    "Group","OH","IL",1,"Avg","D.234"),
+                       Est_labs=c("Assumption S2, Overall ATT",
+                                  "Assumption S2, Week 1 Effect",
                                   "Assumption S2, Week 2 Effect",
                                   "Assumption S2, Weeks 1-4 Effect", 
                                   "Assumption S2, Weeks 2-4 Effect",
-                                  "Assumption S2, Ohio Effect",
                                   "Assumption S2, State-Averaged Effect",
-                                  "Assumption S5, Overall Effect"))
+                                  "Assumption S2, Ohio Effect",
+                                  "Assumption S2, Illinois Effect",
+                                  "Assumption S5, Overall Effect",
+                                  "Assumption S2, Overall ATT, Ind.",
+                                  "Assumption S2, Weeks 2-4 Effect, Ind."))
 for (row in 1:(dim(Map_Settings)[1])) {
   Weights <- (get(paste0("MVOut_",Map_Settings[row,] %>% pull("i"),"_",
                          Map_Settings[row,] %>% pull("j")))[["MV"]])[["Obs.weights"]]
