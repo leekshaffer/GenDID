@@ -197,13 +197,15 @@ for (i in Assns) {
 ### To create various heat maps, add rows with 
 ### different values of i (Assumption Setting),
 ### j (Variance setting), and Estimators (estimator)
-Map_Settings <- tibble(i=c(5,4,3,2,rep(4,6),rep(2,6)),
-                       j=rep("CS_0_003",16),
+Map_Settings <- tibble(i=c(5,4,3,2,3,2,rep(4,6),rep(2,6)),
+                       j=rep("CS_0_003",18),
                        Estimators=c("1","AvgEx8","Avg","AvgEx7",
+                                    "D.1","D.1",
                                     "T.2","T.3","T.4","T.5","T.6","T.7",
                                     "T.2","T.3","T.4","T.5","T.6","T.7"),
                        Est_labs=c("Overall, Assumption S5","Avg., Assumption S4",
                                   "Avg., Assumption S3", "ATT, Assumption S2",
+                                  "First-Period, Assumption S3", "First-Period, Assumption S2",
                                   "Pd. 2, Assumption S4", "Pd. 3, Assumption S4",
                                   "Pd. 4, Assumption S4", "Pd. 5, Assumption S4",
                                   "Pd. 6, Assumption S4", "Pd. 7, Assumption S4",

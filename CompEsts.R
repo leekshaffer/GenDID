@@ -203,20 +203,20 @@ Comp_Ests_Weights <- function(DFT_obj, Amat,
     Obs.weights <- bind_cols(Obs.weights, t(Amat) %*% as.matrix(DID.weights))
   }
   if ("NP" %in% estimator) {
-    N_Trt <- apply(DFT_obj$Theta$Schematic, 2, sum)
-    N_Ctrl <- dim(DFT_obj$Theta$Schematic)[1] - N_Trt
+    N_Trt <- apply(DFT_obj$Theta$Schematic, 2, function(x) sum(x > 0))
+    N_Ctrl <- DFT_obj$N - N_Trt
     W_Trt <- if_else(N_Trt==0 | N_Ctrl==0,0,1/N_Trt)
-    W_Ctrl <- if_else(N_Trt==0 | N_Ctrl==0,0,-1/N_Ctrl)
-    Ns <- as.vector(matrix(c(N_Trt,N_Ctrl),nrow=2,byrow=TRUE))
-    Ws <- as.vector(matrix(c(W_Trt,W_Ctrl),nrow=2,byrow=TRUE))
-    NP_w_int <- rep(Ws, times=Ns)
+    W_Ctrl <- if_else(N_Trt==0 | N_Ctrl==0,0,-1/(N_Ctrl))
+    Mat <- matrix(c(W_Trt, N_Trt, W_Ctrl, N_Ctrl), nrow=4, byrow=TRUE)
+    W_Mat <- apply(Mat, 2, FUN=function(col) c(rep(col[1], col[2]), rep(col[3], col[4])))
+    NP_w_int <- as.vector(t(W_Mat))
     Mult_Eq <- if_else(N_Trt > 0 & N_Ctrl > 0, 1, 0)/sum(if_else(N_Trt > 0 & N_Ctrl > 0, 1, 0))
     Mult_ATT <- if_else(N_Trt > 0 & N_Ctrl > 0, N_Trt, 0)/sum(if_else(N_Trt > 0 & N_Ctrl > 0, N_Trt, 0))
     Mult_IV <- if_else(N_Trt > 0 & N_Ctrl > 0, (1/N_Trt + 1/N_Ctrl)^(-1),0)/sum(if_else(N_Trt > 0 & N_Ctrl > 0, (1/N_Trt + 1/N_Ctrl)^(-1),0))
     Obs.weights <- bind_cols(Obs.weights, 
-                             W_NP_Eq=NP_w_int * rep(Mult_Eq, times=N_Trt+N_Ctrl),
-                             W_NP_Att=NP_w_int * rep(Mult_ATT, times=N_Trt+N_Ctrl),
-                             W_NP_IV=NP_w_int * rep(Mult_IV, times=N_Trt+N_Ctrl))
+                             W_NP_Eq=NP_w_int * rep(Mult_Eq, times=DFT_obj$N),
+                             W_NP_ATT=NP_w_int * rep(Mult_ATT, times=DFT_obj$N),
+                             W_NP_IV=NP_w_int * rep(Mult_IV, times=DFT_obj$N))
   }
   
   return(list(DID.weights=DID.weights,
