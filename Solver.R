@@ -20,7 +20,7 @@ solve_WA <- function(DFT_obj,A_mat,v,
   
   if (!is.null(rank_obj)) { # if given a rank object, use it:
     if (ncol(v) != ncol(rank_obj$FTv_Ranks)) {
-      stop(simpleError("v and FTv_Ranks do not come from the same dimension of v."))
+      stop(simpleError("v and rank_obj do not come from the same dimension of v."))
     }
     FT_qr <- rank_obj$FT_qr
     FT_rank <- FT_qr$rank

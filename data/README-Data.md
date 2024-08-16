@@ -9,6 +9,6 @@ Sources:
 - Thompson JA, Davey C, Fielding K, Hargreaves JR, Hayes RJ. 2018. Robust analysis of stepped wedge trials using cluster-level summaries within periods. Statistics in Medicine 37: 2487–2500. https://doi.org/10.1002/sim.7668.
 - Kennedy-Shaffer L, De Gruttola V, Lipsitch M. 2020. Novel methods for the analysis of stepped wedge cluster randomized trials. Statistics in Medicine 39: 815–844. https://doi.org/10.1002/sim.8451.
 
-synth-data-clean.RData: The data here directly come from the Harvard Dataverse archive for Fuller et al. (2022), at https://doi.org/10.7910/DVN/K1XX02.
+synth-data-clean.RData: The data here directly come from the Harvard Dataverse archive for Fuller et al. (2022), at https://doi.org/10.7910/DVN/K1XX02. See that repository for citation, access, and sharing policies.
 Source:
 - Fuller S, Kazemian S, Algara C, Simmons DJ. 2022. Assessing the effectiveness of COVID-19 vaccine lotteries: A cross-state synthetic control methods approach. PLoS ONE 17: e0274374. https://doi.org/10.1371/journal.pone.0274374.
