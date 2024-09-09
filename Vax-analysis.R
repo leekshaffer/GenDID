@@ -87,7 +87,7 @@ Theta2 <- gen_Theta(gen_js(StartTimes$Cluster,
                  Assumption=2)
 
 ## Run Solver for different assumption settings:
-SO2 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
+SolveOut_2 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                         Assumption=2,
                         v.Mat=cbind(Avg=rep(1/26,26),
                                     D.1=create_V(26, c(1,6,10,19)),
@@ -111,7 +111,7 @@ SO2 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                                                  create_V(26, c(19, 23)))),
                         save_loc="../int_large/",
                         save_prefix="vax-solve-a_")
-SO3 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
+SolveOut_3 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                         Assumption=3,
                         v.Mat=cbind(D.1=create_V(12, 1),
                                     D.2=create_V(12, 2),
@@ -121,13 +121,13 @@ SO3 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                                     Avg=create_V(12, 1:12)),
                         save_loc="../int_large/",
                         save_prefix="vax-solve-a_")
-SO4 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
+SolveOut_4 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                         Assumption=4,
                         v.Mat=cbind(Avg=create_V(12, 1:12),
                                     T.30=create_V(12, 12)),
                         save_loc="../int_large/",
                         save_prefix="vax-solve-a_")
-SO5 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
+SolveOut_5 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
                         Assumption=5,
                         v.Mat=1,
                         save_loc="../int_large/",
@@ -138,7 +138,7 @@ set.seed(1011)
 ### Independence:
 for (i in 2:5) {
   assign(x=paste0("MVOut_",i,"_Ind"),
-         value=MV_Assumption(SolveOut=get(paste0("SO",i)),
+         value=MV_Assumption(SolveOut=get(paste0("SolveOut_",i)),
                              Assumption=i,
                              Sigma=create_Sigma_Ind(N=N,J=J),
                              SigmaName="Ind",
@@ -154,7 +154,14 @@ ar.dat <- Vax_wk_2021 %>%
                 lottery==0,
                 Period >= 15)
 require(geepack)
-GEE <- geepack::geeglm(First_18Pop_Pct~as.factor(Period)+as.factor(Cluster),
+##### Correlation estimate for cumulative population percent with >= 1 dose:
+GEE_c <- geepack::geeglm(First_18Pop_Pct~as.factor(Period)+as.factor(Cluster),
+                       data=ar.dat,
+                       family=gaussian,
+                       id=Cluster,
+                       corstr="ar1")
+##### Correlation estimate for weekly percentage of pop getting first dose:
+GEE_d <- geepack::geeglm(Diff_First~as.factor(Period)+as.factor(Cluster),
                        data=ar.dat,
                        family=gaussian,
                        id=Cluster,
@@ -163,7 +170,7 @@ GEE <- geepack::geeglm(First_18Pop_Pct~as.factor(Period)+as.factor(Cluster),
 ### AR(1) (rho = 0.95 estimated from above; First_Diff has 0.34 instead):
 for (i in 2:5) {
   assign(x=paste0("MVOut_",i,"_AR1_0_95"),
-         value=MV_Assumption(SolveOut=get(paste0("SO",i)),
+         value=MV_Assumption(SolveOut=get(paste0("SolveOut_",i)),
                              Assumption=i,
                              Sigma=create_Sigma_AR1(rho=0.95,N=N,J=J),
                              SigmaName="AR1_0_95",
@@ -173,9 +180,21 @@ for (i in 2:5) {
                              save_prefix="vax-mv-a_"))
 }
 
+for (i in 2:5) {
+  assign(x=paste0("MVOut_",i,"_AR1_0_95"),
+         value=MV_Assumption(SolveOut=get(paste0("SolveOut_",i)),
+                             Assumption=i,
+                             Sigma=create_Sigma_AR1(rho=0.34,N=N,J=J),
+                             SigmaName="AR1_0_34",
+                             Observations=Obs_Y,
+                             Permutations=1000,
+                             save_loc="int/",
+                             save_prefix="vax-mv-a_"))
+}
+
 ## Import Results:
 Assns <- 2:5
-SigmaNames <- c("Ind","AR1_0_95")
+SigmaNames <- c("Ind","AR1_0_95","AR1_0_34")
 
 for (j in SigmaNames) {
   for (i in Assns) {
@@ -230,11 +249,11 @@ for (i in Assns) {
 ### To create various heat maps, add rows with 
 ### different values of i (Assumption Setting),
 ### j (Variance setting), and Estimators (estimator)
-Map_Settings <- tibble(i=c(rep(2,8),5,2,2),
-                       j=c(rep("AR1_0_95",9),rep("Ind",2)),
-                       Estimators=c("Avg","D.1","D.2","D.1234","D.234",
-                                    "Group","OH","IL",1,"Avg","D.234"),
-                       Est_labs=c("Assumption S2, Overall ATT",
+Map_Settings <- tibble(i=c(rep(2,8),5,rep(2,8),5,2,2),
+                       j=c(rep("AR1_0_95",9),rep("AR1_0_34",9),rep("Ind",2)),
+                       Estimators=c(rep(c("Avg","D.1","D.2","D.1234","D.234",
+                                    "Group","OH","IL",1),2),"Avg","D.234"),
+                       Est_labs=c(rep(c("Assumption S2, Overall ATT",
                                   "Assumption S2, Week 1 Effect",
                                   "Assumption S2, Week 2 Effect",
                                   "Assumption S2, Weeks 1-4 Effect", 
@@ -242,7 +261,7 @@ Map_Settings <- tibble(i=c(rep(2,8),5,2,2),
                                   "Assumption S2, State-Averaged Effect",
                                   "Assumption S2, Ohio Effect",
                                   "Assumption S2, Illinois Effect",
-                                  "Assumption S5, Overall Effect",
+                                  "Assumption S5, Overall Effect"),2),
                                   "Assumption S2, Overall ATT, Ind.",
                                   "Assumption S2, Weeks 2-4 Effect, Ind."))
 for (row in 1:(dim(Map_Settings)[1])) {
@@ -275,7 +294,7 @@ for (row in 1:(dim(Map_Settings)[1])) {
 
 ## Comparisons to other methods:
 ### Get comparison estimates:
-DFT <- SO5$DFT
+DFT <- SolveOut_5$DFT
 Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
                               estimator=c("TW","CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
