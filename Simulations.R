@@ -44,6 +44,8 @@ Sim_Frame <- function(N, J, StartingPds=NULL) {
 Sim_Data <- function(Sim.Fr, mu, Alpha1, 
                      T1, T2, ProbT1,
                      sig_nu, sig_e, Theta, m) {
+  N <- length(unique(Sim.Fr$Cluster))
+  J <- length(unique(Sim.Fr$Period))
   Sim.Dat <- Sim.Fr %>%
     dplyr::mutate(FE.g = rep(sample(Alpha1, N, replace=FALSE), each=J),
                   FE.t.Type = rep(sample(c(1,2), size=N, replace=TRUE, prob=c(ProbT1,1-ProbT1)), 
