@@ -31,7 +31,7 @@ Sim_Frame <- function(N, J, StartingPds=NULL) {
       warning(simpleWarning(message=paste0("Assuming ",N/J, " switches per period starting in period 1.")))
       StartingPds <- rep(1:J, each=N/J)
     } else {
-      stop(simpleError(message="N and J must both be numeric."))
+      stop(simpleError(message="N and J must both be numeric. Either N is a multiple of J or J-1, or specify StartingPds."))
     }
   }
   return(tibble(Cluster=rep(1:N, each=J),
@@ -43,7 +43,8 @@ Sim_Frame <- function(N, J, StartingPds=NULL) {
 #### Simulate Data:
 Sim_Data <- function(Sim.Fr, mu, Alpha1, 
                      T1, T2, ProbT1,
-                     sig_nu, sig_e, Theta, m) {
+                     sig_nu, sig_e, m,
+                     ThetaType, ThetaDF) {
   N <- length(unique(Sim.Fr$Cluster))
   J <- length(unique(Sim.Fr$Period))
   Sim.Dat <- Sim.Fr %>%
@@ -51,8 +52,31 @@ Sim_Data <- function(Sim.Fr, mu, Alpha1,
                   FE.t.Type = rep(sample(c(1,2), size=N, replace=TRUE, prob=c(ProbT1,1-ProbT1)), 
                                   each=J),
                   CPI = rnorm(N*J, mean=0, sd=sig_nu),
-                  FE.t=if_else(FE.t.Type==1, T1[Period], T2[Period]),
-                  mu.ij=mu+FE.g+FE.t+CPI+Interv*Theta)
+                  FE.t=if_else(FE.t.Type==1, T1[Period], T2[Period]))
+  if (ThetaType==5) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) x["Interv"]*ThetaDF$Theta[1])
+  } else if (ThetaType==4) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) ifelse(x["Interv"]==0, 0,
+                                              ThetaDF[ThetaDF$j==x["Period"],]$Theta))
+  } else if (ThetaType==3) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) ifelse(x["Interv"]==0, 0,
+                                              ThetaDF[ThetaDF$a==x["Period"]-x["Start"]+1,]$Theta))
+  } else if (ThetaType==2) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) ifelse(x["Interv"]==0, 0,
+                                              ThetaDF[ThetaDF$j==x["Period"] & ThetaDF$a==x["Period"]-x["Start"]+1,]$Theta))
+  } else if (ThetaType==1) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) ifelse(x["Interv"]==0, 0,
+                                              ThetaDF[ThetaDF$j==x["Period"] & ThetaDF$a==x["Period"]-x["Start"]+1 & ThetaDF$i==x["Cluster"],]$Theta))
+  } else {
+    stop(simpleError(message="ThetaType must be an integer from 1 to 5 corresponding to the effect heterogeneity assumption."))
+  }
+  Sim.Dat <- Sim.Dat %>% dplyr::mutate(Theta.ij=Theta.ij,
+                                       mu.ij=mu+FE.g+FE.t+CPI+Theta.ij)
   YVals <- matrix(rnorm(n=N*J*m, mean=rep(Sim.Dat$mu.ij, each=m), sd=sig_e),
                   nrow=N*J, ncol=m, byrow=TRUE)
   colnames(YVals) <- paste("Y.ij", as.character(1:m), sep=".")
@@ -201,7 +225,8 @@ simulate_SWT <- function(NumSims,
                           N, J, StartingPds=NULL,
                           mu, Alpha1, 
                           T1, T2, ProbT1,
-                          sig_nu, sig_e, Theta, m,
+                          sig_nu, sig_e, m,
+                         ThetaType, ThetaDF,
                          MVO_list, SO_list=NULL,
                          Comparisons=NULL, corstr="exchangeable",
                          Permutations=0) {
@@ -212,7 +237,8 @@ simulate_SWT <- function(NumSims,
   Sim.Dat <- replicate(n=NumSims, 
                        as.matrix(Sim_Data(Sim.Fr, mu, Alpha1, 
                                           T1, T2, ProbT1,
-                                          sig_nu, sig_e, Theta, m)), 
+                                          sig_nu, sig_e, m,
+                                          ThetaType, ThetaDF)), 
                        simplify="array")
   Sim.Wt <- Sim_Weights(MV_Out=MVO_list,
                         Solve_Out=SO_list, 
@@ -248,6 +274,7 @@ simulate_SWT <- function(NumSims,
 }
 
 simulate_FromSet <- function(Param_Set,
+                             Theta_Set,
                              StartingPds=NULL,
                              Alpha1, 
                              T1, T2, 
@@ -258,15 +285,17 @@ simulate_FromSet <- function(Param_Set,
   for (i in 1:(dim(Param_Set)[1])) {
     row <- Param_Set[i,]
     print(paste("Starting Sim. Number",row$SimNo))
-    Res <- simulate_SWT(row$NumSims,
-            row$N, row$J, StartingPds,
-            row$mu, Alpha1, 
-            T1, T2, row$ProbT1,
-            row$sig_nu, row$sig_e, row$Theta, row$m,
-            MVO_list, SO_list,
-            Comparisons, corstr,
-            Permutations=row$NumPerms)
-    save(Res, 
+    assign(x=paste0("Res_Sim_",i),
+           value=simulate_SWT(row$NumSims,
+                              row$N, row$J, StartingPds,
+                              row$mu, Alpha1, 
+                              T1, T2, row$ProbT1,
+                              row$sig_nu, row$sig_e, row$m,
+                              Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
+                              MVO_list, SO_list,
+                              Comparisons, corstr,
+                              Permutations=row$NumPerms))
+    save(list=paste0("Res_Sim_",i), 
          file=paste0(outdir,"/",outname,"_",row$SimNo,".Rda"))
   }
 }
@@ -275,14 +304,34 @@ simulate_FromSet <- function(Param_Set,
 
 ### Parameters for Simulation:
 Param_Set <- tribble(
-  ~SimNo, ~NumSims, ~NumPerms, ~mu, ~ProbT1, ~sig_nu, ~sig_e, ~m, ~J, ~N, ~Theta,
-  1, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14, 0,
-  2, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14, -0.05,
-  3, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14, -0.1,
-  4, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14, 0,
-  5, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14, -0.05,
-  6, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14, -0.1
+  ~SimNo, ~NumSims, ~NumPerms, ~mu, ~ProbT1, ~sig_nu, ~sig_e, ~m, ~J, ~N,
+  1, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  2, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  3, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  4, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  5, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  6, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  7, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  8, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  9, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  10, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  11, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  12, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14
 )
+
+Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0)),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.05)),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.1)),
+                  list(Type=5, ThetaDF=tibble(Theta=0)),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.05)),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.1)),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02))),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.14,-0.12,-0.08,0,0.06,0.04,0.02))),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.05,4),rep(0,3)))),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.07,by=-0.01))),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.05,5)))),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02))))
+
 Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012, 
             0.002, 0.005, -0.001, 0.020, 0, 0.017, -0.011)
 T1 <- c(0,0.08,0.18,0.29,0.30,0.27,0.20,0.13)
@@ -309,7 +358,8 @@ set.seed(801611)
 #                               corstr="exchangeable",
 #                               Permutations=500))
 
-system.time(simulate_FromSet(Param_Set[4:6,],
+system.time(simulate_FromSet(Param_Set[8:12,],
+                             Theta_Set[8:12],
                              StartingPds=NULL,
                              Alpha1, 
                              T1, T2, 
