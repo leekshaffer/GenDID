@@ -134,7 +134,7 @@ Sim_Analyze <- function(Sim.Dat,
                         corstr="exchangeable") {
   Obs.mat<- t(Sim.Dat[,"Y.ij.bar",,drop=TRUE])
   Results <- Obs.mat %*% as.matrix(Sim.Wt)
-  if (MEM | CPI | GEE) {
+  if (MEM | CPI | CPI.T | CPI.D | GEE) {
     Sim.Dat.long <- apply(Sim.Dat, 3, 
                           FUN=function(x) as_tibble(x) %>% 
                             dplyr::select(-c("Y.ij.bar","Y.ij.sd")) %>%
@@ -156,7 +156,8 @@ Sim_Analyze <- function(Sim.Dat,
     if (CPI.T) {
       CPI.T_Res <- as_tibble(t(sapply(Sim.Dat.long,
                           FUN=function(x) fixef(lmer(Y~Interv*factor(Period) + (1|Cluster) + (1|CPI),
-                                                            data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"))))))) %>%
+                                                            data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_")),
+                                                     control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -164,13 +165,14 @@ Sim_Analyze <- function(Sim.Dat,
       colnames(CPI.T_Res) <- gsub(".*)","CPI.T_",colnames(CPI.T_Res))
       CPI.T_Res$CPI.T_AvgExLast <- apply(CPI.T_Res, 1, mean, na.rm=TRUE)
       CPI.T_Res$CPI.T_Middle <- apply(CPI.T_Res[,paste0("CPI.T_",2:4)], 1, mean, na.rm=TRUE)
-      Results <- cbind(Results, CPI.T_Res)
+      Results <- cbind(Results, as.matrix(CPI.T_Res))
     }
     if (CPI.D) {
       CPI.D_Res <- as_tibble(t(sapply(Sim.Dat.long,
                                       FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff) + factor(Period)+ (1|Cluster) + (1|CPI),
                                                                  data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
-                                                                                          Diff=if_else(Period-Start < 0,0,Period-Start+1))))))) %>%
+                                                                                          Diff=if_else(Period-Start < 0,0,Period-Start+1)),
+                                                                 control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -178,7 +180,7 @@ Sim_Analyze <- function(Sim.Dat,
       colnames(CPI.D_Res) <- gsub(".*)","CPI.D_",colnames(CPI.D_Res))
       CPI.D_Res$CPI.D_Avg <- apply(CPI.D_Res, 1, mean, na.rm=TRUE)
       CPI.D_Res$CPI.D_Middle <- apply(CPI.D_Res[,paste0("CPI.D_",2:4)], 1, mean, na.rm=TRUE)
-      Results <- cbind(Results, CPI.D_Res)
+      Results <- cbind(Results, as.matrix(CPI.D_Res))
     }
     if (GEE) {
       GEE_Res <- sapply(Sim.Dat.long,
@@ -225,7 +227,7 @@ Sim_Permutation <- function(Sim.Dat,
   Perm.mat <- t(sapply(1:dim(Sim.Dat)[3],
                      FUN=function(i) Obs.true[Orders[,i],i]))
   Res.perm <- Perm.mat %*% as.matrix(Sim.Wt)
-  if (MEM | CPI | GEE) {
+  if (MEM | CPI | CPI.T | CPI.D | GEE) {
     Perm.Dat.Long <- lapply(1:(dim(Sim.Dat)[3]),
                             FUN=function(i) Permute_All(Sim.Dat[,,i], Orders[,i]))
     if (MEM) {
@@ -242,7 +244,8 @@ Sim_Permutation <- function(Sim.Dat,
     if (CPI.T) {
       CPI.T_Res <- as_tibble(t(sapply(Perm.Dat.Long,
                                       FUN=function(x) fixef(lmer(Y~Interv*factor(Period) + (1|Cluster) + (1|CPI),
-                                                                 data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"))))))) %>%
+                                                                 data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_")),
+                                                                 control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -250,13 +253,14 @@ Sim_Permutation <- function(Sim.Dat,
       colnames(CPI.T_Res) <- gsub(".*)","CPI.T_",colnames(CPI.T_Res))
       CPI.T_Res$CPI.T_AvgExLast <- apply(CPI.T_Res, 1, mean, na.rm=TRUE)
       CPI.T_Res$CPI.T_Middle <- apply(CPI.T_Res[,paste0("CPI.T_",2:4)], 1, mean, na.rm=TRUE)
-      Res.perm <- cbind(Res.perm, CPI.T_Res)
+      Res.perm <- cbind(Res.perm, as.matrix(CPI.T_Res))
     }
     if (CPI.D) {
       CPI.D_Res <- as_tibble(t(sapply(Perm.Dat.Long,
                                       FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff) + factor(Period)+ (1|Cluster) + (1|CPI),
                                                                  data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
-                                                                                          Diff=if_else(Period-Start < 0,0,Period-Start+1))))))) %>%
+                                                                                          Diff=if_else(Period-Start < 0,0,Period-Start+1)),
+                                                                 control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -264,7 +268,7 @@ Sim_Permutation <- function(Sim.Dat,
       colnames(CPI.D_Res) <- gsub(".*)","CPI.D_",colnames(CPI.D_Res))
       CPI.D_Res$CPI.D_Avg <- apply(CPI.D_Res, 1, mean, na.rm=TRUE)
       CPI.D_Res$CPI.D_Middle <- apply(CPI.D_Res[,paste0("CPI.D_",2:4)], 1, mean, na.rm=TRUE)
-      Res.perm <- cbind(Res.perm, CPI.D_Res)
+      Res.perm <- cbind(Res.perm, as.matrix(CPI.D_Res))
     }
     if (GEE) {
       GEE_Res <- sapply(Perm.Dat.Long,
@@ -325,7 +329,7 @@ simulate_SWT <- function(NumSims,
                               colnames(Sim.Res),
                               c("Results",paste("Placebo",1:(dim(Sim.Perm.Res)[3]),sep="_")))
     Sim.PVals <- apply(X=Sim.All, MARGIN=c(1,2),
-                       FUN=function(x) mean(abs(x["Results"]) <= abs(x)))
+                       FUN=function(x) mean(abs(x["Results"]) <= abs(x), na.rm=TRUE))
     return(list(Estimates=Sim.All[,,"Results"],
                 PValues=Sim.PVals))
   } else {
@@ -364,11 +368,11 @@ simulate_FromSet <- function(Param_Set,
 
 
 ### Parameters for Simulation:
-NumSims.all <- 2
+NumSims.all <- 250
 NumPerms.all <- 250
 Param_Set <- tribble(
   ~SimNo, ~NumSims, ~NumPerms, ~mu, ~ProbT1, ~sig_nu, ~sig_e, ~m, ~J, ~N,
-  1, NumSims.all, NumPerms.all, 250, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  1, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   2, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   3, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   4, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
@@ -382,18 +386,18 @@ Param_Set <- tribble(
   12, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14
 )
 
-Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.03), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.06), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=0), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.03), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.06), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.14,-0.12,-0.08,0,0.06,0.04,0.02)), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.05,4),rep(0,3))), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.07,by=-0.01)), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.05,5))), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL))
+Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.03), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.06), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=0), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.03), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.06), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.14,-0.12,-0.08,0,0.06,0.04,0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.05,4),rep(0,3))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.07,by=-0.01)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.05,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL))
 
 Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012, 
             0.002, 0.005, -0.001, 0.020, 0, 0.017, -0.011)
@@ -401,6 +405,7 @@ T1 <- c(0,0.08,0.18,0.29,0.30,0.27,0.20,0.13)
 T2 <- c(0,0.02,0.03,0.07,0.13,0.19,0.27,0.30)
 
 ### Run Simulations:
+
 load("int/xpert-mv-a_2_CS_0_003.Rda")
 load("int/xpert-mv-a_3_CS_0_003.Rda")
 load("int/xpert-mv-a_4_CS_0_003.Rda")
@@ -409,17 +414,8 @@ load("../int_large/xpert-solve-a_2.Rda")
 load("../int_large/xpert-solve-a_3.Rda")
 load("../int_large/xpert-solve-a_4.Rda")
 load("../int_large/xpert-solve-a_5.Rda")
+
 set.seed(801611)
-# system.time(Sim.Run <- simulate_SWT(NumSims=50, N, J, StartingPds=NULL,
-#                               mu, Alpha1, T1, T2, ProbT1, sig_nu, sig_e, Theta, m,
-#                               MVO_list=list(A2=MVOut_2_CS_0_003,
-#                                             A3=MVOut_3_CS_0_003,
-#                                             A4=MVOut_4_CS_0_003,
-#                                             A5=MVOut_5_CS_0_003),
-#                               SO_list=list(Comp=SolveOut_5),
-#                               Comparisons=c("TW","CS","SA","CH","CO","NP","MEM","CPI"),
-#                               corstr="exchangeable",
-#                               Permutations=500))
 
 system.time(simulate_FromSet(Param_Set,
                              Theta_Set,
@@ -431,7 +427,5 @@ system.time(simulate_FromSet(Param_Set,
                                           A4=MVOut_4_CS_0_003,
                                           A5=MVOut_5_CS_0_003),
                              SO_list=list(Comp=SolveOut_5),
-                             Comparisons=,
-                             corstr="exchangeable",
                              outdir="sim_res",
                              outname="Sim_Set"))
