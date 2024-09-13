@@ -51,7 +51,7 @@ Sim_Data <- function(Sim.Fr, mu, Alpha1,
     dplyr::mutate(FE.g = rep(sample(Alpha1, N, replace=FALSE), each=J),
                   FE.t.Type = rep(sample(c(1,2), size=N, replace=TRUE, prob=c(ProbT1,1-ProbT1)), 
                                   each=J),
-                  CPI = rnorm(N*J, mean=0, sd=sig_nu),
+                  RE.CPI = rnorm(N*J, mean=0, sd=sig_nu),
                   FE.t=if_else(FE.t.Type==1, T1[Period], T2[Period]))
   if (ThetaType==5) {
     Theta.ij <- apply(Sim.Dat, 1,
@@ -76,7 +76,7 @@ Sim_Data <- function(Sim.Fr, mu, Alpha1,
     stop(simpleError(message="ThetaType must be an integer from 1 to 5 corresponding to the effect heterogeneity assumption."))
   }
   Sim.Dat <- Sim.Dat %>% dplyr::mutate(Theta.ij=Theta.ij,
-                                       mu.ij=mu+FE.g+FE.t+CPI+Theta.ij)
+                                       mu.ij=mu+FE.g+FE.t+RE.CPI+Theta.ij)
   YVals <- matrix(rnorm(n=N*J*m, mean=rep(Sim.Dat$mu.ij, each=m), sd=sig_e),
                   nrow=N*J, ncol=m, byrow=TRUE)
   colnames(YVals) <- paste("Y.ij", as.character(1:m), sep=".")
@@ -128,6 +128,8 @@ Sim_Analyze <- function(Sim.Dat,
                         Sim.Wt,
                         MEM=FALSE,
                         CPI=FALSE,
+                        CPI.T=FALSE,
+                        CPI.D=FALSE,
                         GEE=FALSE, #Note: GEE comp is very slow; ~1min/GEE fit
                         corstr="exchangeable") {
   Obs.mat<- t(Sim.Dat[,"Y.ij.bar",,drop=TRUE])
@@ -150,6 +152,33 @@ Sim_Analyze <- function(Sim.Dat,
                     FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster)+(1|CPI), 
                                                       data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"))))["Interv"]))
       Results <- cbind(Results, Comp_CPI=CPI_Res)
+    }
+    if (CPI.T) {
+      CPI.T_Res <- as_tibble(t(sapply(Sim.Dat.long,
+                          FUN=function(x) fixef(lmer(Y~Interv*factor(Period) + (1|Cluster) + (1|CPI),
+                                                            data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"))))))) %>%
+        dplyr::select(starts_with("Interv")) %>%
+        dplyr::mutate(across(.cols=-c("Interv"),
+                             .fns=~.x+Interv)) %>%
+        dplyr::rename(`Interv:factor(Period)0`=Interv)
+      colnames(CPI.T_Res) <- gsub(".*)","CPI.T_",colnames(CPI.T_Res))
+      CPI.T_Res$CPI.T_AvgExLast <- apply(CPI.T_Res, 1, mean, na.rm=TRUE)
+      CPI.T_Res$CPI.T_Middle <- apply(CPI.T_Res[,paste0("CPI.T_",2:4)], 1, mean, na.rm=TRUE)
+      Results <- cbind(Results, CPI.T_Res)
+    }
+    if (CPI.D) {
+      CPI.D_Res <- as_tibble(t(sapply(Sim.Dat.long,
+                                      FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff) + factor(Period)+ (1|Cluster) + (1|CPI),
+                                                                 data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
+                                                                                          Diff=if_else(Period-Start < 0,0,Period-Start+1))))))) %>%
+        dplyr::select(starts_with("Interv")) %>%
+        dplyr::mutate(across(.cols=-c("Interv"),
+                             .fns=~.x+Interv)) %>%
+        dplyr::rename(`Interv:factor(Diff)0`=Interv)
+      colnames(CPI.D_Res) <- gsub(".*)","CPI.D_",colnames(CPI.D_Res))
+      CPI.D_Res$CPI.D_Avg <- apply(CPI.D_Res, 1, mean, na.rm=TRUE)
+      CPI.D_Res$CPI.D_Middle <- apply(CPI.D_Res[,paste0("CPI.D_",2:4)], 1, mean, na.rm=TRUE)
+      Results <- cbind(Results, CPI.D_Res)
     }
     if (GEE) {
       GEE_Res <- sapply(Sim.Dat.long,
@@ -181,6 +210,8 @@ Sim_Permutation <- function(Sim.Dat,
                         N=NULL, J=NULL,
                         MEM=FALSE,
                         CPI=FALSE,
+                        CPI.T=FALSE,
+                        CPI.D=FALSE,
                         GEE=FALSE, #Note: GEE comp is very slow
                         corstr="exchangeable") {
   if (is.null(N) | is.null(J)) {
@@ -207,6 +238,33 @@ Sim_Permutation <- function(Sim.Dat,
                         FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster)+(1|CPI), 
                                                           data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"))))["Interv"]))
       Res.perm <- cbind(Res.perm, Comp_CPI=CPI_Res)
+    }
+    if (CPI.T) {
+      CPI.T_Res <- as_tibble(t(sapply(Perm.Dat.Long,
+                                      FUN=function(x) fixef(lmer(Y~Interv*factor(Period) + (1|Cluster) + (1|CPI),
+                                                                 data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"))))))) %>%
+        dplyr::select(starts_with("Interv")) %>%
+        dplyr::mutate(across(.cols=-c("Interv"),
+                             .fns=~.x+Interv)) %>%
+        dplyr::rename(`Interv:factor(Period)0`=Interv)
+      colnames(CPI.T_Res) <- gsub(".*)","CPI.T_",colnames(CPI.T_Res))
+      CPI.T_Res$CPI.T_AvgExLast <- apply(CPI.T_Res, 1, mean, na.rm=TRUE)
+      CPI.T_Res$CPI.T_Middle <- apply(CPI.T_Res[,paste0("CPI.T_",2:4)], 1, mean, na.rm=TRUE)
+      Res.perm <- cbind(Res.perm, CPI.T_Res)
+    }
+    if (CPI.D) {
+      CPI.D_Res <- as_tibble(t(sapply(Perm.Dat.Long,
+                                      FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff) + factor(Period)+ (1|Cluster) + (1|CPI),
+                                                                 data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
+                                                                                          Diff=if_else(Period-Start < 0,0,Period-Start+1))))))) %>%
+        dplyr::select(starts_with("Interv")) %>%
+        dplyr::mutate(across(.cols=-c("Interv"),
+                             .fns=~.x+Interv)) %>%
+        dplyr::rename(`Interv:factor(Diff)0`=Interv)
+      colnames(CPI.D_Res) <- gsub(".*)","CPI.D_",colnames(CPI.D_Res))
+      CPI.D_Res$CPI.D_Avg <- apply(CPI.D_Res, 1, mean, na.rm=TRUE)
+      CPI.D_Res$CPI.D_Middle <- apply(CPI.D_Res[,paste0("CPI.D_",2:4)], 1, mean, na.rm=TRUE)
+      Res.perm <- cbind(Res.perm, CPI.D_Res)
     }
     if (GEE) {
       GEE_Res <- sapply(Perm.Dat.Long,
@@ -244,16 +302,20 @@ simulate_SWT <- function(NumSims,
                         Solve_Out=SO_list, 
                         Comparisons=Comparisons)
   Sim.Res <- Sim_Analyze(Sim.Dat, Sim.Wt,
-                                     MEM=("MEM" %in% Comparisons),
-                                     CPI=("CPI" %in% Comparisons),
-                                     GEE=("GEE" %in% Comparisons),
-                                     corstr=corstr)
+                         MEM=("MEM" %in% Comparisons),
+                         CPI=("CPI" %in% Comparisons),
+                         CPI.T=("CPI.T" %in% Comparisons),
+                         CPI.D=("CPI.D" %in% Comparisons),
+                         GEE=("GEE" %in% Comparisons),
+                         corstr=corstr)
   if (Permutations > 0) {
     Sim.Perm.Res <- replicate(n=Permutations,
                               expr=Sim_Permutation(Sim.Dat, Sim.Wt,
                                     N, J,
                                     MEM=("MEM" %in% Comparisons),
                                     CPI=("CPI" %in% Comparisons),
+                                    CPI.T=("CPI.T" %in% Comparisons),
+                                    CPI.D=("CPI.D" %in% Comparisons),
                                     GEE=("GEE" %in% Comparisons),
                                     corstr=corstr),
                               simplify="array")
@@ -279,7 +341,6 @@ simulate_FromSet <- function(Param_Set,
                              Alpha1, 
                              T1, T2, 
                              MVO_list, SO_list=NULL,
-                             Comparisons=NULL, corstr="exchangeable",
                              outdir=NULL,
                              outname=NULL) {
   for (i in 1:(dim(Param_Set)[1])) {
@@ -293,9 +354,9 @@ simulate_FromSet <- function(Param_Set,
                               row$sig_nu, row$sig_e, row$m,
                               Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
                               MVO_list, SO_list,
-                              Comparisons, corstr,
+                              Comparisons=Theta_Set[[i]]$Comps, Theta_Set[[i]]$corstr,
                               Permutations=row$NumPerms))
-    save(list=paste0("Res_Sim_",i), 
+    save(list=paste0("Res_Sim_",row$SimNo), 
          file=paste0(outdir,"/",outname,"_",row$SimNo,".Rda"))
   }
 }
@@ -303,34 +364,36 @@ simulate_FromSet <- function(Param_Set,
 
 
 ### Parameters for Simulation:
+NumSims.all <- 2
+NumPerms.all <- 250
 Param_Set <- tribble(
   ~SimNo, ~NumSims, ~NumPerms, ~mu, ~ProbT1, ~sig_nu, ~sig_e, ~m, ~J, ~N,
-  1, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  2, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  3, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  4, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
-  5, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
-  6, 100, 100, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
-  7, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  8, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  9, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  10, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  11, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  12, 100, 100, 0.3, 1, 0.01, 0.1, 100, 8, 14
+  1, NumSims.all, NumPerms.all, 250, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  2, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  3, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  4, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  5, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  6, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  7, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  8, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  9, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  10, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  11, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  12, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14
 )
 
-Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0)),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.05)),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.1)),
-                  list(Type=5, ThetaDF=tibble(Theta=0)),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.05)),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.1)),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02))),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.14,-0.12,-0.08,0,0.06,0.04,0.02))),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.05,4),rep(0,3)))),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.07,by=-0.01))),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.05,5)))),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02))))
+Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.03), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.06), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=0), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.03), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.06), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.14,-0.12,-0.08,0,0.06,0.04,0.02)), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.05,4),rep(0,3))), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.07,by=-0.01)), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.05,5))), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comparisons=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL))
 
 Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012, 
             0.002, 0.005, -0.001, 0.020, 0, 0.017, -0.011)
@@ -358,8 +421,8 @@ set.seed(801611)
 #                               corstr="exchangeable",
 #                               Permutations=500))
 
-system.time(simulate_FromSet(Param_Set[7:12,],
-                             Theta_Set[7:12],
+system.time(simulate_FromSet(Param_Set,
+                             Theta_Set,
                              StartingPds=NULL,
                              Alpha1, 
                              T1, T2, 
@@ -368,7 +431,7 @@ system.time(simulate_FromSet(Param_Set[7:12,],
                                           A4=MVOut_4_CS_0_003,
                                           A5=MVOut_5_CS_0_003),
                              SO_list=list(Comp=SolveOut_5),
-                             Comparisons=c("TW","CS","SA","CH","CO","NP","MEM","CPI"),
+                             Comparisons=,
                              corstr="exchangeable",
                              outdir="sim_res",
                              outname="Sim_Set"))
