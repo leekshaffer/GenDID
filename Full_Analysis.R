@@ -61,9 +61,17 @@ Permute_data <- function(StartTimes, J, data, Obs.weights) {
 ## N is the total number of clusters/units
 ## J is the total number of periods (Note: N*J should be the number of rows in Observations)
 ## Obs.weights is the observation weights as output from min_var
+Permute_order <- function(N, J) {
+  return((rep(sample.int(N, size=N, replace=FALSE), each=J)-1)*J+rep(1:J, times=N))
+}
+
 Permute_obs <- function(Observations, N, J, Obs.weights) {
-  Order <- (rep(sample.int(N, size=N, replace=FALSE), each=J)-1)*J+rep(1:J, times=N)
-  return(t(Obs.weights) %*% as.matrix(Observations)[Order,,drop=FALSE])
+  Order <- Permute_order(N, J)
+  if (is.null(Obs.weights)) {
+    return(Observations[Order])
+  } else {
+    return(t(Obs.weights) %*% as.matrix(Observations)[Order,,drop=FALSE])
+  }
 }
 
 ## Inputs to MV_Assumption function:
@@ -87,11 +95,15 @@ MV_Assumption <- function(SolveOut, Assumption,
                     A_mat=SolveOut$Amat,
                     Sigma=Sigma)
   if (is.null(Observations)) {
+    D_Full <- cbind(SolveOut$DFT$D_aug,
+                    MV_int$DID.weights)
     assign(x=paste0("MV_",Assumption,"_",SigmaName),
-           value=MV_int)
+           value=list(Amat=SolveOut$Amat,
+                            D_Full=D_Full,
+                            MV=MV_int))
     save(list=paste0("MV_",Assumption,"_",SigmaName),
          file=paste0(save_loc,save_prefix,Assumption,"_",SigmaName,".Rda"))
-    return(MV_int)
+    return(get(paste0("MV_",Assumption,"_",SigmaName)))
   } else {
     Estimates <- t(MV_int$Obs.weights) %*% Observations
     D_Full <- cbind(SolveOut$DFT$D_aug,
@@ -109,7 +121,7 @@ MV_Assumption <- function(SolveOut, Assumption,
       PVals <- NULL
     }
     assign(x=paste0("MVOut_",Assumption,"_",SigmaName),
-           value=list(Amat=Amat,
+           value=list(Amat=SolveOut$Amat,
                       Estimates=Estimates,
                       D_Full=D_Full,
                       MV=MV_int,
