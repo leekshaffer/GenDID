@@ -358,8 +358,8 @@ set.seed(801611)
 #                               corstr="exchangeable",
 #                               Permutations=500))
 
-system.time(simulate_FromSet(Param_Set[8:12,],
-                             Theta_Set[8:12],
+system.time(simulate_FromSet(Param_Set[7:12,],
+                             Theta_Set[7:12],
                              StartingPds=NULL,
                              Alpha1, 
                              T1, T2, 
