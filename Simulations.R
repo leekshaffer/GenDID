@@ -429,3 +429,21 @@ system.time(simulate_FromSet(Param_Set,
                              SO_list=list(Comp=SolveOut_5),
                              outdir="sim_res",
                              outname="Sim_Set"))
+
+
+
+### Get simulation results:
+Full_Sim_Res <- NULL
+for (i in Param_Set$SimNo) {
+  load(paste0("sim_res/Sim_Set_",i,".Rda"))
+  assign(x="Res", value=get(paste0("Res_Sim_",i)))
+  Res_int <- tibble(SimNo=rep(i,4), 
+                    Result=c("Mean Estimate","Median Estimate","SD Estimate","Power"))
+  Full_Sim_Res <- Full_Sim_Res %>% bind_rows(cbind(Res_int, rbind(apply(Res$Estimates, 2, mean, na.rm=TRUE),
+                                                                  apply(Res$Estimates, 2, median, na.rm=TRUE),
+                                                                  apply(Res$Estimates, 2, sd, na.rm=TRUE),
+                                                                  apply(Res$PValues, 2, function(x) mean(x <= 0.05, na.rm=TRUE)))))
+  rm(list=c("Res",paste0("Res_Sim_",i),"Res_int"))
+}
+save(Full_Sim_Res,
+     file="sim_res/Full_Sim_Res.Rda")
