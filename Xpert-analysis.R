@@ -149,9 +149,22 @@ for (i in 2:5) {
                              save_prefix="xpert-mv-a_"))
 }
 
+### Add additional version (exch, rho = 0.333) for simulations:
+for (i in 2:5) {
+  assign(x=paste0("MVOut_",i,"_CS_0_333"),
+         value=MV_Assumption(SolveOut=get(paste0("SO",i)),
+                             Assumption=i,
+                             Sigma=create_Sigma_CS(rho=1/3,N=N,J=J),
+                             SigmaName="CS_0_333",
+                             Observations=Obs_Y,
+                             Permutations=1000,
+                             save_loc="int/",
+                             save_prefix="xpert-mv-a_"))
+}
+
 ## Import Results:
 Assns <- 2:5
-SigmaNames <- c("Ind","CS_0_003","AR1_0_012")
+SigmaNames <- c("Ind","CS_0_003","CS_0_333","AR1_0_012")
 
 for (j in SigmaNames) {
   for (i in Assns) {
@@ -306,3 +319,4 @@ CH <- did_multiplegt(df=xpert.dat,
                      T="Period",
                      D="Interv")
 CH
+
