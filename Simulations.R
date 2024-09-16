@@ -393,22 +393,22 @@ Param_Set <- tribble(
 )
 
 Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.03), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.06), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.02), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.04), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
                   list(Type=5, ThetaDF=tibble(Theta=0), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.03), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.06), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.02), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.04), Comps=c("TW","CS","SA","CH","CO","NP","CPI"), corstr=NULL),
                   list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.14,-0.12,-0.08,0,0.06,0.04,0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.05,4),rep(0,3))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.07,by=-0.01)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.05,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.07,-0.06,-0.04,0,0.03,0.02,0.01)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.03,4),rep(0,3))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.04,by=-0.005)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.03,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
                   list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
                   list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.14,-0.12,-0.08,0,0.06,0.04,0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.05,4),rep(0,3))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.07,by=-0.01)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.05,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.07,-0.06,-0.04,0,0.03,0.02,0.01)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.03,4),rep(0,3))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.04,by=-0.005)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.03,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL),
                   list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D"), corstr=NULL))
 
 Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012, 
@@ -422,6 +422,14 @@ load("int/xpert-mv-a_2_CS_0_003.Rda")
 load("int/xpert-mv-a_3_CS_0_003.Rda")
 load("int/xpert-mv-a_4_CS_0_003.Rda")
 load("int/xpert-mv-a_5_CS_0_003.Rda")
+load("int/xpert-mv-a_2_CS_0_333.Rda")
+load("int/xpert-mv-a_3_CS_0_333.Rda")
+load("int/xpert-mv-a_4_CS_0_333.Rda")
+load("int/xpert-mv-a_5_CS_0_333.Rda")
+load("int/xpert-mv-a_2_Ind.Rda")
+load("int/xpert-mv-a_3_Ind.Rda")
+load("int/xpert-mv-a_4_Ind.Rda")
+load("int/xpert-mv-a_5_Ind.Rda")
 load("../int_large/xpert-solve-a_2.Rda")
 load("../int_large/xpert-solve-a_3.Rda")
 load("../int_large/xpert-solve-a_4.Rda")
@@ -434,10 +442,18 @@ system.time(simulate_FromSet(Param_Set,
                              StartingPds=NULL,
                              Alpha1, 
                              T1, T2, 
-                             MVO_list=list(A2=MVOut_2_CS_0_003,
-                                          A3=MVOut_3_CS_0_003,
-                                          A4=MVOut_4_CS_0_003,
-                                          A5=MVOut_5_CS_0_003),
+                             MVO_list=list(A2_003=MVOut_2_CS_0_003,
+                                          A3_003=MVOut_3_CS_0_003,
+                                          A4_003=MVOut_4_CS_0_003,
+                                          A5_003=MVOut_5_CS_0_003,
+                                          A2_333=MVOut_2_CS_0_333,
+                                          A3_333=MVOut_3_CS_0_333,
+                                          A4_333=MVOut_4_CS_0_333,
+                                          A5_333=MVOut_5_CS_0_333,
+                                          A2_Ind=MVOut_2_Ind,
+                                          A3_Ind=MVOut_3_Ind,
+                                          A4_Ind=MVOut_4_Ind,
+                                          A5_Ind=MVOut_5_Ind,),
                              SO_list=list(Comp=SolveOut_5),
                              outdir="sim_res",
                              outname="Sim_Set"))
