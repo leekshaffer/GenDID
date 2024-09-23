@@ -453,7 +453,7 @@ system.time(simulate_FromSet(Param_Set,
                                           A2_Ind=MVOut_2_Ind,
                                           A3_Ind=MVOut_3_Ind,
                                           A4_Ind=MVOut_4_Ind,
-                                          A5_Ind=MVOut_5_Ind,),
+                                          A5_Ind=MVOut_5_Ind),
                              SO_list=list(Comp=SolveOut_5),
                              outdir="sim_res",
                              outname="Sim_Set"))
@@ -475,3 +475,5 @@ for (i in Param_Set$SimNo) {
 }
 save(Full_Sim_Res,
      file="sim_res/Full_Sim_Res.Rda")
+write_csv(x=Full_Sim_Res,
+          file="sim_res/Full_Sim_Res.csv")
