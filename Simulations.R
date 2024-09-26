@@ -434,8 +434,10 @@ load("../int_large/xpert-solve-a_2.Rda")
 load("../int_large/xpert-solve-a_3.Rda")
 load("../int_large/xpert-solve-a_4.Rda")
 load("../int_large/xpert-solve-a_5.Rda")
-
+## Round 1 seed:
 set.seed(801611)
+## Round 2 seed:
+set.seed(569908)
 
 system.time(simulate_FromSet(Param_Set,
                              Theta_Set,
@@ -455,7 +457,7 @@ system.time(simulate_FromSet(Param_Set,
                                           A4_Ind=MVOut_4_Ind,
                                           A5_Ind=MVOut_5_Ind),
                              SO_list=list(Comp=SolveOut_5),
-                             outdir="sim_res",
+                             outdir="sim_res_2",
                              outname="Sim_Set"))
 
 
@@ -465,6 +467,8 @@ Full_Sim_Res <- NULL
 for (i in Param_Set$SimNo) {
   load(paste0("sim_res/Sim_Set_",i,".Rda"))
   assign(x="Res", value=get(paste0("Res_Sim_",i)))
+  load(paste0("sim_res_2/Sim_Set_",i,".Rda"))
+  assign(x="Res", value=Res %>% bind_rows(get(paste0("Res_Sim_",i))))
   Res_int <- tibble(SimNo=rep(i,4), 
                     Result=c("Mean Estimate","Median Estimate","SD Estimate","Power"))
   Full_Sim_Res <- Full_Sim_Res %>% bind_rows(cbind(Res_int, rbind(apply(Res$Estimates, 2, mean, na.rm=TRUE),
@@ -474,6 +478,6 @@ for (i in Param_Set$SimNo) {
   rm(list=c("Res",paste0("Res_Sim_",i),"Res_int"))
 }
 save(Full_Sim_Res,
-     file="sim_res/Full_Sim_Res.Rda")
+     file="sim_res/Full_Sim_Res_withRd2.Rda")
 write_csv(x=Full_Sim_Res,
-          file="sim_res/Full_Sim_Res.csv")
+          file="sim_res/Full_Sim_Res_withRd2.csv")
