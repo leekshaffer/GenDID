@@ -466,18 +466,78 @@ system.time(simulate_FromSet(Param_Set,
 Full_Sim_Res <- NULL
 for (i in Param_Set$SimNo) {
   load(paste0("sim_res/Sim_Set_",i,".Rda"))
-  assign(x="Res", value=get(paste0("Res_Sim_",i)))
+  assign(x="Res1", value=get(paste0("Res_Sim_",i)))
   load(paste0("sim_res_2/Sim_Set_",i,".Rda"))
-  assign(x="Res", value=Res %>% bind_rows(get(paste0("Res_Sim_",i))))
+  assign(x="Res2", value=get(paste0("Res_Sim_",i)))
+  Ests <- rbind(Res1$Estimates, Res2$Estimates)
+  PVs <- rbind(Res1$PValues, Res2$PValues)
   Res_int <- tibble(SimNo=rep(i,4), 
                     Result=c("Mean Estimate","Median Estimate","SD Estimate","Power"))
-  Full_Sim_Res <- Full_Sim_Res %>% bind_rows(cbind(Res_int, rbind(apply(Res$Estimates, 2, mean, na.rm=TRUE),
-                                                                  apply(Res$Estimates, 2, median, na.rm=TRUE),
-                                                                  apply(Res$Estimates, 2, sd, na.rm=TRUE),
-                                                                  apply(Res$PValues, 2, function(x) mean(x <= 0.05, na.rm=TRUE)))))
-  rm(list=c("Res",paste0("Res_Sim_",i),"Res_int"))
+  Full_Sim_Res <- Full_Sim_Res %>% bind_rows(cbind(Res_int, rbind(apply(Ests, 2, mean, na.rm=TRUE),
+                                                                  apply(Ests, 2, median, na.rm=TRUE),
+                                                                  apply(Ests, 2, sd, na.rm=TRUE),
+                                                                  apply(PVs, 2, function(x) mean(x <= 0.05, na.rm=TRUE)))))
+  rm(list=c("Res1","Res2","Ests","PVs",
+            paste0("Res_Sim_",i),"Res_int"))
 }
 save(Full_Sim_Res,
-     file="sim_res/Full_Sim_Res_withRd2.Rda")
+     file="sim_res/Full_Sim_Res.Rda")
 write_csv(x=Full_Sim_Res,
-          file="sim_res/Full_Sim_Res_withRd2.csv")
+          file="sim_res/Full_Sim_Res.csv")
+
+
+### Pull Results for Manuscript:
+OverallSet <- tibble(Estimator=c("A5_Ind_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_CO3",
+                "A4_Ind_AvgEx8","CPI.T_AvgExLast","Comp_W_CS.W_calendar",
+                "A3_Ind_Avg","A3_Ind_AvgEx7","CPI.D_Avg","Comp_W_CS.W_dynamic",
+                "A2_Ind_Group","Comp_W_CS.W_group",
+                "A2_Ind_AvgEx7","Comp_W_CS.W_simple","Comp_W_SA.W_ATT")) %>%
+  mutate(`Estimator Number`=row_number())
+OverallSet_333 <- tibble(Estimator=c("A5_333_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_CO3",
+                                 "A4_333_AvgEx8","CPI.T_AvgExLast","Comp_W_CS.W_calendar",
+                                 "A3_333_Avg","A3_333_AvgEx7","CPI.D_Avg","Comp_W_CS.W_dynamic",
+                                 "A2_333_Group","Comp_W_CS.W_group",
+                                 "A2_333_AvgEx7","Comp_W_CS.W_simple","Comp_W_SA.W_ATT")) %>%
+  mutate(`Estimator Number`=row_number())
+TargetsSet <- tibble(Estimator=c("A4_Ind_T.3","A2_Ind_T.3","CPI.T_3",
+                 "A3_Ind_D.2","A2_Ind_D.2","CPI.D_2",
+                 "A2_Ind_D.1","Comp_W_CH.W_M","Comp_W_CO.W_CO1",
+                 "A3_Ind_D.1","Comp_W_CO.W_CO2")) %>%
+  mutate(`Estimator Number`=row_number())
+
+Overall <- Full_Sim_Res %>% dplyr::select(all_of(c("SimNo","Result",OverallSet$Estimator))) %>% 
+  pivot_longer(cols=-c("SimNo","Result"),names_to="Estimator", values_to="Value") %>% 
+  pivot_wider(id_cols=c("SimNo","Estimator"), names_from="Result", values_from="Value") %>%
+  mutate(Lower=`Mean Estimate`-`SD Estimate`, Upper=`Mean Estimate`+`SD Estimate`) %>%
+  left_join(OverallSet, by="Estimator")
+Overall_333 <- Full_Sim_Res %>% dplyr::select(all_of(c("SimNo","Result",OverallSet_333$Estimator))) %>% 
+  pivot_longer(cols=-c("SimNo","Result"),names_to="Estimator", values_to="Value") %>% 
+  pivot_wider(id_cols=c("SimNo","Estimator"), names_from="Result", values_from="Value") %>%
+  mutate(Lower=`Mean Estimate`-`SD Estimate`, Upper=`Mean Estimate`+`SD Estimate`) %>%
+  left_join(OverallSet_333, by="Estimator")
+Targets <- Full_Sim_Res %>% dplyr::select(all_of(c("SimNo","Result",TargetsSet$Estimator))) %>% 
+  pivot_longer(cols=-c("SimNo","Result"),names_to="Estimator", values_to="Value") %>% 
+  pivot_wider(id_cols=c("SimNo","Estimator"), names_from="Result", values_from="Value") %>%
+  mutate(Lower=`Mean Estimate`-`SD Estimate`, Upper=`Mean Estimate`+`SD Estimate`) %>%
+  left_join(TargetsSet, by="Estimator")
+
+## Simple Plots:
+ggplot(Overall  %>% filter(SimNo %in% c(1:3,7:12)), 
+       mapping=aes(x=`Estimator Number`, y=Power*100)) + geom_point() +
+  facet_wrap(~SimNo, nrow=3, ncol=3) + theme_bw()
+
+ggplot(Overall %>% filter(SimNo %in% c(1:3,7:12)), 
+       mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                   ymin=Lower, ymax=Upper)) + 
+  geom_point() + geom_errorbar() +
+  facet_wrap(~SimNo, nrow=3, ncol=3) + theme_bw()
+
+ggplot(Targets  %>% filter(SimNo %in% c(1:3,7:12)), 
+       mapping=aes(x=`Estimator Number`, y=Power*100)) + geom_point() +
+  facet_wrap(~SimNo, nrow=3, ncol=3) + theme_bw()
+
+ggplot(Targets %>% filter(SimNo %in% c(1:3,7:12)), 
+       mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                   ymin=Lower, ymax=Upper)) + 
+  geom_point() + geom_errorbar() +
+  facet_wrap(~SimNo, nrow=3, ncol=3) + theme_bw()
