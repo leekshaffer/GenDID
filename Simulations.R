@@ -375,15 +375,15 @@ Param_Set <- tribble(
   1, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   2, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   3, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  4, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
-  5, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
-  6, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  10, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  11, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  12, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
+  4, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  5, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
+  6, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   7, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   8, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   9, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  10, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  11, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
-  12, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
   13, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
   14, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
   15, NumSims.all, NumPerms.all, 0.3, 0.5, 0.01, 0.1, 100, 8, 14,
@@ -489,16 +489,30 @@ write_csv(x=Full_Sim_Res,
 ### Pull Results for Manuscript:
 OverallSet <- tibble(Estimator=c("A5_Ind_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_CO3",
                 "A4_Ind_AvgEx8","CPI.T_AvgExLast","Comp_W_CS.W_calendar",
-                "A3_Ind_Avg","A3_Ind_AvgEx7","CPI.D_Avg","Comp_W_CS.W_dynamic",
+                "A3_Ind_Avg","CPI.D_Avg","A3_Ind_AvgEx7","Comp_W_CS.W_dynamic",
                 "A2_Ind_Group","Comp_W_CS.W_group",
                 "A2_Ind_AvgEx7","Comp_W_CS.W_simple","Comp_W_SA.W_ATT")) %>%
-  mutate(`Estimator Number`=row_number())
+  mutate(`Estimator Number`=row_number(),
+         Type=c("GD","SA","CPI","SA","GD","CPI","SA","GD","CPI","GD","SA",
+                "GD","SA","GD","SA","SA"),
+         Assumption=c("S5","S5","S5","S5","S4","S4","S4","S3","S3","S3","S3",
+                      "S2","S2","S2","S2","S2"),
+         Name=c("GD_A5","TWFE","CPI_A5","CO3","GD_A4","CPI_A4","CS_A4",
+                "GD_A3","CPI_A3","GD_A3_ExLast","CS_A3",
+                "GD_A2_group","CS_group","GD_A2_ATT","CS_ATT","SA_ATT"))
 OverallSet_333 <- tibble(Estimator=c("A5_333_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_CO3",
                                  "A4_333_AvgEx8","CPI.T_AvgExLast","Comp_W_CS.W_calendar",
-                                 "A3_333_Avg","A3_333_AvgEx7","CPI.D_Avg","Comp_W_CS.W_dynamic",
+                                 "A3_333_Avg","CPI.D_Avg","A3_333_AvgEx7","Comp_W_CS.W_dynamic",
                                  "A2_333_Group","Comp_W_CS.W_group",
                                  "A2_333_AvgEx7","Comp_W_CS.W_simple","Comp_W_SA.W_ATT")) %>%
-  mutate(`Estimator Number`=row_number())
+  mutate(`Estimator Number`=row_number(),
+         Type=c("GD","SA","CPI","SA","GD","CPI","SA","GD","CPI","GD","SA",
+                "GD","SA","GD","SA","SA"),
+         Assumption=c("S5","S5","S5","S5","S4","S4","S4","S3","S3","S3","S3",
+                      "S2","S2","S2","S2","S2"),
+         Name=c("GD_A5","TWFE","CPI_A5","CO3","GD_A4","CPI_A4","CS_A4",
+                "GD_A3","CPI_A3","GD_A3_ExLast","CS_A3",
+                "GD_A2_group","CS_group","GD_A2_ATT","CS_ATT","SA_ATT"))
 TargetsSet <- tibble(Estimator=c("A4_Ind_T.3","A2_Ind_T.3","CPI.T_3",
                  "A3_Ind_D.2","A2_Ind_D.2","CPI.D_2",
                  "A2_Ind_D.1","Comp_W_CH.W_M","Comp_W_CO.W_CO1",
@@ -522,22 +536,281 @@ Targets <- Full_Sim_Res %>% dplyr::select(all_of(c("SimNo","Result",TargetsSet$E
   left_join(TargetsSet, by="Estimator")
 
 ## Simple Plots:
-ggplot(Overall  %>% filter(SimNo %in% c(1:3,7:12)), 
-       mapping=aes(x=`Estimator Number`, y=Power*100)) + geom_point() +
-  facet_wrap(~SimNo, nrow=3, ncol=3) + theme_bw()
+Power13 <- 
+  ggplot(Overall  %>% filter(SimNo %in% c(1:3)), 
+       mapping=aes(x=`Estimator Number`, y=Power*100, 
+                   color=Type, shape=Assumption)) + 
+  geom_point() +
+  facet_wrap(~SimNo, nrow=1, ncol=3) + theme_bw()
 
-ggplot(Overall %>% filter(SimNo %in% c(1:3,7:12)), 
+Power1 <- 
+  ggplot(Overall  %>% filter(SimNo==1), 
+       mapping=aes(x=`Estimator Number`, y=Power*100, 
+                   color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Type I Error (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2)) +
+  geom_hline(yintercept=5, linetype="dashed", color="gray50")
+
+Power2 <- 
+  ggplot(Overall  %>% filter(SimNo==2), 
+         mapping=aes(x=`Estimator Number`, y=Power*100, 
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Power (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2))
+
+Power3 <- 
+  ggplot(Overall  %>% filter(SimNo==3), 
+         mapping=aes(x=`Estimator Number`, y=Power*100, 
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Power (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2))
+
+Power46 <- 
+  ggplot(Overall  %>% filter(SimNo %in% c(4:6), Assumption %in% c("S4","S5")), 
+       mapping=aes(x=`Estimator Number`, y=Power*100, 
+                   color=Type, shape=Assumption)) + 
+  geom_point() +
+  facet_wrap(~SimNo, nrow=1, ncol=3) + theme_bw()
+
+Power4 <- 
+  ggplot(Overall  %>% filter(SimNo==4, Assumption %in% c("S4","S5")), 
+         mapping=aes(x=`Estimator Number`, y=Power*100, 
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Power (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2))
+
+Power5 <- 
+  ggplot(Overall  %>% filter(SimNo==5, Assumption %in% c("S4","S5")), 
+         mapping=aes(x=`Estimator Number`, y=Power*100, 
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Power (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2))
+
+Power6 <- 
+  ggplot(Overall  %>% filter(SimNo==6, Assumption %in% c("S4","S5")), 
+         mapping=aes(x=`Estimator Number`, y=Power*100, 
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Power (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2))
+
+Power79 <- 
+  ggplot(Overall  %>% filter(SimNo %in% c(7:9), Assumption %in% c("S3")), 
+       mapping=aes(x=`Estimator Number`, y=Power*100, 
+                   color=Type, shape=Assumption)) + 
+  geom_point() +
+  facet_wrap(~SimNo, nrow=1, ncol=3) + theme_bw()
+
+Power7 <- 
+  ggplot(Overall  %>% filter(SimNo==7, Assumption %in% c("S3")), 
+         mapping=aes(x=`Estimator Number`, y=Power*100, 
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Power (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2))
+
+Power8 <- 
+  ggplot(Overall  %>% filter(SimNo==8, Assumption %in% c("S3")), 
+         mapping=aes(x=`Estimator Number`, y=Power*100, 
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Power (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2))
+
+Power9 <- 
+  ggplot(Overall  %>% filter(SimNo==9, Assumption %in% c("S3")), 
+         mapping=aes(x=`Estimator Number`, y=Power*100, 
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + theme_bw() +
+  labs(x="Estimator",y="Power (%)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(0,100), 
+                     breaks=seq(0,100,by=20),
+                     expand=c(0,2))
+
+Est13 <- 
+  ggplot(Overall %>% filter(SimNo %in% c(1:3)), 
        mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
-                   ymin=Lower, ymax=Upper)) + 
+                   ymin=Lower, ymax=Upper,
+                   color=Type, shape=Assumption)) + 
   geom_point() + geom_errorbar() +
-  facet_wrap(~SimNo, nrow=3, ncol=3) + theme_bw()
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0)) +
+  facet_wrap(~SimNo, nrow=1, ncol=3)
 
-ggplot(Targets  %>% filter(SimNo %in% c(1:3,7:12)), 
-       mapping=aes(x=`Estimator Number`, y=Power*100)) + geom_point() +
-  facet_wrap(~SimNo, nrow=3, ncol=3) + theme_bw()
+Est1 <- 
+  ggplot(Overall %>% filter(SimNo==1), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0)) +
+  geom_hline(yintercept=0, linetype="dashed", color="gray50")
 
-ggplot(Targets %>% filter(SimNo %in% c(1:3,7:12)), 
-       mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
-                   ymin=Lower, ymax=Upper)) + 
+Est2 <- 
+  ggplot(Overall %>% filter(SimNo==2), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0)) +
+  geom_hline(yintercept=-0.02, linetype="dashed", color="gray50")
+
+Est3 <- 
+  ggplot(Overall %>% filter(SimNo==3), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point(size=2) + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0)) +
+  geom_hline(yintercept=-0.04, linetype="dashed", color="gray50")
+
+Est46 <- 
+  ggplot(Overall %>% filter(SimNo %in% c(4:6),
+                            Assumption %in% c("S2","S4","S5")), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
   geom_point() + geom_errorbar() +
-  facet_wrap(~SimNo, nrow=3, ncol=3) + theme_bw()
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0)) +
+  facet_wrap(~SimNo, nrow=1, ncol=3)
+
+Est4 <- 
+  ggplot(Overall %>% filter(SimNo==4,
+                            Assumption %in% c("S2","S4","S5")), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point() + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0))
+
+Est5 <- 
+  ggplot(Overall %>% filter(SimNo==5,
+                            Assumption %in% c("S2","S4","S5")), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point() + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0))
+
+Est6 <- 
+  ggplot(Overall %>% filter(SimNo==6,
+                            Assumption %in% c("S2","S4","S5")), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point() + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0))
+
+Est79 <- 
+  ggplot(Overall %>% filter(SimNo %in% c(7:9),
+                            Assumption %in% c("S2","S3","S5")), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point() + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0)) +
+  facet_wrap(~SimNo, nrow=1, ncol=3)
+
+Est7 <- 
+  ggplot(Overall %>% filter(SimNo==7,
+                            Assumption %in% c("S2","S3","S5")), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point() + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0))
+
+Est8 <- 
+  ggplot(Overall %>% filter(SimNo==8,
+                            Assumption %in% c("S2","S3","S5")), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point() + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0))
+
+Est9 <- 
+  ggplot(Overall %>% filter(SimNo==9,
+                            Assumption %in% c("S2","S3","S5")), 
+         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
+                     ymin=Lower, ymax=Upper,
+                     color=Type, shape=Assumption)) + 
+  geom_point() + geom_errorbar() +
+  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
+  scale_x_discrete() + 
+  scale_y_continuous(limits=c(-0.10,0.015), 
+                     breaks=seq(-0.1,0.01,by=0.02),
+                     expand=c(0,0))
