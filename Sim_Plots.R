@@ -9,8 +9,8 @@ require(patchwork)
 
 outdir <- "figs/"
 
-## Load simulation results:
-load(file="sim_res/Full_Sim_Res.Rda")
+## Load simulation results from Runs 1--2:
+load(file="sim_res/Full_Sim_Res_12.Rda")
 
 ## Select Desired Estimators:
 OverallSet <- tibble(Estimator=c("A5_Ind_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_CO3",
