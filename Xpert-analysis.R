@@ -37,7 +37,11 @@ Amat <- gen_A(N,J)
 SO2 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                         Assumption=2,
                         v.Mat=cbind(Avg=c(rep(1/28,28)),
-                                    AvgEx7=c(rep(1/21,21),rep(0,7)),
+                                    AvgExT8=c(rep(1/21,21),rep(0,7)),
+                                    D.Avg=1/6*c(1/6,1/6,1/5,1/6,1/5,1/4,1/6,1/5,1/4,1/3,
+                                            1/6,1/5,1/4,1/3,1/2,1/6,1/5,1/4,1/3,1/2,1,rep(0,7)),
+                                    T.Avg=1/6*c(1,1/2,1/2,rep(1/3,3),rep(1/4,4),
+                                                rep(1/5,5),rep(1/6,6),rep(0,7)),
                                     D.1=c(1/6,1/6,0,1/6,0,0,1/6,0,0,0,1/6,0,0,0,0,1/6,rep(0,12)),
                                     D.2=c(0,0,1/5,0,1/5,0,0,1/5,0,0,0,1/5,0,0,0,0,1/5,rep(0,11)),
                                     D.12=c(1/11,1/11,1/11,1/11,1/11,0,1/11,1/11,0,0,1/11,1/11,0,0,0,1/11,1/11,rep(0,11)),
@@ -211,7 +215,7 @@ for (i in Assns) {
 ### j (Variance setting), and Estimators (estimator)
 Map_Settings <- tibble(i=c(5,4,3,2,3,2,rep(4,6),rep(2,6)),
                        j=rep("CS_0_003",18),
-                       Estimators=c("1","AvgEx8","Avg","AvgEx7",
+                       Estimators=c("1","AvgEx8","Avg","AvgExT8",
                                     "D.1","D.1",
                                     "T.2","T.3","T.4","T.5","T.6","T.7",
                                     "T.2","T.3","T.4","T.5","T.6","T.7"),
@@ -313,7 +317,8 @@ SA <- feols(Outcome~sunab(cohort=StartPd,
 summary(SA)
 
 ### de Chaisemartin and d'Haultfoeuille (2020):
-CH <- did_multiplegt(df=xpert.dat,
+CH <- did_multiplegt(mode="old",
+                     df=xpert.dat,
                      Y="Outcome",
                      G="Cluster",
                      T="Period",

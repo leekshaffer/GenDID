@@ -14,10 +14,11 @@ load(file="sim_res/Full_Sim_Res.Rda")
 
 ## Select Desired Estimators:
 OverallSet <- tibble(Estimator=c("A5_Ind_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_CO3",
-                                 "A4_Ind_AvgEx8","CPI.T_AvgExLast","Comp_W_CS.W_calendar",
+                                 "A4_Ind_AvgEx8","CPI.T_AvgExLast","Comp_W_CS.W_calendar"
                                  "A3_Ind_Avg","CPI.D_Avg","A3_Ind_AvgEx7","Comp_W_CS.W_dynamic",
                                  "A2_Ind_Group","Comp_W_CS.W_group",
                                  "A2_Ind_AvgEx7","Comp_W_CS.W_simple","Comp_W_SA.W_ATT")) %>%
+  ### When update sims, change A2_Ind_AvgEx7 to A2_Ind_AvgExT8 and add A2_Ind_D.Avg in row 3 and A2_Ind_T.Avg in row 2
   mutate(`Estimator Number`=row_number(),
          Type=c("GD","SA","CPI","SA","GD","CPI","SA","GD","CPI","GD","SA",
                 "GD","SA","GD","SA","SA"),
