@@ -4,6 +4,9 @@
 ###### Created 2024/09/09 #############
 #######################################
 
+## Note: some details of the mixed effects model fitting is specific to the setting used in Sim_Runs.R
+### Please check and alter these or do not use those models if using a different setup.
+
 source("A_Const.R")
 source("Sigmas.R")
 source("Full_Analysis.R")
