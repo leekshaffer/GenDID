@@ -247,7 +247,7 @@ simulate_FromSet_Par(Param_Set, Theta_Set,
                  SO_list=list(Comp=SolveOut_5),
                  outdir="sim_res_3", outname="Sim_Set",
                  parallel=TRUE,
-                 n_cores=6)
+                 n_cores=9)
 
 
 
