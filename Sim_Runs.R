@@ -178,7 +178,7 @@ write_csv(x=Full_Sim_Res,
 ## New simulation runs (3):
 
 ### Parameters for Simulation:
-NumSims.all <- 500 # Full: 500
+NumSims.all <- 1000 # Full: 1000
 NumPerms.all <- 250 # Full: 250
 Param_Set <- tribble(
   ~SimNo, ~NumSims, ~NumPerms, ~mu, ~ProbT1, ~sig_nu, ~sig_e, ~m, ~J, ~N,
