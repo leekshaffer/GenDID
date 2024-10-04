@@ -161,7 +161,8 @@ Sim_Analyze <- function(Sim.Dat,
       CPI.T_Res <- as_tibble(t(sapply(Sim.Dat.long,
                           FUN=function(x) fixef(lmer(Y~Interv*factor(Period) + (1|Cluster) + (1|CPI),
                                                             data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_")),
-                                                     control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
+                                                     control=lmerControl(check.rankX="silent.drop.cols",
+                                                                         check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -176,7 +177,8 @@ Sim_Analyze <- function(Sim.Dat,
                                       FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff) + factor(Period)+ (1|Cluster) + (1|CPI),
                                                                  data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
                                                                                           Diff=if_else(Period-Start < 0,0,Period-Start+1)),
-                                                                 control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
+                                                                 control=lmerControl(check.rankX="silent.drop.cols",
+                                                                                     check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -192,7 +194,8 @@ Sim_Analyze <- function(Sim.Dat,
                                                                    factor(Period)+ (1|Cluster) + (1|CPI),
                                                                  data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
                                                                                           Diff=if_else(Period-Start < 0,0,Period-Start+1)),
-                                                                 control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
+                                                                 control=lmerControl(check.rankX="silent.drop.cols",
+                                                                                     check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -262,7 +265,7 @@ Sim_Permutation <- function(Sim.Dat,
   Perm.mat <- t(sapply(1:dim(Sim.Dat)[3],
                      FUN=function(i) Obs.true[Orders[,i],i]))
   Res.perm <- Perm.mat %*% as.matrix(Sim.Wt)
-  if (MEM | CPI | CPI.T | CPI.D | GEE) {
+  if (MEM | CPI | CPI.T | CPI.D | CPI.DT | GEE) {
     Perm.Dat.Long <- lapply(1:(dim(Sim.Dat)[3]),
                             FUN=function(i) Permute_All(Sim.Dat[,,i], Orders[,i]))
     if (MEM) {
@@ -280,7 +283,8 @@ Sim_Permutation <- function(Sim.Dat,
       CPI.T_Res <- as_tibble(t(sapply(Perm.Dat.Long,
                                       FUN=function(x) fixef(lmer(Y~Interv*factor(Period) + (1|Cluster) + (1|CPI),
                                                                  data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_")),
-                                                                 control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
+                                                                 control=lmerControl(check.rankX="silent.drop.cols",
+                                                                                     check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -295,7 +299,8 @@ Sim_Permutation <- function(Sim.Dat,
                                       FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff) + factor(Period)+ (1|Cluster) + (1|CPI),
                                                                  data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
                                                                                           Diff=if_else(Period-Start < 0,0,Period-Start+1)),
-                                                                 control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
+                                                                 control=lmerControl(check.rankX="silent.drop.cols",
+                                                                                     check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -306,12 +311,13 @@ Sim_Permutation <- function(Sim.Dat,
       Res.perm <- cbind(Res.perm, as.matrix(CPI.D_Res))
     }
     if (CPI.DT) {
-      CPI.DT_Res <- as_tibble(t(sapply(Sim.Dat.long,
+      CPI.DT_Res <- as_tibble(t(sapply(Perm.Dat.Long,
                                        FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff):factor(Period) + 
                                                                     factor(Period)+ (1|Cluster) + (1|CPI),
                                                                   data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
                                                                                            Diff=if_else(Period-Start < 0,0,Period-Start+1)),
-                                                                  control=lmerControl(check.rankX="silent.drop.cols")))))) %>%
+                                                                  control=lmerControl(check.rankX="silent.drop.cols",
+                                                                                      check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))))) %>%
         dplyr::select(starts_with("Interv")) %>%
         dplyr::mutate(across(.cols=-c("Interv"),
                              .fns=~.x+Interv)) %>%
@@ -375,6 +381,7 @@ simulate_SWT <- function(NumSims,
                          CPI=("CPI" %in% Comparisons),
                          CPI.T=("CPI.T" %in% Comparisons),
                          CPI.D=("CPI.D" %in% Comparisons),
+                         CPI.DT=("CPI.DT" %in% Comparisons),
                          GEE=("GEE" %in% Comparisons),
                          corstr=corstr)
   if (Permutations > 0) {
@@ -385,6 +392,7 @@ simulate_SWT <- function(NumSims,
                                     CPI=("CPI" %in% Comparisons),
                                     CPI.T=("CPI.T" %in% Comparisons),
                                     CPI.D=("CPI.D" %in% Comparisons),
+                                    CPI.DT=("CPI.DT" %in% Comparisons),
                                     GEE=("GEE" %in% Comparisons),
                                     corstr=corstr),
                               simplify="array")
@@ -412,20 +420,18 @@ simulate_FromSet <- function(Param_Set,
                              MVO_list, SO_list=NULL,
                              outdir=NULL,
                              outname=NULL) {
-  for (i in 1:(dim(Param_Set)[1])) {
-    row <- Param_Set[i,]
-    print(paste("Starting Sim. Number",row$SimNo))
-    assign(x=paste0("Res_Sim_",i),
-           value=simulate_SWT(row$NumSims,
-                              row$N, row$J, StartingPds,
-                              row$mu, Alpha1, 
-                              T1, T2, row$ProbT1,
-                              row$sig_nu, row$sig_e, row$m,
-                              Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
-                              MVO_list, SO_list,
-                              Comparisons=Theta_Set[[i]]$Comps, Theta_Set[[i]]$corstr,
-                              Permutations=row$NumPerms))
-    save(list=paste0("Res_Sim_",row$SimNo), 
-         file=paste0(outdir,"/",outname,"_",row$SimNo,".Rda"))
-  }
+      row <- Param_Set[i,]
+      print(paste("Starting Sim. Number",row$SimNo))
+      assign(x=paste0("Res_Sim_",i),
+             value=simulate_SWT(row$NumSims,
+                                row$N, row$J, StartingPds,
+                                row$mu, Alpha1, 
+                                T1, T2, row$ProbT1,
+                                row$sig_nu, row$sig_e, row$m,
+                                Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
+                                MVO_list, SO_list,
+                                Comparisons=Theta_Set[[i]]$Comps, Theta_Set[[i]]$corstr,
+                                Permutations=row$NumPerms))
+      save(list=paste0("Res_Sim_",row$SimNo), 
+           file=paste0(outdir,"/",outname,"_",row$SimNo,".Rda"))
 }

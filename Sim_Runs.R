@@ -6,6 +6,52 @@
 
 source("Simulations.R")
 
+## A version of simulate_FromSet that allows simple parallelization
+simulate_FromSet_Par <- function(Param_Set,
+                             Theta_Set,
+                             StartingPds=NULL,
+                             Alpha1, 
+                             T1, T2, 
+                             MVO_list, SO_list=NULL,
+                             outdir=NULL,
+                             outname=NULL,
+                             parallel=TRUE, ## allows simple parallelization across settings
+                             n_cores=NULL) {
+  if (!parallel) {
+    simulate_FromSet(Param_Set, Theta_Set, StartingPds,
+                     Alpha1, T1, T2, 
+                     MVO_list, SO_list,
+                     outdir, outname)
+  } else {
+    require(foreach)
+    require(doParallel)
+    if (is.null(n_cores)) {
+      n_cores <- detectCores() - 1
+    }
+    par_clust <- makeCluster(n_cores)
+    registerDoParallel(par_clust)
+    foreach (i=1:(dim(Param_Set)[1])) %dopar% {
+      source("Simulations.R")
+      row <- Param_Set[i,]
+      print(paste("Starting Sim. Number",row$SimNo))
+      assign(x=paste0("Res_Sim_",i),
+             value=simulate_SWT(row$NumSims,
+                                row$N, row$J, StartingPds,
+                                row$mu, Alpha1, 
+                                T1, T2, row$ProbT1,
+                                row$sig_nu, row$sig_e, row$m,
+                                Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
+                                MVO_list, SO_list,
+                                Comparisons=Theta_Set[[i]]$Comps, Theta_Set[[i]]$corstr,
+                                Permutations=row$NumPerms))
+      save(list=paste0("Res_Sim_",row$SimNo), 
+           file=paste0(outdir,"/",outname,"_",row$SimNo,".Rda"))
+    }
+    stopCluster(cl = par_clust)
+  }
+}
+
+
 ## Original simulation runs (1--2):
 
 ### Parameters for Simulation:
@@ -132,8 +178,8 @@ write_csv(x=Full_Sim_Res,
 ## New simulation runs (3):
 
 ### Parameters for Simulation:
-NumSims.all <- 500
-NumPerms.all <- 250
+NumSims.all <- 500 # Full: 500
+NumPerms.all <- 250 # Full: 250
 Param_Set <- tribble(
   ~SimNo, ~NumSims, ~NumPerms, ~mu, ~ProbT1, ~sig_nu, ~sig_e, ~m, ~J, ~N,
   1, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
@@ -183,7 +229,7 @@ load("../int_large/xpert-solve-a_5.Rda")
 
 set.seed(73475)
 
-simulate_FromSet(Param_Set, Theta_Set,
+simulate_FromSet_Par(Param_Set, Theta_Set,
                  StartingPds=NULL, 
                  Alpha1,T1, T2, 
                  MVO_list=list(A2_003=MVOut_2_CS_0_003,
@@ -199,7 +245,9 @@ simulate_FromSet(Param_Set, Theta_Set,
                                A4_Ind=MVOut_4_Ind,
                                A5_Ind=MVOut_5_Ind),
                  SO_list=list(Comp=SolveOut_5),
-                 outdir="sim_res_3", outname="Sim_Set")
+                 outdir="sim_res_3", outname="Sim_Set",
+                 parallel=TRUE,
+                 n_cores=6)
 
 
 
