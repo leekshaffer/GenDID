@@ -134,237 +134,189 @@ Targets_333 <- Full_Sim_Res %>% dplyr::select(all_of(c("SimNo","Result",TargetsS
   left_join(TargetsSet_333, by="Estimator")
 
 ### Plots for full set:
-Overall_Plots <- function(res_df, outname) {
-Power13 <- 
-  ggplot(res_df  %>% filter(SimNo %in% c(1:3)), 
-         mapping=aes(x=`Estimator Number`, y=Power*100, 
-                     color=Type, shape=Assumption)) + 
-  geom_point() +
-  facet_wrap(~SimNo, nrow=1, ncol=3) + theme_bw() +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
-
+Overall_Plots <- function(res_df, outname,
+                          BreakVec, MinorVec) {
 Power1 <- 
   ggplot(res_df  %>% filter(SimNo==1), 
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Type I Error (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), 
+                     breaks=BreakVec, minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
   geom_hline(yintercept=5, linetype="dashed", color="gray50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power2 <- 
   ggplot(res_df  %>% filter(SimNo==2), 
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Power (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), 
+                     breaks=BreakVec, minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power3 <- 
   ggplot(res_df  %>% filter(SimNo==3), 
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Power (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), 
+                     breaks=BreakVec, minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
-
-Power46 <- 
-  ggplot(res_df  %>% filter(SimNo %in% c(4:6), #Assumption %in% c("S4","S5")),
-                             Estimand %in% c("Time Avg.","Group Avg.","ATT")),
-         mapping=aes(x=`Estimator Number`, y=Power*100, 
-                     color=Type, shape=Assumption)) + 
-  geom_point() +
-  facet_wrap(~SimNo, nrow=1, ncol=3) + theme_bw() +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power4 <- 
   ggplot(res_df  %>% filter(SimNo==4, #Assumption %in% c("S4","S5")),
                              Estimand %in% c("Time Avg.","Group Avg.","ATT")),
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Power (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), 
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power5 <- 
   ggplot(res_df  %>% filter(SimNo==5, #Assumption %in% c("S4","S5")),
                              Estimand %in% c("Time Avg.","Group Avg.","ATT")),
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Power (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), 
+                     breaks=BreakVec, minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power6 <- 
   ggplot(res_df  %>% filter(SimNo==6, #Assumption %in% c("S4","S5")),
                              Estimand %in% c("Time Avg.","Group Avg.","ATT")),
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Power (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
-
-Power79 <- 
-  ggplot(res_df  %>% filter(SimNo %in% c(7:9), #Assumption %in% c("S3")), 
-                             Estimand %in% c("Exp. Avg.","Group Avg.","ATT")),
-         mapping=aes(x=`Estimator Number`, y=Power*100, 
-                     color=Type, shape=Assumption)) + 
-  geom_point() +
-  facet_wrap(~SimNo, nrow=1, ncol=3) + theme_bw() +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power7 <- 
   ggplot(res_df  %>% filter(SimNo==7, #Assumption %in% c("S3")), 
                              Estimand %in% c("Exp. Avg.","Group Avg.","ATT")),
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Power (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power8 <- 
   ggplot(res_df  %>% filter(SimNo==8, #Assumption %in% c("S3")), 
                              Estimand %in% c("Exp. Avg.","Group Avg.","ATT")),
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Power (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power9 <- 
   ggplot(res_df  %>% filter(SimNo==9, #Assumption %in% c("S3")), 
                              Estimand %in% c("Exp. Avg.","Group Avg.","ATT")),
          mapping=aes(x=`Estimator Number`, y=Power*100, 
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + theme_bw() +
-  labs(x="Estimator",y="Power (%)") +
-  scale_x_discrete() + 
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Empirical Power (%)") +
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 ### Plots of Estimates and SDs:
-Est13 <- 
-  ggplot(res_df %>% filter(SimNo %in% c(1:3)), 
-         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
-                     ymin=Lower, ymax=Upper,
-                     color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
-  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
-  scale_y_continuous(limits=c(-0.10,0.015), 
-                     breaks=seq(-0.1,0.01,by=0.02),
-                     expand=c(0,0)) +
-  facet_wrap(~SimNo, nrow=1, ncol=3) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
-
 Est1 <- 
   ggplot(res_df %>% filter(SimNo==1), 
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_hline(yintercept=0, linetype="dashed", color="gray50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est2 <- 
   ggplot(res_df %>% filter(SimNo==2), 
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_hline(yintercept=-0.02, linetype="dashed", color="gray50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est3 <- 
   ggplot(res_df %>% filter(SimNo==3), 
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point(size=2) + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_hline(yintercept=-0.04, linetype="dashed", color="gray50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
-
-Est46 <- 
-  ggplot(res_df %>% filter(SimNo %in% c(4:6),
-                            # Assumption %in% c("S2","S4","S5")), 
-                            Estimand %in% c("Overall","Time Avg.","Group Avg.","ATT")),
-         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
-                     ymin=Lower, ymax=Upper,
-                     color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
-  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
-  scale_y_continuous(limits=c(-0.10,0.015), 
-                     breaks=seq(-0.1,0.01,by=0.02),
-                     expand=c(0,0)) +
-  facet_wrap(~SimNo, nrow=1, ncol=3) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est4 <- 
   ggplot(res_df %>% filter(SimNo==4,
@@ -373,9 +325,10 @@ Est4 <-
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
@@ -385,8 +338,8 @@ Est4 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.0033333, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est5 <- 
   ggplot(res_df %>% filter(SimNo==5,
@@ -395,9 +348,10 @@ Est5 <-
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
@@ -407,8 +361,8 @@ Est5 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.001904762, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
              
 Est6 <- 
   ggplot(res_df %>% filter(SimNo==6,
@@ -417,9 +371,10 @@ Est6 <-
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
@@ -429,25 +384,8 @@ Est6 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.01428571, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
-
-Est79 <- 
-  ggplot(res_df %>% filter(SimNo %in% c(7:9),
-                            # Assumption %in% c("S2","S3","S5")), 
-                            Estimand %in% c("Overall","Exp. Avg.","Group Avg.","ATT")),
-         mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
-                     ymin=Lower, ymax=Upper,
-                     color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
-  theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
-  scale_y_continuous(limits=c(-0.10,0.015), 
-                     breaks=seq(-0.1,0.01,by=0.02),
-                     expand=c(0,0)) +
-  facet_wrap(~SimNo, nrow=1, ncol=3) +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est7 <- 
   ggplot(res_df %>% filter(SimNo==7,
@@ -456,9 +394,10 @@ Est7 <-
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
@@ -470,8 +409,8 @@ Est7 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.01833333, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est8 <- 
   ggplot(res_df %>% filter(SimNo==8,
@@ -480,9 +419,10 @@ Est8 <-
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
@@ -494,8 +434,8 @@ Est8 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.01428571, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est9 <- 
   ggplot(res_df %>% filter(SimNo==9,
@@ -504,9 +444,10 @@ Est9 <-
          mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) + 
-  geom_point() + geom_errorbar() +
+  geom_point(show.legend=TRUE) + geom_errorbar() +
   theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-  scale_x_discrete() + 
+  scale_x_continuous(limits=c(0,22), expand=expansion(0,0), breaks=BreakVec,
+                     minor_breaks=MinorVec) +
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
@@ -518,17 +459,17 @@ Est9 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.036666667, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-  scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 ### Export Plots
 ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".png")),
        plot=Power1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
          Power2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
-         Power3 + guides(color="none") +labs(x=NULL, y=NULL, title="C) Scenario 3") +
+         Power3 + guides(shape="none") +labs(x=NULL, y=NULL, title="C) Scenario 3") +
          Power4 + guides(color="none", shape="none") + labs(x=NULL, title="D) Scenario 4") +
          Power5 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="E) Scenario 5") +
-         Power6 + guides(shape="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
+         Power6 + guides(color="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
          Power7 + guides(color="none", shape="none") + labs(title="G) Scenario 7") +
          Power8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
          Power9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
@@ -537,10 +478,10 @@ ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".png")),
 ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".png")),
        plot=Est1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
          Est2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
-         Est3 + guides(color="none") + labs(x=NULL, y=NULL, title="C) Scenario 3") +
+         Est3 + guides(shape="none") + labs(x=NULL, y=NULL, title="C) Scenario 3") +
          Est4 + guides(color="none", shape="none") + labs(x=NULL, title="D) Scenario 4") +
          Est5 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="E) Scenario 5") +
-         Est6 + guides(shape="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
+         Est6 + guides(color="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
          Est7 + guides(color="none", shape="none") + labs(title="G) Scenario 7") +
          Est8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
          Est9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
@@ -548,176 +489,191 @@ ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".png")),
        width=8, height=7, units="in", dpi=300)
 }
 
-Overall_Plots(Overall, outname="Overall_Ind")
-Overall_Plots(Overall_333, outname="Overall_333")
+Overall_Plots(Overall, outname="Overall_Ind",
+              BreakVec=seq(3,21,by=3), MinorVec=NULL)
+Overall_Plots(Overall_333, outname="Overall_333",
+              BreakVec=seq(3,21,by=3), MinorVec=NULL)
 
 ### Plots for Targeted period-specific effects:
-Target_Plots <- function(res_df, outname) {
+Target_Plots <- function(res_df, outname,
+                         BreakVec, MinorVec) {
   Power1 <- 
     ggplot(res_df  %>% filter(SimNo==1), 
            mapping=aes(x=`Estimator Number`, y=Power*100, 
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Type I Error (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
     geom_hline(yintercept=5, linetype="dashed", color="gray50") +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power2 <- 
     ggplot(res_df  %>% filter(SimNo==2), 
            mapping=aes(x=`Estimator Number`, y=Power*100, 
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Power (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power3 <- 
     ggplot(res_df  %>% filter(SimNo==3), 
            mapping=aes(x=`Estimator Number`, y=Power*100, 
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Power (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power4 <- 
     ggplot(res_df  %>% filter(SimNo==4,
                               Estimand=="Time 3"), 
            mapping=aes(x=`Estimator Number`, y=Power*100, 
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Power (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power5 <- 
     ggplot(res_df  %>% filter(SimNo==5,
                               Estimand=="Time 3"), 
            mapping=aes(x=`Estimator Number`, y=Power*100, 
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Power (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power6 <- 
     ggplot(res_df  %>% filter(SimNo==6,
                               Estimand=="Time 3"), 
            mapping=aes(x=`Estimator Number`, y=Power*100, 
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Power (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power7 <- ggplot(res_df  %>% filter(SimNo==7,
                                       Estimand %in% c("Exp. Pd. 1","Exp. Pd. 2")), 
                    mapping=aes(x=`Estimator Number`, y=Power*100, 
                                color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Power (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power8 <- ggplot(res_df  %>% filter(SimNo==8,
                                       Estimand %in% c("Exp. Pd. 1","Exp. Pd. 2")), 
                    mapping=aes(x=`Estimator Number`, y=Power*100, 
                                color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Power (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power9 <- ggplot(res_df  %>% filter(SimNo==9,
                                       Estimand %in% c("Exp. Pd. 1","Exp. Pd. 2")), 
                    mapping=aes(x=`Estimator Number`, y=Power*100, 
                                color=Type, shape=Assumption)) + 
-    geom_point(size=2) + theme_bw() +
-    labs(x="Estimator",y="Power (%)") +
-    scale_x_discrete() + 
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Empirical Power (%)") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est1 <- 
     ggplot(res_df %>% filter(SimNo==1), 
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_hline(yintercept=0, linetype="dashed", color="gray50") +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est2 <- 
     ggplot(res_df %>% filter(SimNo==2), 
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_hline(yintercept=-0.02, linetype="dashed", color="gray50") +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est3 <- 
     ggplot(res_df %>% filter(SimNo==3), 
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point(size=2) + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_hline(yintercept=-0.04, linetype="dashed", color="gray50") +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est4 <- 
     ggplot(res_df %>% filter(SimNo==4,
@@ -726,16 +682,17 @@ Target_Plots <- function(res_df, outname) {
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point() + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=-0.05, x=0.5, xend=4.5,
                  linetype="dashed", color="grey50") +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est5 <- 
     ggplot(res_df %>% filter(SimNo==5,
@@ -744,16 +701,17 @@ Target_Plots <- function(res_df, outname) {
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point() + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=-0.06, x=0.5, xend=4.5,
                  linetype="dashed", color="grey50") +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est6 <- 
     ggplot(res_df %>% filter(SimNo==6,
@@ -762,16 +720,17 @@ Target_Plots <- function(res_df, outname) {
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point() + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=-0.03, x=0.5, xend=4.5,
                  linetype="dashed", color="grey50") +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est7 <- 
     ggplot(res_df %>% filter(SimNo==7,
@@ -780,9 +739,10 @@ Target_Plots <- function(res_df, outname) {
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point() + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
@@ -790,8 +750,8 @@ Target_Plots <- function(res_df, outname) {
                  linetype="dashed", color="grey50") +
     geom_segment(y=-0.01, x=8.5, xend=15.5,
                  linetype="dashed", color="grey50")  +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est8 <- 
     ggplot(res_df %>% filter(SimNo==8,
@@ -800,9 +760,10 @@ Target_Plots <- function(res_df, outname) {
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point() + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
@@ -810,8 +771,8 @@ Target_Plots <- function(res_df, outname) {
                  linetype="dashed", color="grey50") +
     geom_segment(y=0, x=8.5, xend=15.5,
                  linetype="dashed", color="grey50") +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est9 <- 
     ggplot(res_df %>% filter(SimNo==9,
@@ -820,9 +781,10 @@ Target_Plots <- function(res_df, outname) {
            mapping=aes(x=`Estimator Number`, y=`Mean Estimate`, 
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) + 
-    geom_point() + geom_errorbar() +
+    geom_point(show.legend=TRUE) + geom_errorbar() +
     theme_bw() + labs(x="Estimator", y="Estimate (Mean \U00B1 SD)") +
-    scale_x_discrete() + 
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
+                       minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
@@ -830,16 +792,16 @@ Target_Plots <- function(res_df, outname) {
                  linetype="dashed", color="grey50") +
     geom_segment(y=-0.07, x=8.5, xend=15.5,
                  linetype="dashed", color="grey50")  +
-    scale_color_manual(values=Colors, breaks=c("GD","CPI","SA")) +
-    scale_shape_manual(values=Shapes, breaks=c("S5","S4","S3","S2"))
+    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
   ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".png")),
          plot=Power1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
            Power2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
-           Power3 + guides(color="none") +labs(x=NULL, y=NULL, title="C) Scenario 3") +
+           Power3 + guides(shape="none") +labs(x=NULL, y=NULL, title="C) Scenario 3") +
            Power4 + guides(color="none", shape="none") + labs(x=NULL, title="D) Scenario 4") +
            Power5 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="E) Scenario 5") +
-           Power6 + guides(shape="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
+           Power6 + guides(color="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
            Power7 + guides(color="none", shape="none") + labs(title="G) Scenario 7") +
            Power8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
            Power9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
@@ -848,10 +810,10 @@ Target_Plots <- function(res_df, outname) {
   ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".png")),
          plot=Est1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
            Est2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
-           Est3 + guides(color="none") + labs(x=NULL, y=NULL, title="C) Scenario 3") +
+           Est3 + guides(shape="none") + labs(x=NULL, y=NULL, title="C) Scenario 3") +
            Est4 + guides(color="none", shape="none") + labs(x=NULL, title="D) Scenario 4") +
            Est5 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="E) Scenario 5") +
-           Est6 + guides(shape="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
+           Est6 + guides(color="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
            Est7 + guides(color="none", shape="none") + labs(title="G) Scenario 7") +
            Est8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
            Est9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
@@ -859,5 +821,7 @@ Target_Plots <- function(res_df, outname) {
          width=8, height=7, units="in", dpi=300)
 }
 
-Target_Plots(Targets, outname="Target_Ind")
-Target_Plots(Targets_333, outname="Target_333")
+Target_Plots(Targets, outname="Target_Ind",
+             BreakVec=seq(3,15,by=3), MinorVec=NULL)
+Target_Plots(Targets_333, outname="Target_333",
+             BreakVec=seq(3,15,by=3), MinorVec=NULL)
