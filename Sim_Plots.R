@@ -22,11 +22,11 @@ OverallSet <- tibble(Estimator=c("A5_Ind_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_C
                                  "A2_Ind_Group","Comp_W_CS.W_group",
                                  "A2_Ind_AvgExT8","Comp_W_CS.W_simple","Comp_W_SA.W_ATT","CPI.DT_AvgEx8")) %>%
   mutate(`Estimator Number`=row_number(),
-         Type=c("GD","SA","CPI","SA",
-                "GD","CPI","SA","GD","CPI",
-                "GD","CPI","GD","SA","GD","CPI",
+         Type=c("GD","SA","ME","SA",
+                "GD","ME","SA","GD","ME",
+                "GD","ME","GD","SA","GD","ME",
                 "GD","SA",
-                "GD","SA","SA","CPI"),
+                "GD","SA","SA","ME"),
          Assumption=c("S5","S5","S5","S5",
                       "S4","S4","S4","S2","S2",
                       "S3","S3","S3","S3","S2","S2",
@@ -48,11 +48,11 @@ OverallSet_333 <- tibble(Estimator=c("A5_333_","Comp_W_TW","Comp_CPI","Comp_W_CO
                                  "A2_333_Group","Comp_W_CS.W_group",
                                  "A2_333_AvgExT8","Comp_W_CS.W_simple","Comp_W_SA.W_ATT","CPI.DT_AvgEx8")) %>%
   mutate(`Estimator Number`=row_number(),
-         Type=c("GD","SA","CPI","SA",
-                "GD","CPI","SA","GD","CPI",
-                "GD","CPI","GD","SA","GD","CPI",
+         Type=c("GD","SA","ME","SA",
+                "GD","ME","SA","GD","ME",
+                "GD","ME","GD","SA","GD","ME",
                 "GD","SA",
-                "GD","SA","SA","CPI"),
+                "GD","SA","SA","ME"),
          Assumption=c("S5","S5","S5","S5",
                       "S4","S4","S4","S2","S2",
                       "S3","S3","S3","S3","S2","S2",
@@ -74,10 +74,10 @@ TargetsSet <- tibble(Estimator=c("A4_Ind_T.3","CPI.T_3","A2_Ind_T.3","CPI.DT_T3"
                                  "A2_Ind_D.1","CPI.DT_D1","Comp_W_CH.W_M","Comp_W_CO.W_CO1"
                                  )) %>%
   mutate(`Estimator Number`=row_number(),
-         Type=c("GD","CPI","GD","CPI",
-                "GD","CPI","GD","CPI",
-                "GD","CPI","SA",
-                "GD","CPI","SA","SA"),
+         Type=c("GD","ME","GD","ME",
+                "GD","ME","GD","ME",
+                "GD","ME","SA",
+                "GD","ME","SA","SA"),
          Assumption=c("S4","S4","S2","S2",
                       "S3","S3","S2","S2",
                       "S3","S3","S2",
@@ -95,10 +95,10 @@ TargetsSet_333 <- tibble(Estimator=c("A4_333_T.3","CPI.T_3","A2_333_T.3","CPI.DT
                                  "A2_333_D.1","CPI.DT_D1","Comp_W_CH.W_M","Comp_W_CO.W_CO1"
 )) %>%
   mutate(`Estimator Number`=row_number(),
-         Type=c("GD","CPI","GD","CPI",
-                "GD","CPI","GD","CPI",
-                "GD","SA","CPI",
-                "GD","CPI","SA","SA"),
+         Type=c("GD","ME","GD","ME",
+                "GD","ME","GD","ME",
+                "GD","SA","ME",
+                "GD","ME","SA","SA"),
          Assumption=c("S4","S4","S2","S2",
                       "S3","S3","S2","S2",
                       "S3","S3","S2",
@@ -148,7 +148,7 @@ Power1 <-
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
   geom_hline(yintercept=5, linetype="dashed", color="gray50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power2 <- 
@@ -162,7 +162,7 @@ Power2 <-
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power3 <- 
@@ -176,7 +176,7 @@ Power3 <-
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power4 <- 
@@ -191,7 +191,7 @@ Power4 <-
                      expand=c(0,2)) +
   scale_x_continuous(limits=c(0,22), expand=expansion(0,0), 
                      breaks=BreakVec, minor_breaks=MinorVec) +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power5 <- 
@@ -206,7 +206,7 @@ Power5 <-
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power6 <- 
@@ -221,7 +221,7 @@ Power6 <-
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power7 <- 
@@ -236,7 +236,7 @@ Power7 <-
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power8 <- 
@@ -251,7 +251,7 @@ Power8 <-
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Power9 <- 
@@ -266,7 +266,7 @@ Power9 <-
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 ### Plots of Estimates and SDs:
@@ -283,7 +283,7 @@ Est1 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_hline(yintercept=0, linetype="dashed", color="gray50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est2 <- 
@@ -299,7 +299,7 @@ Est2 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_hline(yintercept=-0.02, linetype="dashed", color="gray50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est3 <- 
@@ -315,7 +315,7 @@ Est3 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_hline(yintercept=-0.04, linetype="dashed", color="gray50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est4 <- 
@@ -338,7 +338,7 @@ Est4 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.0033333, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est5 <- 
@@ -361,7 +361,7 @@ Est5 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.001904762, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
              
 Est6 <- 
@@ -384,7 +384,7 @@ Est6 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.01428571, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est7 <- 
@@ -409,7 +409,7 @@ Est7 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.01833333, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est8 <- 
@@ -434,7 +434,7 @@ Est8 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.01428571, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Est9 <- 
@@ -459,7 +459,7 @@ Est9 <-
                linetype="dashed", color="grey50") +
   geom_segment(y=-0.036666667, x=17.5, xend=21.5,
                linetype="dashed", color="grey50") +
-  scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 ### Export Plots
@@ -509,7 +509,7 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
     geom_hline(yintercept=5, linetype="dashed", color="gray50") +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power2 <- 
@@ -523,7 +523,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power3 <- 
@@ -537,7 +537,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power4 <- 
@@ -552,7 +552,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power5 <- 
@@ -567,7 +567,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power6 <- 
@@ -582,7 +582,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power7 <- ggplot(res_df  %>% filter(SimNo==7,
@@ -596,7 +596,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power8 <- ggplot(res_df  %>% filter(SimNo==8,
@@ -605,12 +605,13 @@ Target_Plots <- function(res_df, outname,
                                color=Type, shape=Assumption)) + 
     geom_point(show.legend=TRUE, size=2) + theme_bw() +
     labs(x="Estimator",y="Empirical Power (%)") +
+    geom_hline(yintercept=5, linetype="dashed", color="gray50") +
     scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
                        minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Power9 <- ggplot(res_df  %>% filter(SimNo==9,
@@ -624,7 +625,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est1 <- 
@@ -640,7 +641,7 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_hline(yintercept=0, linetype="dashed", color="gray50") +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est2 <- 
@@ -656,7 +657,7 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_hline(yintercept=-0.02, linetype="dashed", color="gray50") +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est3 <- 
@@ -672,7 +673,7 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_hline(yintercept=-0.04, linetype="dashed", color="gray50") +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est4 <- 
@@ -691,7 +692,7 @@ Target_Plots <- function(res_df, outname,
                        expand=c(0,0)) +
     geom_segment(y=-0.05, x=0.5, xend=4.5,
                  linetype="dashed", color="grey50") +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est5 <- 
@@ -710,7 +711,7 @@ Target_Plots <- function(res_df, outname,
                        expand=c(0,0)) +
     geom_segment(y=-0.06, x=0.5, xend=4.5,
                  linetype="dashed", color="grey50") +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est6 <- 
@@ -729,7 +730,7 @@ Target_Plots <- function(res_df, outname,
                        expand=c(0,0)) +
     geom_segment(y=-0.03, x=0.5, xend=4.5,
                  linetype="dashed", color="grey50") +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est7 <- 
@@ -750,7 +751,7 @@ Target_Plots <- function(res_df, outname,
                  linetype="dashed", color="grey50") +
     geom_segment(y=-0.01, x=8.5, xend=15.5,
                  linetype="dashed", color="grey50")  +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est8 <- 
@@ -771,7 +772,7 @@ Target_Plots <- function(res_df, outname,
                  linetype="dashed", color="grey50") +
     geom_segment(y=0, x=8.5, xend=15.5,
                  linetype="dashed", color="grey50") +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
   Est9 <- 
@@ -792,7 +793,7 @@ Target_Plots <- function(res_df, outname,
                  linetype="dashed", color="grey50") +
     geom_segment(y=-0.07, x=8.5, xend=15.5,
                  linetype="dashed", color="grey50")  +
-    scale_color_manual(drop=FALSE, limits=c("GD","CPI","SA"), values=Colors, breaks=c("GD","CPI","SA")) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
   ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".png")),
