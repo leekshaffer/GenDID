@@ -12,8 +12,8 @@ Shapes <- 15:18
 
 outdir <- "figs/"
 
-## Load simulation results from Run 3:
-load(file="sim_res/Full_Sim_Res_3.Rda")
+## Load simulation results:
+load(file="int/Full_Sim_Res.Rda")
 
 ## Select Desired Estimators:
 OverallSet <- tibble(Estimator=c("A5_Ind_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_CO3",
@@ -474,7 +474,7 @@ ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".png")),
          Power8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
          Power9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
          plot_layout(nrow=3, ncol=3, byrow=TRUE),
-       width=8, height=7, units="in", dpi=300)
+       width=8, height=7, units="in", dpi=600)
 ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".png")),
        plot=Est1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
          Est2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
@@ -486,7 +486,7 @@ ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".png")),
          Est8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
          Est9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
          plot_layout(nrow=3, ncol=3, byrow=TRUE),
-       width=8, height=7, units="in", dpi=300)
+       width=8, height=7, units="in", dpi=600)
 }
 
 Overall_Plots(Overall, outname="Overall_Ind",
@@ -807,7 +807,7 @@ Target_Plots <- function(res_df, outname,
            Power8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
            Power9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
            plot_layout(nrow=3, ncol=3, byrow=TRUE),
-         width=8, height=7, units="in", dpi=300)
+         width=8, height=7, units="in", dpi=600)
   ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".png")),
          plot=Est1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
            Est2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
@@ -819,7 +819,7 @@ Target_Plots <- function(res_df, outname,
            Est8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
            Est9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
            plot_layout(nrow=3, ncol=3, byrow=TRUE),
-         width=8, height=7, units="in", dpi=300)
+         width=8, height=7, units="in", dpi=600)
 }
 
 Target_Plots(Targets, outname="Target_Ind",
