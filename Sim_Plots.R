@@ -147,7 +147,7 @@ Power1 <-
   scale_y_continuous(limits=c(0,100), 
                      breaks=seq(0,100,by=20),
                      expand=c(0,2)) +
-  geom_hline(yintercept=5, linetype="dashed", color="gray50") +
+  geom_hline(yintercept=5, linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -282,7 +282,7 @@ Est1 <-
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
-  geom_hline(yintercept=0, linetype="dashed", color="gray50") +
+  geom_hline(yintercept=0, linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -298,7 +298,7 @@ Est2 <-
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
-  geom_hline(yintercept=-0.02, linetype="dashed", color="gray50") +
+  geom_hline(yintercept=-0.02, linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -314,7 +314,7 @@ Est3 <-
   scale_y_continuous(limits=c(-0.10,0.015), 
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
-  geom_hline(yintercept=-0.04, linetype="dashed", color="gray50") +
+  geom_hline(yintercept=-0.04, linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -333,11 +333,11 @@ Est4 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_segment(y=-0.02, x=0.5, xend=9.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=0.005, x=15.5, xend=17.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.0033333, x=17.5, xend=21.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -356,11 +356,11 @@ Est5 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_segment(y=-0.02, x=0.5, xend=9.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=0.005694444, x=15.5, xend=17.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.001904762, x=17.5, xend=21.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
              
@@ -379,11 +379,11 @@ Est6 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_segment(y=-0.02, x=0.5, xend=9.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.0105, x=15.5, xend=17.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.01428571, x=17.5, xend=21.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -402,13 +402,13 @@ Est7 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_segment(y=-0.025, x=9.5, xend=11.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.0225, x=11.5, xend=15.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-.01625, x=15.5, xend=17.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.01833333, x=17.5, xend=21.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -427,13 +427,13 @@ Est8 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_segment(y=-0.0214, x=9.5, xend=11.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.02, x=11.5, xend=15.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.0105, x=15.5, xend=17.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.01428571, x=17.5, xend=21.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -452,13 +452,13 @@ Est9 <-
                      breaks=seq(-0.1,0.01,by=0.02),
                      expand=c(0,0)) +
   geom_segment(y=-0.01, x=9.5, xend=11.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.02, x=11.5, xend=15.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.045, x=15.5, xend=17.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   geom_segment(y=-0.036666667, x=17.5, xend=21.5,
-               linetype="dashed", color="grey50") +
+               linetype="dotted", color="gray25") +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
@@ -508,7 +508,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(0,100), 
                        breaks=seq(0,100,by=20),
                        expand=c(0,2)) +
-    geom_hline(yintercept=5, linetype="dashed", color="gray50") +
+    geom_hline(yintercept=5, linetype="dotted", color="gray25") +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -605,7 +605,7 @@ Target_Plots <- function(res_df, outname,
                                color=Type, shape=Assumption)) + 
     geom_point(show.legend=TRUE, size=2) + theme_bw() +
     labs(x="Estimator",y="Empirical Power (%)") +
-    geom_hline(yintercept=5, linetype="dashed", color="gray50") +
+    geom_hline(yintercept=5, linetype="dotted", color="gray25") +
     scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,                      
                        minor_breaks=MinorVec) +
     scale_y_continuous(limits=c(0,100), 
@@ -640,7 +640,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
-    geom_hline(yintercept=0, linetype="dashed", color="gray50") +
+    geom_hline(yintercept=0, linetype="dotted", color="gray25") +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -656,7 +656,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
-    geom_hline(yintercept=-0.02, linetype="dashed", color="gray50") +
+    geom_hline(yintercept=-0.02, linetype="dotted", color="gray25") +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -672,7 +672,7 @@ Target_Plots <- function(res_df, outname,
     scale_y_continuous(limits=c(-0.10,0.015), 
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
-    geom_hline(yintercept=-0.04, linetype="dashed", color="gray50") +
+    geom_hline(yintercept=-0.04, linetype="dotted", color="gray25") +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -691,7 +691,7 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=-0.05, x=0.5, xend=4.5,
-                 linetype="dashed", color="grey50") +
+                 linetype="dotted", color="gray25") +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -710,7 +710,7 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=-0.06, x=0.5, xend=4.5,
-                 linetype="dashed", color="grey50") +
+                 linetype="dotted", color="gray25") +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -729,7 +729,7 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=-0.03, x=0.5, xend=4.5,
-                 linetype="dashed", color="grey50") +
+                 linetype="dotted", color="gray25") +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -748,9 +748,9 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=-0.015, x=4.5, xend=8.5,
-                 linetype="dashed", color="grey50") +
+                 linetype="dotted", color="gray25") +
     geom_segment(y=-0.01, x=8.5, xend=15.5,
-                 linetype="dashed", color="grey50")  +
+                 linetype="dotted", color="gray25")  +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -769,9 +769,9 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=0, x=4.5, xend=8.5,
-                 linetype="dashed", color="grey50") +
+                 linetype="dotted", color="gray25") +
     geom_segment(y=0, x=8.5, xend=15.5,
-                 linetype="dashed", color="grey50") +
+                 linetype="dotted", color="gray25") +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
   
@@ -790,9 +790,9 @@ Target_Plots <- function(res_df, outname,
                        breaks=seq(-0.1,0.01,by=0.02),
                        expand=c(0,0)) +
     geom_segment(y=-0.05, x=4.5, xend=8.5,
-                 linetype="dashed", color="grey50") +
+                 linetype="dotted", color="gray25") +
     geom_segment(y=-0.07, x=8.5, xend=15.5,
-                 linetype="dashed", color="grey50")  +
+                 linetype="dotted", color="gray25")  +
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA"), values=Colors, breaks=c("GD","ME","SA")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
