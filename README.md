@@ -7,7 +7,7 @@
 
 <!-- badges: end -->
 
-The goal of GenDID is ti implement the generalized DID estimator
+The goal of GenDID is to implement the generalized DID estimator
 approach to analysis of stepped wedge cluster-randomized trials and
 observational/quasi-experimental panel data. See manuscript at
 <https://arxiv.org/abs/2405.08730>.
