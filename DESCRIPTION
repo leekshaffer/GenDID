@@ -3,7 +3,7 @@ Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R: 
     person("Lee", "Kennedy-Shaffer", , "lee.kennedy-shaffer@yale.edu", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0001-7604-3638"))
 Description:
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
