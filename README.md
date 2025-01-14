@@ -4,13 +4,14 @@
 # GenDID
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 The goal of GenDID is to implement the generalized DID estimator
-approach to analysis of stepped wedge cluster-randomized trials and
-observational/quasi-experimental panel data. See manuscript at
-<https://arxiv.org/abs/2405.08730>.
+approach for the analysis of stepped wedge cluster-randomized trials and
+observational/quasi-experimental panel data. See the manuscript “A
+Generalized Difference-in-Differences Estimator for Randomized
+Stepped-Wedge and Observational Staggered Adoption Settings” by Lee
+Kennedy-Shaffer at <https://arxiv.org/abs/2405.08730>.
 
 ## Installation
 
