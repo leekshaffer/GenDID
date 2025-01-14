@@ -27,11 +27,11 @@ Lott_weeks <- lotteries %>% left_join(MMWR_weeks,
                 lott_week=Period) %>%
   dplyr::select(state,lottery,lott_week,lott_date)
 ### Create weekly data set and add lottery weeks:
-Vax_wk_2021 <- state_vaccines %>% 
+Vax_wk_2021 <- state_vaccines %>%
   dplyr::rename(First_18Pop_Pct=Administered_Dose1_Recip_18PlusPop_Pct,
                 Complete_18Pop_Pct=Series_Complete_18PlusPop_Pct,
                 Cluster=state, Week_End=date) %>%
-  left_join(MMWR_weeks %>% dplyr::rename(Week_Start=First_Day), 
+  left_join(MMWR_weeks %>% dplyr::rename(Week_Start=First_Day),
             by=join_by(Week_End == Last_Day)) %>%
   dplyr::filter(!is.na(Period)) %>%
   dplyr::select(Cluster,Period,Week_Start,Week_End,
@@ -42,18 +42,18 @@ Vax_wk_2021 <- state_vaccines %>%
          rel_week=if_else(lottery==0,NA,Period-lott_week),
          lott_week=if_else(is.na(lott_week),Inf,lott_week))
 ### Add previous week
-Vax_prev_wk <- Vax_wk_2021 %>% 
+Vax_prev_wk <- Vax_wk_2021 %>%
   dplyr::select(Cluster,Period,First_18Pop_Pct,Complete_18Pop_Pct) %>%
   dplyr::mutate(Period=Period+1) %>%
   dplyr::rename(Prev_First=First_18Pop_Pct,
                 Prev_Complete=Complete_18Pop_Pct)
-Vax_wk_2021 <- Vax_wk_2021 %>% 
+Vax_wk_2021 <- Vax_wk_2021 %>%
   left_join(Vax_prev_wk, by=c("Cluster","Period")) %>%
   dplyr::filter(!is.na(Prev_First)) %>%
   dplyr::mutate(Diff_First=First_18Pop_Pct-Prev_First,
                 Diff_Complete=Complete_18Pop_Pct-Prev_Complete)
-### Subset to CDC Midwest region, and start 4 weeks prior to first lottery (Week 15): 
-Vax.dat <- Vax_wk_2021 %>% 
+### Subset to CDC Midwest region, and start 4 weeks prior to first lottery (Week 15):
+Vax.dat <- Vax_wk_2021 %>%
   dplyr::filter(Cluster %in% c("IA","IL","IN","KS","MI","MN","MO","ND",
                              "NE","OH","SD","WI"),
                 Period >= 15)
@@ -69,7 +69,7 @@ Ord_Data <- Vax.dat %>% dplyr::rename(StartPd=lott_week) %>%
 StartTimes <- Ord_Data %>% dplyr::select(Cluster,StartPd) %>%
   distinct()
 N <- length(StartTimes$Cluster)
-Obs_Y <- matrix(data=c(Ord_Data$First_18Pop_Pct, 
+Obs_Y <- matrix(data=c(Ord_Data$First_18Pop_Pct,
                        Ord_Data$Complete_18Pop_Pct,
                        Ord_Data$Diff_First,
                        Ord_Data$Diff_Complete), ncol=4)
@@ -148,7 +148,7 @@ for (i in 2:5) {
 }
 
 #### Estimate AR correlation on unused non-lottery states
-ar.dat <- Vax_wk_2021 %>% 
+ar.dat <- Vax_wk_2021 %>%
   dplyr::filter(!(Cluster %in% c("IA","IL","IN","KS","MI","MN","MO","ND","NE","OH","SD","WI")),
                 lottery==0,
                 Period >= 15)
@@ -245,7 +245,7 @@ for (i in Assns) {
 }
 
 ## Print Observation Weight Heatmaps:
-### To create various heat maps, add rows with 
+### To create various heat maps, add rows with
 ### different values of i (Assumption Setting),
 ### j (Variance setting), and Estimators (estimator)
 Map_Settings <- tibble(i=c(rep(2,8),5,rep(2,8),5,2,2),
@@ -255,7 +255,7 @@ Map_Settings <- tibble(i=c(rep(2,8),5,rep(2,8),5,2,2),
                        Est_labs=c(rep(c("Assumption S2, Overall ATT",
                                   "Assumption S2, Week 1 Effect",
                                   "Assumption S2, Week 2 Effect",
-                                  "Assumption S2, Weeks 1-4 Effect", 
+                                  "Assumption S2, Weeks 1-4 Effect",
                                   "Assumption S2, Weeks 2-4 Effect",
                                   "Assumption S2, State-Averaged Effect",
                                   "Assumption S2, Ohio Effect",
@@ -273,23 +273,23 @@ for (row in 1:(dim(Map_Settings)[1])) {
                            Value=Weights[,Map_Settings[row,] %>% pull("Estimators")])
   ggsave(filename=paste0("figs/Vax-Weights_Heatmap_",Map_Settings[row,"i"],"_",
                          Map_Settings[row,] %>% pull("j"),"_",
-                         Map_Settings[row,] %>% pull("Estimators"),".png"),
+                         Map_Settings[row,] %>% pull("Estimators"),".eps"),
          plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
            geom_tile() + theme_bw() +
            coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
-           scale_y_reverse(breaks=1:N, 
+           scale_y_reverse(breaks=1:N,
                            labels=StartTimes$Cluster,
                            minor_breaks=NULL) +
-           scale_x_continuous(breaks=1:J, 
+           scale_x_continuous(breaks=1:J,
                               labels=OrderedPds,
                               minor_breaks=NULL) +
            scale_fill_gradient2(low="#542788",high="#b35806") +
            labs(x="MMWR Week (2021)", y="State", fill="Weight",
-                title=paste0("Observation Weights, ", 
+                title=paste0("Observation Weights, ",
                              Map_Settings[row,] %>% pull("Est_labs"))),
-         width=6, height=4, units="in", dpi=600)
+         width=6, height=4, units="in")
 }
-  
+
 
 ## Comparisons to other methods:
 ### Get comparison estimates:
@@ -302,11 +302,11 @@ Comp_ests
 ### Get comparison perm. p-values
 set.seed(12959)
 Comp_perms <- replicate(n=1000,
-                        expr=Permute_obs(Observations=Obs_Y, 
-                                         N=DFT$N, J=DFT$J, 
+                        expr=Permute_obs(Observations=Obs_Y,
+                                         N=DFT$N, J=DFT$J,
                                          Obs.weights=Comp_wts$Obs.weights))
-Comp_perms2 <- simplify2array(apply(Comp_perms, 3, 
-                                    FUN=function(x) abs(x) >= abs(Comp_ests), 
+Comp_perms2 <- simplify2array(apply(Comp_perms, 3,
+                                    FUN=function(x) abs(x) >= abs(Comp_ests),
                                     simplify=FALSE))
 Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
 Comparisons=list(Estimates=Comp_ests, P_Values=Comp_pvals)
@@ -349,7 +349,7 @@ aggte(CS_gt, type="calendar")
 
 ### Sun and Abraham (2021):
 SA <- feols(First_18Pop_Pct~sunab(cohort=StartPd,
-                                  period=Period, 
+                                  period=Period,
                                   att=TRUE) | Cluster + Period,
             data=Vax.dat.2)
 summary(SA)

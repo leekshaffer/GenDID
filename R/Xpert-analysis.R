@@ -210,7 +210,7 @@ for (i in Assns) {
 }
 
 ### Observation Weight Heatmaps:
-### To create various heat maps, add rows with 
+### To create various heat maps, add rows with
 ### different values of i (Assumption Setting),
 ### j (Variance setting), and Estimators (estimator)
 Map_Settings <- tibble(i=c(5,4,3,2,3,2,rep(4,6),rep(2,6)),
@@ -239,10 +239,10 @@ for (row in 1:(dim(Map_Settings)[1])) {
                              Value=Weights[,Map_Settings[row,] %>% pull("Estimators")])
     ggsave(filename=paste0("figs/Xpert-Weights_Heatmap_",Map_Settings[row,"i"],"_",
                            Map_Settings[row,] %>% pull("j"),"_",
-                           Map_Settings[row,] %>% pull("Estimators"),".png"),
+                           Map_Settings[row,] %>% pull("Estimators"),".eps"),
            plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
-             geom_tile() + theme_bw() + 
-             coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), 
+             geom_tile() + theme_bw() +
+             coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5),
                              clip="off", expand=FALSE) +
              scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
              scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
@@ -250,10 +250,10 @@ for (row in 1:(dim(Map_Settings)[1])) {
              labs(x="Period (Month of Study)", y="Cluster", fill="Weight",
                   title=paste0("Observation Weights: ",
                                Map_Settings[row,] %>% pull("Est_labs"))),
-           width=6, height=4, units="in", dpi=600)
+           width=6, height=4, units="in")
 }
-    
-    
+
+
 ## Comparisons to other methods:
 ### Get comparison estimates:
 DFT <- SO5$DFT
@@ -265,10 +265,10 @@ Comp_ests
 ### Get comparison perm. p-values
 set.seed(7446)
 Comp_perms <- replicate(n=1000,
-                        expr=Permute_obs(Observations=Obs_Y, 
-                                         N=DFT$N, J=DFT$J, 
+                        expr=Permute_obs(Observations=Obs_Y,
+                                         N=DFT$N, J=DFT$J,
                                          Obs.weights=Comp_wts$Obs.weights))
-Comp_perms2 <- simplify2array(apply(Comp_perms, 3, 
+Comp_perms2 <- simplify2array(apply(Comp_perms, 3,
                                     FUN=function(x) abs(x) >= abs(Comp_ests), simplify=FALSE))
 Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
 Comparisons=list(Estimates=Comp_ests, P_Values=Comp_pvals)
