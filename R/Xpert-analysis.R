@@ -6,10 +6,10 @@
 
 require(tidyverse)
 
-source("A_Const.R")
-source("Sigmas.R")
-source("Full_Analysis.R")
-source("CompEsts.R")
+source("R/A_Const.R")
+source("R/Sigmas.R")
+source("R/Full_Analysis.R")
+source("R/CompEsts.R")
 
 ## Read in (simulated) data from data folder:
 load("data/Xpert-data-sim.Rda")

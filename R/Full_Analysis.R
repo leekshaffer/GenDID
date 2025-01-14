@@ -5,10 +5,10 @@
 ###### Updated 2024/08/12 #############
 #######################################
 
-source("D_F_Const.R")
-source("Rank_Analysis.R")
-source("Var_Min.R")
-source("Solver.R")
+source("R/D_F_Const.R")
+source("R/Rank_Analysis.R")
+source("R/Var_Min.R")
+source("R/Solver.R")
 
 ## Inputs to Solve_Assumption function:
 ### Amat is the A matrix for the setting
@@ -42,7 +42,7 @@ Solve_Assumption <- function(Amat,StartTimes,OrderedPds,
          value=list(Amat=Amat,
                     DFT=DFT_int,
                     Solve=solve_int))
-  save(list=paste0("SolveOut_",Assumption), 
+  save(list=paste0("SolveOut_",Assumption),
        file=paste0(save_loc,save_prefix,Assumption,".Rda"))
   return(get(paste0("SolveOut_",Assumption)))
 }
@@ -54,7 +54,7 @@ Solve_Assumption <- function(Amat,StartTimes,OrderedPds,
 Permute_data <- function(StartTimes, J, data, Obs.weights) {
   ST_P <- tibble(StartPd=rep(sample(StartTimes$StartPd, size=nrow(StartTimes), replace=FALSE), each=J),
                  Cluster=rep(sample(StartTimes$Cluster, size=nrow(StartTimes), replace=FALSE), each=J))
-  return(t(Obs.weights) %*% as.matrix(cbind(ST_P, data) %>% dplyr::arrange(StartPd,Cluster) %>% 
+  return(t(Obs.weights) %*% as.matrix(cbind(ST_P, data) %>% dplyr::arrange(StartPd,Cluster) %>%
                                         dplyr::select(-c(Cluster,StartPd))))
 }
 ## Observations is a vector with the observed outcomes, ordered by cluster then period
@@ -85,7 +85,7 @@ Permute_obs <- function(Observations, N, J, Obs.weights) {
 ### save_loc is the folder to save it in (be sure to end with / if anything other than blank is passed)
 ### save_prefix is the prefix to put on the save files
 MV_Assumption <- function(SolveOut, Assumption,
-                          Sigma, 
+                          Sigma,
                           SigmaName=NULL,
                           Observations=NULL,
                           Permutations=NULL,
@@ -111,10 +111,10 @@ MV_Assumption <- function(SolveOut, Assumption,
                     MV_int$DID.weights)
     if(!is.null(Permutations)) {
       Perms <- replicate(n=Permutations,
-                         expr=Permute_obs(Observations=Observations, 
-                                          N=SolveOut$DFT$N, J=SolveOut$DFT$J, 
+                         expr=Permute_obs(Observations=Observations,
+                                          N=SolveOut$DFT$N, J=SolveOut$DFT$J,
                                           Obs.weights=MV_int$Obs.weights))
-      PermRes <- simplify2array(apply(Perms, 3, 
+      PermRes <- simplify2array(apply(Perms, 3,
                                       FUN=function(x) abs(x) >= abs(Estimates), simplify=FALSE))
       PVals <- apply(PermRes, c(1,2), mean)
     } else {
@@ -126,7 +126,7 @@ MV_Assumption <- function(SolveOut, Assumption,
                       D_Full=D_Full,
                       MV=MV_int,
                       P_Values=PVals))
-    save(list=paste0("MVOut_",Assumption,"_",SigmaName), 
+    save(list=paste0("MVOut_",Assumption,"_",SigmaName),
          file=paste0(save_loc,save_prefix,Assumption,"_",SigmaName,".Rda"))
     return(get(paste0("MVOut_",Assumption,"_",SigmaName)))
   }

@@ -463,7 +463,7 @@ Est9 <-
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 ### Export Plots
-ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".png")),
+ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".eps")),
        plot=Power1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
          Power2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
          Power3 + guides(shape="none") +labs(x=NULL, y=NULL, title="C) Scenario 3") +
@@ -474,8 +474,8 @@ ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".png")),
          Power8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
          Power9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
          plot_layout(nrow=3, ncol=3, byrow=TRUE),
-       width=8, height=7, units="in", dpi=600)
-ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".png")),
+       width=8, height=7, units="in")
+ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".eps")),
        plot=Est1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
          Est2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
          Est3 + guides(shape="none") + labs(x=NULL, y=NULL, title="C) Scenario 3") +
@@ -486,7 +486,7 @@ ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".png")),
          Est8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
          Est9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
          plot_layout(nrow=3, ncol=3, byrow=TRUE),
-       width=8, height=7, units="in", dpi=600)
+       width=8, height=7, units="in")
 }
 
 Overall_Plots(Overall, outname="Overall_Ind",
