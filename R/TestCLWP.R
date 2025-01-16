@@ -49,8 +49,8 @@ simulate_FromSet_Par <- function(Param_Set,
 ## Simulation runs:
 
 ### Parameters for Simulation:
-NumSims.all <- 10 # Full: 1000
-NumPerms.all <- 25 # Full: 250
+NumSims.all <- 1000 # Full: 1000
+NumPerms.all <- 250 # Full: 250
 Param_Set <- tribble(
   ~SimNo, ~NumSims, ~NumPerms, ~mu, ~ProbT1, ~sig_nu, ~sig_e, ~m, ~J, ~N,
   1, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
@@ -84,14 +84,14 @@ T2 <- c(0,0.02,0.03,0.07,0.13,0.19,0.27,0.30)
 
 set.seed(73475)
 
-system.time(simulate_FromSet_Par(Param_Set, Theta_Set,
+simulate_FromSet_Par(Param_Set, Theta_Set,
                      StartingPds=NULL,
                      Alpha1,T1, T2,
                      MVO_list=NULL,
                      SO_list=NULL,
                      outdir="sim_res_t", outname="Sim_Set",
                      parallel=TRUE,
-                     n_cores=9))
+                     n_cores=9)
 
 
 Full_Sim_Res <- NULL
