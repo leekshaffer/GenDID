@@ -31,7 +31,7 @@ simulate_FromSet_Par <- function(Param_Set,
     par_clust <- makeCluster(n_cores)
     registerDoParallel(par_clust)
     foreach (i=1:(dim(Param_Set)[1])) %dopar% {
-      source("Simulations.R")
+      source("R/Simulations.R")
       row <- Param_Set[i,]
       print(paste("Starting Sim. Number",row$SimNo))
       assign(x=paste0("Res_Sim_",i),
