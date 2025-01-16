@@ -135,7 +135,9 @@ Sim_Analyze <- function(Sim.Dat,
                         CPI.D=FALSE,
                         CPI.DT=FALSE,
                         GEE=FALSE, #Note: GEE comp is very slow; ~1min/GEE fit
-                        corstr="exchangeable") {
+                        corstr="exchangeable",
+                        CLWP=FALSE,
+                        CLWPA=FALSE) {
   Obs.mat<- t(Sim.Dat[,"Y.ij.bar",,drop=TRUE])
   Results <- Obs.mat %*% as.matrix(Sim.Wt)
   if (MEM | CPI | CPI.T | CPI.D | CPI.DT | GEE) {
@@ -146,7 +148,18 @@ Sim_Analyze <- function(Sim.Dat,
                                          names_to="Indiv",
                                          names_prefix="Y.ij.",
                                          values_to="Y"))
-    if (MEM) {
+    if (MEM & (CLWP | CLWPA)) {
+      NumSims <- length(Sim.Dat.long)
+      MEM_Res <- rep(NA,NumSims)
+      MEM_Sigma <- rep(NA,NumSims)
+      for (ns in 1:NumSims) {
+        MEM.ns <- lmer(Y~Interv+factor(Period)+(1|Cluster), data=Sim.Dat.long[[ns]])
+        MEM_Res[ns] <- unname(fixef(MEM.ns)["Interv"])
+        MEM_Sigma[ns] <- sqrt(as.data.frame(VarCorr(MEM.ns))[2,"vcov"]*2)
+      }
+      Results <- cbind(Results, Comp_MEM=MEM_Res)
+    }
+    else if (MEM) {
       MEM_Res <- sapply(Sim.Dat.long,
                     FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster), data=x))["Interv"]))
       Results <- cbind(Results, Comp_MEM=MEM_Res)
@@ -226,6 +239,58 @@ Sim_Analyze <- function(Sim.Dat,
                                                   id=Clf,
                                                   corstr=corstr)$coefficients["Interv"]))
       Results <- cbind(Results, Comp_GEE=GEE_Res)
+    }
+  }
+  if (CLWP | CLWPA) {
+    NumSims <- dim(Sim.Dat)[3]
+    N <- length(unique(Sim.Dat[,"Cluster",1]))
+    if (MEM) {
+      start_theta <- MEM_Res
+      start_sigma <- MEM_Sigma
+    } else {
+      Sim.Dat.long <- apply(Sim.Dat, 3,
+                            FUN=function(x) as_tibble(x) %>%
+                              dplyr::select(-c("Y.ij.bar","Y.ij.sd")) %>%
+                              pivot_longer(cols=starts_with("Y.ij."),
+                                           names_to="Indiv",
+                                           names_prefix="Y.ij.",
+                                           values_to="Y"))
+      start_theta <- rep(NA,NumSims)
+      start_sigma <- rep(NA,NumSims)
+      for (ns in 1:NumSims) {
+        MEM.ns <- lmer(Y~Interv+factor(Period)+(1|Cluster), data=Sim.Dat.long[[ns]])
+        start_theta[ns] <- unname(fixef(MEM.ns)["Interv"])
+        start_sigma[ns] <- sqrt(as.data.frame(VarCorr(MEM.ns))[2,"vcov"]*2)
+      }
+    }
+    Sim.Dat.list <- apply(Sim.Dat, 3,
+                          FUN=function(x) as_tibble(x) %>%
+                            dplyr::select(Cluster,Period,Interv,Y.ij.bar))
+    if (CLWP) {
+      CLWP_Res <- rep(NA,NumSims)
+      CLWP_pval <- rep(NA,NumSims)
+      for (ns in 1:NumSims) {
+        Fit <- CLWP_fit(my.data=Sim.Dat.list[[ns]],
+                        start_theta=start_theta[ns],
+                        start_sigma=start_sigma[ns],
+                        N=N)
+        CLWP_Res[ns] <- Fit["CLWP_est.theta"]
+        CLWP_pval[ns] <- Fit["CLWP_pval.theta"]
+      }
+      Results <- cbind(Results, Comp_CLWP=CLWP_Res)
+    }
+    if (CLWPA) {
+      CLWPA_Res <- rep(NA,NumSims)
+      CLWPA_pval <- rep(NA,NumSims)
+      for (ns in 1:NumSims) {
+        Fit <- CLWPA_fit(my.data=Sim.Dat.list[[ns]],
+                        start_theta=start_theta[ns],
+                        start_sigma=start_sigma[ns],
+                        N=N)
+        CLWPA_Res[ns] <- Fit["CLWPA_est.theta"]
+        CLWPA_pval[ns] <- Fit["CLWPA_pval.theta"]
+      }
+      Results <- cbind(Results, Comp_CLWPA=CLWPA_Res)
     }
   }
   return(Results)
