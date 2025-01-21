@@ -254,6 +254,13 @@ for (row in 1:(dim(Map_Settings)[1])) {
            width=6, height=4, units="in")
 }
 
+## Comparisons to other methods:
+### Get comparison estimates for methods with known weights:
+DFT <- SO5$DFT
+Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
+                              estimator=c("TW","CS","SA","CH","CO","NP"))
+Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
+Comp_ests
 
 ### Get comparison estimates and perm. p-values for CLWP/CLWPA:
 xpert.dat.long <- NULL
