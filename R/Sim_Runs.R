@@ -69,15 +69,15 @@ Param_Set <- tribble(
   9, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14
 )
 
-Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.D","CPI.DT"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.02), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.D","CPI.DT"), corstr=NULL),
-                  list(Type=5, ThetaDF=tibble(Theta=-0.04), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.D","CPI.DT"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.DT"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.07,-0.06,-0.04,0,0.03,0.02,0.01)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.DT"), corstr=NULL),
-                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.03,4),rep(0,3))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.DT"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.04,by=-0.005)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.03,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT"), corstr=NULL),
-                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT"), corstr=NULL))
+Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.02), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"), corstr=NULL),
+                  list(Type=5, ThetaDF=tibble(Theta=-0.04), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.DT","CLWP","CLWPA"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(-0.07,-0.06,-0.04,0,0.03,0.02,0.01)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.DT","CLWP","CLWPA"), corstr=NULL),
+                  list(Type=4, ThetaDF=tibble(j=2:8, Theta=c(rep(-0.03,4),rep(0,3))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.T","CPI.DT","CLWP","CLWPA"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.01,to=-0.04,by=-0.005)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT","CLWP","CLWPA"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.03,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT","CLWP","CLWPA"), corstr=NULL),
+                  list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT","CLWP","CLWPA"), corstr=NULL))
 
 Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012,
             0.002, 0.005, -0.001, 0.020, 0, 0.017, -0.011)
