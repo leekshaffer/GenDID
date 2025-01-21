@@ -193,7 +193,7 @@ Comp_Ests <- function(DFT_obj,
 }
 
 Comp_Ests_Weights <- function(DFT_obj, Amat,
-                              estimator=c("TW","CS","SA","CH","CO","NP")) {
+                              estimator=c("TW","CS","SA","CH","CO","NP","CLWP","CLWPA")) {
   DID.weights <- NULL
   Obs.weights <- NULL
   if (sum(c("TW","CS","SA","CH","CO") %in% estimator) > 0) {
@@ -218,7 +218,6 @@ Comp_Ests_Weights <- function(DFT_obj, Amat,
                              W_NP_ATT=NP_w_int * rep(Mult_ATT, times=DFT_obj$N),
                              W_NP_IV=NP_w_int * rep(Mult_IV, times=DFT_obj$N))
   }
-
   return(list(DID.weights=DID.weights,
               Obs.weights=Obs.weights))
 }

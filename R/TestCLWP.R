@@ -94,7 +94,7 @@ simulate_FromSet_Par(Param_Set, Theta_Set,
                      n_cores=9)
 
 
-Full_Sim_Res <- NULL
+Full_Sim_Res_CL <- NULL
 for (i in Param_Set$SimNo) {
   load(paste0("sim_res_t/Sim_Set_",i,".Rda"))
   assign(x="Res1", value=get(paste0("Res_Sim_",i)))
@@ -102,10 +102,19 @@ for (i in Param_Set$SimNo) {
   PVs <- Res1$PValues
   Res_int <- tibble(SimNo=rep(i,4),
                     Result=c("Mean Estimate","Median Estimate","SD Estimate","Power"))
-  Full_Sim_Res <- Full_Sim_Res %>% bind_rows(cbind(Res_int, rbind(apply(Ests, 2, mean, na.rm=TRUE),
+  Full_Sim_Res_CL <- Full_Sim_Res_CL %>% bind_rows(cbind(Res_int, rbind(apply(Ests, 2, mean, na.rm=TRUE),
                                                                   apply(Ests, 2, median, na.rm=TRUE),
                                                                   apply(Ests, 2, sd, na.rm=TRUE),
                                                                   apply(PVs, 2, function(x) mean(x <= 0.05, na.rm=TRUE)))))
   rm(list=c("Res1","Ests","PVs",
             paste0("Res_Sim_",i),"Res_int"))
 }
+save(Full_Sim_Res_CL,
+     file="int/Full_Sim_Res_CLWP.Rda")
+load(file="int/Full_Sim_Res.Rda")
+Full_Sim_Res <- Full_Sim_Res %>%
+  left_join(Full_Sim_Res_CL %>%
+              dplyr::select(SimNo,Result,Comp_CLWP,Comp_CLWPA),
+            by=c("SimNo","Result"))
+save(Full_Sim_Res,
+     file="int/Full_Sim_Res.Rda")
