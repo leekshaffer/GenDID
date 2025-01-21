@@ -68,9 +68,10 @@ Permute_order <- function(N, J) {
 Permute_obs <- function(Observations, N, J, Obs.weights) {
   Order <- Permute_order(N, J)
   if (is.null(Obs.weights)) {
-    return(Observations[Order])
+    return(Observations[Order,])
   } else {
-    return(t(Obs.weights) %*% as.matrix(Observations)[Order,,drop=FALSE])
+    return(list(Obs=Observations[Order,],
+                Ests=t(Obs.weights) %*% as.matrix(Observations)[Order,,drop=FALSE]))
   }
 }
 

@@ -7,10 +7,10 @@
 ## Note: some details of the mixed effects model fitting is specific to the setting used in Sim_Runs.R
 ### Please check and alter these or do not use those models if using a different setup.
 
-source("A_Const.R")
-source("Sigmas.R")
-source("Full_Analysis.R")
-source("CompEsts.R")
+source("R/A_Const.R")
+source("R/Sigmas.R")
+source("R/Full_Analysis.R")
+source("R/CompEsts.R")
 
 require(tidyverse)
 require(lme4)
@@ -44,7 +44,7 @@ Sim_Frame <- function(N, J, StartingPds=NULL) {
 }
 
 #### Simulate Data:
-Sim_Data <- function(Sim.Fr, mu, Alpha1, 
+Sim_Data <- function(Sim.Fr, mu, Alpha1,
                      T1, T2, ProbT1,
                      sig_nu, sig_e, m,
                      ThetaType, ThetaDF) {
@@ -52,7 +52,7 @@ Sim_Data <- function(Sim.Fr, mu, Alpha1,
   J <- length(unique(Sim.Fr$Period))
   Sim.Dat <- Sim.Fr %>%
     dplyr::mutate(FE.g = rep(sample(Alpha1, N, replace=FALSE), each=J),
-                  FE.t.Type = rep(sample(c(1,2), size=N, replace=TRUE, prob=c(ProbT1,1-ProbT1)), 
+                  FE.t.Type = rep(sample(c(1,2), size=N, replace=TRUE, prob=c(ProbT1,1-ProbT1)),
                                   each=J),
                   RE.CPI = rnorm(N*J, mean=0, sd=sig_nu),
                   FE.t=if_else(FE.t.Type==1, T1[Period], T2[Period]))
@@ -94,15 +94,15 @@ Sim_Data <- function(Sim.Fr, mu, Alpha1,
 #### Note MV_Out can be a list with multiple MV_Out objects: names are passed on
 #### Solve_Out is used only for comparisons to other estimators; can be a list; names passed on
 Sim_Weights <- function(MV_Out,
-                        Solve_Out=NULL, 
+                        Solve_Out=NULL,
                         Comparisons=NULL) {
   Weights <- NULL
   if (!is.null(MV_Out$Obs.Weights)) { #If only one MV_Out object is given
     Weights <- tibble(GenDID=MV_Out$Obs.Weights)
   } else {
     for (i in 1:length(MV_Out)) { #If list of MV_Out objects is given
-      Weights <- Weights %>% 
-        bind_cols(as_tibble(MV_Out[[i]]$MV$Obs.weights) %>% 
+      Weights <- Weights %>%
+        bind_cols(as_tibble(MV_Out[[i]]$MV$Obs.weights) %>%
                     dplyr::rename_with(~paste(names(MV_Out)[i],colnames(MV_Out[[i]]$MV$Obs.weights),
                                               sep="_",recycle0=FALSE)))
     }
@@ -119,7 +119,7 @@ Sim_Weights <- function(MV_Out,
                                   Amat=Solve_Out[[i]]$Amat,
                                   estimator=Comparisons[Comparisons %in% c("TW","CS","SA","CH","CO","NP")])$Obs.weights
         colnames(CEwi) <- paste(names(Solve_Out)[i], colnames(CEwi), sep="_", recycle0=FALSE)
-        CE_Weights <- CE_Weights %>% 
+        CE_Weights <- CE_Weights %>%
           bind_cols(CEwi)
       }
     }
@@ -135,12 +135,18 @@ Sim_Analyze <- function(Sim.Dat,
                         CPI.D=FALSE,
                         CPI.DT=FALSE,
                         GEE=FALSE, #Note: GEE comp is very slow; ~1min/GEE fit
-                        corstr="exchangeable") {
+                        corstr="exchangeable",
+                        CLWP=FALSE,
+                        CLWPA=FALSE) {
   Obs.mat<- t(Sim.Dat[,"Y.ij.bar",,drop=TRUE])
-  Results <- Obs.mat %*% as.matrix(Sim.Wt)
+  if (is.null(Sim.Wt)) {
+    Results <- NULL
+  } else {
+    Results <- Obs.mat %*% as.matrix(Sim.Wt)
+  }
   if (MEM | CPI | CPI.T | CPI.D | CPI.DT | GEE) {
-    Sim.Dat.long <- apply(Sim.Dat, 3, 
-                          FUN=function(x) as_tibble(x) %>% 
+    Sim.Dat.long <- apply(Sim.Dat, 3,
+                          FUN=function(x) as_tibble(x) %>%
                             dplyr::select(-c("Y.ij.bar","Y.ij.sd")) %>%
                             pivot_longer(cols=starts_with("Y.ij."),
                                          names_to="Indiv",
@@ -151,9 +157,21 @@ Sim_Analyze <- function(Sim.Dat,
                     FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster), data=x))["Interv"]))
       Results <- cbind(Results, Comp_MEM=MEM_Res)
     }
-    if (CPI) {
+    if (CPI & (CLWP | CLWPA)) {
+      NumSims <- length(Sim.Dat.long)
+      CPI_Res <- rep(NA,NumSims)
+      CPI_Sigma <- rep(NA,NumSims)
+      for (ns in 1:NumSims) {
+        CPI.ns <- lmer(Y~Interv+factor(Period)+(1|Cluster)+(1|CPI),
+                       data=Sim.Dat.long[[ns]] %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_")))
+        CPI_Res[ns] <- unname(fixef(CPI.ns)["Interv"])
+        VC <- as.data.frame(VarCorr(CPI.ns))
+        CPI_Sigma[ns] <- sqrt(VC[VC$grp=="Residual","vcov"]*2)
+      }
+      Results <- cbind(Results, Comp_CPI=CPI_Res)
+    } else if (CPI) {
       CPI_Res <- sapply(Sim.Dat.long,
-                    FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster)+(1|CPI), 
+                    FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster)+(1|CPI),
                                                       data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"))))["Interv"]))
       Results <- cbind(Results, Comp_CPI=CPI_Res)
     }
@@ -190,7 +208,7 @@ Sim_Analyze <- function(Sim.Dat,
     }
     if (CPI.DT) {
       CPI.DT_Res <- as_tibble(t(sapply(Sim.Dat.long,
-                                      FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff):factor(Period) + 
+                                      FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff):factor(Period) +
                                                                    factor(Period)+ (1|Cluster) + (1|CPI),
                                                                  data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
                                                                                           Diff=if_else(Period-Start < 0,0,Period-Start+1)),
@@ -206,11 +224,11 @@ Sim_Analyze <- function(Sim.Dat,
       CPI.DT_Res$CPI.DT_Avg <- apply(CPI.DT_Res_orig, 1, mean, na.rm=TRUE)
       CPI.DT_Res$CPI.DT_AvgEx8 <- apply(CPI.DT_Res_orig %>% dplyr::select(-ends_with("j8")), 1, mean, na.rm=TRUE)
       for (i in 1:6) {
-        CPI.DT_Res[,paste0("CPI.DT_D",i)] <- apply(CPI.DT_Res_orig %>% dplyr::select(contains(paste0("a",i))), 
+        CPI.DT_Res[,paste0("CPI.DT_D",i)] <- apply(CPI.DT_Res_orig %>% dplyr::select(contains(paste0("a",i))),
                                                    1, mean, na.rm=TRUE)
       }
       for (i in 2:7) {
-        CPI.DT_Res[,paste0("CPI.DT_T",i)] <- apply(CPI.DT_Res_orig %>% dplyr::select(contains(paste0("j",i))), 
+        CPI.DT_Res[,paste0("CPI.DT_T",i)] <- apply(CPI.DT_Res_orig %>% dplyr::select(contains(paste0("j",i))),
                                                    1, mean, na.rm=TRUE)
       }
       CPI.DT_Res$CPI.DT_DAvg <- apply(CPI.DT_Res %>% dplyr::select(starts_with("CPI.DT_D")),
@@ -227,15 +245,60 @@ Sim_Analyze <- function(Sim.Dat,
                                                   corstr=corstr)$coefficients["Interv"]))
       Results <- cbind(Results, Comp_GEE=GEE_Res)
     }
+    if (CLWP | CLWPA) {
+      NumSims <- dim(Sim.Dat)[3]
+      N <- length(unique(Sim.Dat[,"Cluster",1]))
+      if (CPI) {
+        start_theta <- CPI_Res
+        start_sigma <- CPI_Sigma
+      } else {
+        start_theta <- rep(NA,NumSims)
+        start_sigma <- rep(NA,NumSims)
+        for (ns in 1:NumSims) {
+          MEM.ns <- lmer(Y~Interv+factor(Period)+(1|Cluster), data=Sim.Dat.long[[ns]])
+          start_theta[ns] <- unname(fixef(MEM.ns)["Interv"])
+          start_sigma[ns] <- sqrt(as.data.frame(VarCorr(MEM.ns))[2,"vcov"]*2)
+        }
+      }
+      Sim.Dat.list <- apply(Sim.Dat, 3,
+                            FUN=function(x) as_tibble(x) %>%
+                              dplyr::select(Cluster,Period,Interv,Y.ij.bar))
+      if (CLWP) {
+        CLWP_Res <- rep(NA,NumSims)
+        CLWP_pval <- rep(NA,NumSims)
+        for (ns in 1:NumSims) {
+          Fit <- CLWP_fit(my.data=Sim.Dat.list[[ns]],
+                          start_theta=start_theta[ns],
+                          start_sigma=start_sigma[ns],
+                          N=N)
+          CLWP_Res[ns] <- Fit["CLWP_est.theta"]
+          CLWP_pval[ns] <- Fit["CLWP_pval.theta"]
+        }
+        Results <- cbind(Results, Comp_CLWP=CLWP_Res)
+      }
+      if (CLWPA) {
+        CLWPA_Res <- rep(NA,NumSims)
+        CLWPA_pval <- rep(NA,NumSims)
+        for (ns in 1:NumSims) {
+          Fit <- CLWPA_fit(my.data=Sim.Dat.list[[ns]],
+                          start_theta=start_theta[ns],
+                          start_sigma=start_sigma[ns],
+                          N=N)
+          CLWPA_Res[ns] <- Fit["CLWPA_est.theta"]
+          CLWPA_pval[ns] <- Fit["CLWPA_pval.theta"]
+        }
+        Results <- cbind(Results, Comp_CLWPA=CLWPA_Res)
+      }
+    }
   }
   return(Results)
 }
 
 Permute_All <- function(Sim.Dat.1,
                         Order1) {
-  return(as_tibble(Sim.Dat.1) %>% 
+  return(as_tibble(Sim.Dat.1) %>%
            dplyr::select(all_of(c("Cluster","Period","Start","Interv"))) %>%
-           bind_cols((as_tibble(Sim.Dat.1) %>% 
+           bind_cols((as_tibble(Sim.Dat.1) %>%
                         dplyr::select(starts_with("Y.ij.")))[Order1,]) %>%
            dplyr::select(-c("Y.ij.bar","Y.ij.sd")) %>%
            pivot_longer(cols=starts_with("Y.ij."),
@@ -253,7 +316,9 @@ Sim_Permutation <- function(Sim.Dat,
                         CPI.D=FALSE,
                         CPI.DT=FALSE,
                         GEE=FALSE, #Note: GEE comp is very slow
-                        corstr="exchangeable") {
+                        corstr="exchangeable",
+                        CLWP=FALSE,
+                        CLWPA=FALSE) {
   if (is.null(N) | is.null(J)) {
     warning(simpleWarning(message="Getting N and J from Sim.Dat"))
     N <- length(unique(Sim.Dat[,"Cluster",1,drop=TRUE]))
@@ -264,8 +329,12 @@ Sim_Permutation <- function(Sim.Dat,
   Obs.true <- Sim.Dat[,"Y.ij.bar",,drop=TRUE]
   Perm.mat <- t(sapply(1:dim(Sim.Dat)[3],
                      FUN=function(i) Obs.true[Orders[,i],i]))
-  Res.perm <- Perm.mat %*% as.matrix(Sim.Wt)
-  if (MEM | CPI | CPI.T | CPI.D | CPI.DT | GEE) {
+  if (is.null(Sim.Wt)) {
+    Res.perm <- NULL
+  } else {
+    Res.perm <- Perm.mat %*% as.matrix(Sim.Wt)
+  }
+  if (MEM | CPI | CPI.T | CPI.D | CPI.DT | GEE | CLWP | CLWPA) {
     Perm.Dat.Long <- lapply(1:(dim(Sim.Dat)[3]),
                             FUN=function(i) Permute_All(Sim.Dat[,,i], Orders[,i]))
     if (MEM) {
@@ -273,9 +342,21 @@ Sim_Permutation <- function(Sim.Dat,
                         FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster), data=x))["Interv"]))
       Res.perm <- cbind(Res.perm, Comp_MEM=MEM_Res)
     }
-    if (CPI) {
+    if (CPI & (CLWP | CLWPA)) {
+      NumSims <- length(Perm.Dat.Long)
+      CPI_Res <- rep(NA,NumSims)
+      CPI_Sigma <- rep(NA,NumSims)
+      for (ns in 1:NumSims) {
+        CPI.ns <- lmer(Y~Interv+factor(Period)+(1|Cluster)+(1|CPI),
+                       data=Perm.Dat.Long[[ns]] %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_")))
+        CPI_Res[ns] <- unname(fixef(CPI.ns)["Interv"])
+        VC <- as.data.frame(VarCorr(CPI.ns))
+        CPI_Sigma[ns] <- sqrt(VC[VC$grp=="Residual","vcov"]*2)
+      }
+      Res.perm <- cbind(Res.perm, Comp_CPI=CPI_Res)
+    } else if (CPI) {
       CPI_Res <- sapply(Perm.Dat.Long,
-                        FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster)+(1|CPI), 
+                        FUN=function(x) unname(fixef(lmer(Y~Interv+factor(Period)+(1|Cluster)+(1|CPI),
                                                           data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"))))["Interv"]))
       Res.perm <- cbind(Res.perm, Comp_CPI=CPI_Res)
     }
@@ -312,7 +393,7 @@ Sim_Permutation <- function(Sim.Dat,
     }
     if (CPI.DT) {
       CPI.DT_Res <- as_tibble(t(sapply(Perm.Dat.Long,
-                                       FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff):factor(Period) + 
+                                       FUN=function(x) fixef(lmer(Y~Interv+Interv:factor(Diff):factor(Period) +
                                                                     factor(Period)+ (1|Cluster) + (1|CPI),
                                                                   data=x %>% dplyr::mutate(CPI=paste(Cluster,Period,sep="_"),
                                                                                            Diff=if_else(Period-Start < 0,0,Period-Start+1)),
@@ -328,11 +409,11 @@ Sim_Permutation <- function(Sim.Dat,
       CPI.DT_Res$CPI.DT_Avg <- apply(CPI.DT_Res_orig, 1, mean, na.rm=TRUE)
       CPI.DT_Res$CPI.DT_AvgEx8 <- apply(CPI.DT_Res_orig %>% dplyr::select(-ends_with("j8")), 1, mean, na.rm=TRUE)
       for (i in 1:6) {
-        CPI.DT_Res[,paste0("CPI.DT_D",i)] <- apply(CPI.DT_Res_orig %>% dplyr::select(contains(paste0("a",i))), 
+        CPI.DT_Res[,paste0("CPI.DT_D",i)] <- apply(CPI.DT_Res_orig %>% dplyr::select(contains(paste0("a",i))),
                                                    1, mean, na.rm=TRUE)
       }
       for (i in 2:7) {
-        CPI.DT_Res[,paste0("CPI.DT_T",i)] <- apply(CPI.DT_Res_orig %>% dplyr::select(contains(paste0("j",i))), 
+        CPI.DT_Res[,paste0("CPI.DT_T",i)] <- apply(CPI.DT_Res_orig %>% dplyr::select(contains(paste0("j",i))),
                                                    1, mean, na.rm=TRUE)
       }
       CPI.DT_Res$CPI.DT_DAvg <- apply(CPI.DT_Res %>% dplyr::select(starts_with("CPI.DT_D")),
@@ -349,6 +430,48 @@ Sim_Permutation <- function(Sim.Dat,
                                                       corstr=corstr)$coefficients["Interv"]))
       Res.perm <- cbind(Res.perm, Comp_GEE=GEE_Res)
     }
+    if (CLWP | CLWPA) {
+      NumSims <- dim(Sim.Dat)[3]
+      N <- length(unique(Sim.Dat[,"Cluster",1]))
+      if (CPI) {
+        start_theta <- CPI_Res
+        start_sigma <- CPI_Sigma
+      } else {
+        start_theta <- rep(NA,NumSims)
+        start_sigma <- rep(NA,NumSims)
+        for (ns in 1:NumSims) {
+          MEM.ns <- lmer(Y~Interv+factor(Period)+(1|Cluster), data=Perm.Dat.Long[[ns]])
+          start_theta[ns] <- unname(fixef(MEM.ns)["Interv"])
+          start_sigma[ns] <- sqrt(as.data.frame(VarCorr(MEM.ns))[2,"vcov"]*2)
+        }
+      }
+      Perm.Dat.list <-  lapply(Perm.Dat.Long,
+                              FUN=function(x) x %>%
+                                group_by(Cluster,Period,Interv) %>%
+                                summarize(Y.ij.bar=mean(Y)))
+      if (CLWP) {
+        CLWP_Res <- rep(NA,NumSims)
+        for (ns in 1:NumSims) {
+          Fit <- CLWP_fit(my.data=Perm.Dat.list[[ns]],
+                          start_theta=start_theta[ns],
+                          start_sigma=start_sigma[ns],
+                          N=N)
+          CLWP_Res[ns] <- Fit["CLWP_est.theta"]
+        }
+        Res.perm <- cbind(Res.perm, Comp_CLWP=CLWP_Res)
+      }
+      if (CLWPA) {
+        CLWPA_Res <- rep(NA,NumSims)
+        for (ns in 1:NumSims) {
+          Fit <- CLWPA_fit(my.data=Perm.Dat.list[[ns]],
+                           start_theta=start_theta[ns],
+                           start_sigma=start_sigma[ns],
+                           N=N)
+          CLWPA_Res[ns] <- Fit["CLWPA_est.theta"]
+        }
+        Res.perm <- cbind(Res.perm, Comp_CLWPA=CLWPA_Res)
+      }
+    }
   }
   return(Res.perm)
 }
@@ -356,7 +479,7 @@ Sim_Permutation <- function(Sim.Dat,
 ### Framework for simulated data with fixed treatment schedule:
 simulate_SWT <- function(NumSims,
                           N, J, StartingPds=NULL,
-                          mu, Alpha1, 
+                          mu, Alpha1,
                           T1, T2, ProbT1,
                           sig_nu, sig_e, m,
                          ThetaType, ThetaDF,
@@ -367,15 +490,19 @@ simulate_SWT <- function(NumSims,
     stop(simpleError(message="NumSims must be at least 2"))
   }
   Sim.Fr <- Sim_Frame(N, J, StartingPds)
-  Sim.Dat <- replicate(n=NumSims, 
-                       as.matrix(Sim_Data(Sim.Fr, mu, Alpha1, 
+  Sim.Dat <- replicate(n=NumSims,
+                       as.matrix(Sim_Data(Sim.Fr, mu, Alpha1,
                                           T1, T2, ProbT1,
                                           sig_nu, sig_e, m,
-                                          ThetaType, ThetaDF)), 
+                                          ThetaType, ThetaDF)),
                        simplify="array")
-  Sim.Wt <- Sim_Weights(MV_Out=MVO_list,
-                        Solve_Out=SO_list, 
-                        Comparisons=Comparisons)
+  if (is.null(MVO_list)) {
+    Sim.Wt <- NULL
+  } else {
+    Sim.Wt <- Sim_Weights(MV_Out=MVO_list,
+                          Solve_Out=SO_list,
+                          Comparisons=Comparisons)
+  }
   Sim.Res <- Sim_Analyze(Sim.Dat, Sim.Wt,
                          MEM=("MEM" %in% Comparisons),
                          CPI=("CPI" %in% Comparisons),
@@ -383,7 +510,9 @@ simulate_SWT <- function(NumSims,
                          CPI.D=("CPI.D" %in% Comparisons),
                          CPI.DT=("CPI.DT" %in% Comparisons),
                          GEE=("GEE" %in% Comparisons),
-                         corstr=corstr)
+                         corstr=corstr,
+                         CLWP=("CLWP" %in% Comparisons),
+                         CLWPA=("CLWPA" %in% Comparisons))
   if (Permutations > 0) {
     Sim.Perm.Res <- replicate(n=Permutations,
                               expr=Sim_Permutation(Sim.Dat, Sim.Wt,
@@ -394,7 +523,9 @@ simulate_SWT <- function(NumSims,
                                     CPI.D=("CPI.D" %in% Comparisons),
                                     CPI.DT=("CPI.DT" %in% Comparisons),
                                     GEE=("GEE" %in% Comparisons),
-                                    corstr=corstr),
+                                    corstr=corstr,
+                                    CLWP=("CLWP" %in% Comparisons),
+                                    CLWPA=("CLWPA" %in% Comparisons)),
                               simplify="array")
     Sim.All <- array(c(Sim.Res, Sim.Perm.Res),
                      dim=c(dim(Sim.Res)[1:2],dim(Sim.Perm.Res)[3]+1))
@@ -415,23 +546,25 @@ simulate_SWT <- function(NumSims,
 simulate_FromSet <- function(Param_Set,
                              Theta_Set,
                              StartingPds=NULL,
-                             Alpha1, 
-                             T1, T2, 
+                             Alpha1,
+                             T1, T2,
                              MVO_list, SO_list=NULL,
                              outdir=NULL,
                              outname=NULL) {
+  for (i in 1:(dim(Param_Set)[1])) {
       row <- Param_Set[i,]
       print(paste("Starting Sim. Number",row$SimNo))
       assign(x=paste0("Res_Sim_",i),
              value=simulate_SWT(row$NumSims,
                                 row$N, row$J, StartingPds,
-                                row$mu, Alpha1, 
+                                row$mu, Alpha1,
                                 T1, T2, row$ProbT1,
                                 row$sig_nu, row$sig_e, row$m,
                                 Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
                                 MVO_list, SO_list,
                                 Comparisons=Theta_Set[[i]]$Comps, Theta_Set[[i]]$corstr,
                                 Permutations=row$NumPerms))
-      save(list=paste0("Res_Sim_",row$SimNo), 
+      save(list=paste0("Res_Sim_",row$SimNo),
            file=paste0(outdir,"/",outname,"_",row$SimNo,".Rda"))
+  }
 }

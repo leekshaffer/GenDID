@@ -4,14 +4,14 @@
 ###### Created 2024/10/04 #############
 #######################################
 
-source("Simulations.R")
+source("R/Simulations.R")
 
 ## A version of simulate_FromSet that allows simple parallelization
 simulate_FromSet_Par <- function(Param_Set,
                              Theta_Set,
                              StartingPds=NULL,
-                             Alpha1, 
-                             T1, T2, 
+                             Alpha1,
+                             T1, T2,
                              MVO_list, SO_list=NULL,
                              outdir=NULL,
                              outname=NULL,
@@ -19,7 +19,7 @@ simulate_FromSet_Par <- function(Param_Set,
                              n_cores=NULL) {
   if (!parallel) {
     simulate_FromSet(Param_Set, Theta_Set, StartingPds,
-                     Alpha1, T1, T2, 
+                     Alpha1, T1, T2,
                      MVO_list, SO_list,
                      outdir, outname)
   } else {
@@ -31,20 +31,20 @@ simulate_FromSet_Par <- function(Param_Set,
     par_clust <- makeCluster(n_cores)
     registerDoParallel(par_clust)
     foreach (i=1:(dim(Param_Set)[1])) %dopar% {
-      source("Simulations.R")
+      source("R/Simulations.R")
       row <- Param_Set[i,]
       print(paste("Starting Sim. Number",row$SimNo))
       assign(x=paste0("Res_Sim_",i),
              value=simulate_SWT(row$NumSims,
                                 row$N, row$J, StartingPds,
-                                row$mu, Alpha1, 
+                                row$mu, Alpha1,
                                 T1, T2, row$ProbT1,
                                 row$sig_nu, row$sig_e, row$m,
                                 Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
                                 MVO_list, SO_list,
                                 Comparisons=Theta_Set[[i]]$Comps, Theta_Set[[i]]$corstr,
                                 Permutations=row$NumPerms))
-      save(list=paste0("Res_Sim_",row$SimNo), 
+      save(list=paste0("Res_Sim_",row$SimNo),
            file=paste0(outdir,"/",outname,"_",row$SimNo,".Rda"))
     }
     stopCluster(cl = par_clust)
@@ -79,7 +79,7 @@ Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0), Comps=c("TW","CS","SA","
                   list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.03,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT"), corstr=NULL),
                   list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT"), corstr=NULL))
 
-Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012, 
+Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012,
             0.002, 0.005, -0.001, 0.020, 0, 0.017, -0.011)
 T1 <- c(0,0.08,0.18,0.29,0.30,0.27,0.20,0.13)
 T2 <- c(0,0.02,0.03,0.07,0.13,0.19,0.27,0.30)
@@ -106,8 +106,8 @@ load("../int_large/xpert-solve-a_5.Rda")
 set.seed(73475)
 
 simulate_FromSet_Par(Param_Set, Theta_Set,
-                 StartingPds=NULL, 
-                 Alpha1,T1, T2, 
+                 StartingPds=NULL,
+                 Alpha1,T1, T2,
                  MVO_list=list(A2_003=MVOut_2_CS_0_003,
                                A3_003=MVOut_3_CS_0_003,
                                A4_003=MVOut_4_CS_0_003,

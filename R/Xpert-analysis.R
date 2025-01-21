@@ -5,6 +5,7 @@
 #######################################
 
 require(tidyverse)
+require(lme4)
 
 source("R/A_Const.R")
 source("R/Sigmas.R")
@@ -253,21 +254,82 @@ for (row in 1:(dim(Map_Settings)[1])) {
            width=6, height=4, units="in")
 }
 
-
 ## Comparisons to other methods:
-### Get comparison estimates:
+### Get comparison estimates for methods with known weights:
 DFT <- SO5$DFT
 Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
                               estimator=c("TW","CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
 
-### Get comparison perm. p-values
+### Get comparison estimates and perm. p-values for CLWP/CLWPA:
+xpert.dat.long <- NULL
+for (i in 1:(dim(xpert.dat)[1])) {
+  add <- xpert.dat[i,,drop=FALSE] %>% dplyr::select(Interv,Period,Cluster) %>%
+    cross_join(tibble(Outcome=c(rep(1,xpert.dat[i,"Events"]),
+                                rep(0,xpert.dat[i,"Indivs"]-xpert.dat[i,"Events"]))))
+  xpert.dat.long <- xpert.dat.long %>% bind_rows(add)
+}
+
+GetCLWPs <- function(data,start_vals) {
+  Fit_Lin <- CLWP_fit(my.data=data %>% rename(Y.ij.bar=Outcome),
+                      start_theta=start_vals["theta_lin"],
+                      start_sigma=start_vals["sigma_lin"],
+                      N=N)
+  Fit_A_Lin <- CLWPA_fit(my.data=data %>% rename(Y.ij.bar=Outcome),
+                         start_theta=start_vals["theta_lin"],
+                         start_sigma=start_vals["sigma_lin"],
+                         N=N)
+  Fit_Log <- CLWP_fit(my.data=data %>% rename(Y.ij.bar=logOdds),
+                      start_theta=start_vals["theta_log"],
+                      start_sigma=start_vals["sigma_log"],
+                      N=N)
+  Fit_A_Log <- CLWPA_fit(my.data=data %>% rename(Y.ij.bar=logOdds),
+                         start_theta=start_vals["theta_log"],
+                         start_sigma=start_vals["sigma_log"],
+                         N=N)
+  Ests <- matrix(data=unname(c(Fit_Lin["CLWP_est.theta"],
+                               Fit_A_Lin["CLWPA_est.theta"],
+                               Fit_Log["CLWP_est.theta"],
+                               Fit_A_Log["CLWPA_est.theta"])),
+                 nrow=2,ncol=2,byrow=FALSE)
+  rownames(Ests) <- c("CLWP","CLWPA")
+  colnames(Ests) <- c("Probability","Log Odds")
+  return(Ests)
+}
+
+MEM.start <- lmer(Outcome~Interv+factor(Period)+(1|Cluster),
+                  data=xpert.dat.long)
+start_theta_lin <- unname(fixef(MEM.start)["Interv"])
+start_sigma_lin <- sqrt(as.data.frame(VarCorr(MEM.start))[2,"vcov"]*2)
+MEM.start.log <- glmer(Outcome~Interv+factor(Period)+(1|Cluster),
+                       data=xpert.dat.long,
+                       family=binomial)
+start_theta_log <- unname(fixef(MEM.start.log)["Interv"])
+start_sigma_log <- sd(summary(MEM.start.log)$residuals)*sqrt(2)
+start_vals <- c(start_theta_lin,start_sigma_lin,
+                start_theta_log,start_sigma_log)
+names(start_vals) <- c("theta_lin","sigma_lin",
+                       "theta_log","sigma_log")
+
+Comp_ests <- rbind(Comp_ests,
+                   GetCLWPs(data=xpert.dat, start_vals=start_vals))
+
+### Get comparison perm. p-values:
 set.seed(7446)
-Comp_perms <- replicate(n=1000,
-                        expr=Permute_obs(Observations=Obs_Y,
-                                         N=DFT$N, J=DFT$J,
-                                         Obs.weights=Comp_wts$Obs.weights))
+SinglePerm <- function() {
+  Perm_out <- Permute_obs(Observations=Obs_Y,
+                          N=DFT$N, J=DFT$J,
+                          Obs.weights=Comp_wts$Obs.weights)
+  return(rbind(Perm_out$Ests,
+               GetCLWPs(data=xpert.dat %>%
+                          dplyr::select(Interv,Period,Cluster) %>%
+                          bind_cols(Perm_out$Obs) %>%
+                          rename(Outcome=Probability,
+                                 logOdds=`Log Odds`),
+                        start_vals=start_vals)))
+}
+Comp_perms <- replicate(n=1000, expr=SinglePerm())
 Comp_perms2 <- simplify2array(apply(Comp_perms, 3,
                                     FUN=function(x) abs(x) >= abs(Comp_ests), simplify=FALSE))
 Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
