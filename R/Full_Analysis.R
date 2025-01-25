@@ -75,17 +75,58 @@ Permute_obs <- function(Observations, N, J, Obs.weights) {
   }
 }
 
-## Inputs to MV_Assumption function:
-### SolveOut is the output from a call to Solve_Assumption
-### Assumption is the numbered assumption setting for the treatment effects (1--5)
-### Sigma is the covariance matrix (up to scalar) to use for minimizing variance
-### SigmaName (optional) is a short name to use in the files saved to indicate the variance setting
-### Observations: if given, will compute estimates for the minimum-variance estimator using these observations
-#### They must be in order of the A matrix:
-#### by cluster in the order given in Solve_Assumption input StartTimes, then by period within cluster
-### save_loc is the folder to save it in (be sure to end with / if anything other than blank is passed)
-### save_prefix is the prefix to put on the save files
-MV_Assumption <- function(SolveOut, Assumption,
+#' Compute Minimum-Variance Estimator and Save Results
+#'
+#' This function computes the minimum-variance estimator for treatment effects
+#' under specified assumptions and optionally computes estimates using provided
+#' observations. Results are saved to files for further analysis.
+#'
+#' @param SolveOut A list output from a call to `Solve_Assumption`, containing:
+#'   - `Solve`: A solve object.
+#'   - `Amat`: The A matrix used in the computation.
+#'   - `DFT`: A list with elements `D_aug`, `N`, and `J` used for computations.
+#' @param Assumption An integer (1–5) indicating the assumption setting for treatment effects.
+#' @param Sigma The covariance matrix (up to scalar) to use for minimizing variance.
+#' @param SigmaName A short string to indicate the variance setting in saved files (optional).
+#' @param Observations A matrix of observations for computing estimates of the minimum-variance
+#'   estimator (optional). Observations must be ordered by cluster and period as in the `StartTimes`
+#'   input to `Solve_Assumption`.
+#' @param Permutations An integer specifying the number of permutations to compute p-values
+#'   for the observed estimates (optional).
+#' @param save_loc A string specifying the folder path to save the output. Ensure the string ends
+#'   with a "/" if it is not blank.
+#' @param save_prefix A string prefix for the filenames of the saved results (default: "mv-a_").
+#'
+#' @return A list containing:
+#'   - `Amat`: The A matrix used in the computation.
+#'   - `D_Full`: A matrix combining augmented D values, optionally with observations and weights.
+#'   - `MV`: The result of the `min_var` computation.
+#'   - `Estimates` (if `Observations` is provided): A matrix of estimated treatment effects.
+#'   - `P_Values` (if `Permutations` is provided): A matrix of permutation-based p-values.
+#'
+#' @details
+#' If `Observations` is not provided, the function computes the minimum-variance estimator
+#' weights and saves the results. If `Observations` are provided, the function computes
+#' estimates for the minimum-variance estimator and optionally performs permutation testing
+#' to calculate p-values.
+#'
+#' Saved files are named using the format:
+#' `<save_prefix><Assumption>_<SigmaName>.Rda`
+#'
+#' @examples
+#' # Example usage:
+#' result <- MV_Assumption(SolveOut = solve_out,
+#'                         Assumption = 3,
+#'                         Sigma = diag(10),
+#'                         SigmaName = "example",
+#'                         Observations = obs_matrix,
+#'                         Permutations = 100,
+#'                         save_loc = "results/",
+#'                         save_prefix = "mv-a_")
+#'
+#' @export
+MV_Assumption <- function(SolveOut,
+                          Assumption,
                           Sigma,
                           SigmaName=NULL,
                           Observations=NULL,
@@ -100,8 +141,8 @@ MV_Assumption <- function(SolveOut, Assumption,
                     MV_int$DID.weights)
     assign(x=paste0("MV_",Assumption,"_",SigmaName),
            value=list(Amat=SolveOut$Amat,
-                            D_Full=D_Full,
-                            MV=MV_int))
+                      D_Full=D_Full,
+                      MV=MV_int))
     save(list=paste0("MV_",Assumption,"_",SigmaName),
          file=paste0(save_loc,save_prefix,Assumption,"_",SigmaName,".Rda"))
     return(get(paste0("MV_",Assumption,"_",SigmaName)))
