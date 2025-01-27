@@ -10,8 +10,53 @@ require(tibble)
 require(tidyr)
 require(bbmle)
 
-## From a DFT output object,
-### derive the weights for various other estimators
+
+#' Compute Weights for Various Estimators
+#'
+#' This function calculates weights for a variety of estimators based on an output object from the
+#' Difference-in-Differences Factorization (DFT) method.
+#'
+#' @param DFT_obj A list containing the output of the DFT method. Must include elements:
+#'   - `Theta`: A dataframe with at least `Cl.Num` and `Start_j`.
+#'   - `D_aug`: A dataframe with columns `i`, `i.prime`, `j`, `j.prime`, `Type`, and `TypeLabel`.
+#'   - `N`: Total number of clusters.
+#'   - `J`: Total number of periods.
+#' @param estimator A character vector specifying the estimators to compute. Options are:
+#'   - `"TW"`: Weights from Goodman-Bacon (2021).
+#'   - `"CS"`: Callaway and Sant'Anna weights.
+#'   - `"SA"`: Sun and Abraham weights.
+#'   - `"CH"`: Chaisemartin and D’Haultfœuille weights.
+#'   - `"CO"`: Cohort-based weights.
+#'
+#' @details
+#' - **TW:** Computes weights based on treatment timing heterogeneity using Goodman-Bacon decomposition.
+#' - **CS:** Computes group-time average treatment effects as in Callaway and Sant’Anna.
+#' - **SA:** Aggregates cohort-specific average treatment effects over relative periods following Sun and Abraham.
+#' - **CH:** Constructs period-specific weights as in Chaisemartin and D’Haultfœuille.
+#' - **CO:** Derives cohort-specific weights for different periods of comparison.
+#'
+#' The function uses internal helper functions (e.g., `CS_wt_fun`, `SA_wt_fun`, `CH_wt_fun`, `CO_wt_fun`)
+#' to compute the respective weights for each estimator.
+#'
+#' @return A list with two elements:
+#' - `Weights`: A matrix containing the computed weights for the specified estimators.
+#' - `Full`: A detailed list containing intermediate and final results for each estimator.
+#'
+#' @examples
+#' # Example usage:
+#' DFT_output <- list(
+#'   Theta = data.frame(Cl.Num = 1:5, Start_j = c(1, 2, 3, 4, 5)),
+#'   D_aug = data.frame(
+#'     i = 1:10, i.prime = 2:11, j = 1:10, j.prime = 2:11,
+#'     Type = c(1, 2, 3, 5), TypeLabel = c("A", "B", "C", "D")
+#'   ),
+#'   N = 10,
+#'   J = 5
+#' )
+#' result <- Comp_Ests(DFT_output, estimator = c("TW", "CS"))
+#' print(result$Weights)
+#'
+#' @export
 Comp_Ests <- function(DFT_obj,
                       estimator=c("TW","CS","SA","CH","CO")) {
   ### First, augment D with start times:
@@ -21,7 +66,7 @@ Comp_Ests <- function(DFT_obj,
   if (max(Starts$Cl.Num) < DFT_obj$N) {
     Starts <- Starts %>%
       bind_rows(tibble(Cl.Num=(max(Starts$Cl.Num)+1):DFT_obj$N,
-                                   Start_j=Inf))
+                       Start_j=Inf))
   }
   D_use <- DFT_obj$D_aug %>% dplyr::select(i,i.prime,j,j.prime,Type,TypeLabel) %>%
     left_join(Starts %>% rename(i.start=Start_j),
@@ -36,7 +81,7 @@ Comp_Ests <- function(DFT_obj,
       dplyr::summarize(n.Clust=n()) %>%
       dplyr::mutate(n=n.Clust/sum(n.Clust),
                     Dbar=if_else(is.infinite(Start_j),0,
-                            (DFT_obj$J-Start_j+1)/DFT_obj$J)) %>%
+                                 (DFT_obj$J-Start_j+1)/DFT_obj$J)) %>%
       dplyr::rename(G=Start_j)
     Cross_starts <- cross_join(Starts_n, Starts_n,
                                suffix=c(".k",".l")) %>%
@@ -52,8 +97,8 @@ Comp_Ests <- function(DFT_obj,
                     W_TW=s/n.DID)
     TW_w <- D_use %>% mutate(G.k=if_else(Type==2, i.start,
                                          if_else(Type==5, i.prime.start, NA)),
-                              G.l=if_else(Type==2, i.prime.start,
-                                          if_else(Type==5, i.start, NA))) %>%
+                             G.l=if_else(Type==2, i.prime.start,
+                                         if_else(Type==5, i.start, NA))) %>%
       left_join(TW.Weights %>% dplyr::select(G.k,G.l,W_TW),
                 by=c("G.k","G.l")) %>%
       dplyr::mutate(W_TW=if_else(is.na(W_TW), 0, W_TW))
@@ -65,11 +110,11 @@ Comp_Ests <- function(DFT_obj,
     Time <- unique(D_use %>% filter(Type %in% 1:3) %>% pull(j.prime))
     CS_key <- crossing(Group,Time) %>% mutate(Col=1:n())
     CS_gt_w_int <- apply(as.matrix(CS_key),
-                          MARGIN=1,
-                          FUN=function(row) CS_wt_fun(D_use, row["Group"], row["Time"]))
+                         MARGIN=1,
+                         FUN=function(row) CS_wt_fun(D_use, row["Group"], row["Time"]))
     CS_gt_w <- apply(CS_gt_w_int, 2, FUN=function(x) x/sum(abs(x)))
     CS_key_agg <- CS_key %>% mutate(Type=if_else(Time >= Group,"Post","Pre"),
-                                      EventTime=Time-Group) %>%
+                                    EventTime=Time-Group) %>%
       left_join(Starts %>% group_by(Start_j) %>% dplyr::summarize(Num=n()),
                 by=join_by(Group==Start_j))
     CS_key_agg <- CS_key_agg %>%
@@ -96,15 +141,15 @@ Comp_Ests <- function(DFT_obj,
                               pull(Start_j))
     CATT_el_key$Num <- apply(as.matrix(CATT_el_key), MARGIN=1,
                              FUN=function(row) nrow(D_use %>% filter(Type %in% 1:3,
-                                                                    i.start==row["Cohort"],
-                                                                    i.prime %in% Ctrl.is,
-                                                                    j.prime-i.start==row["Period"],
-                                                                    j-i.start==-1)) +
+                                                                     i.start==row["Cohort"],
+                                                                     i.prime %in% Ctrl.is,
+                                                                     j.prime-i.start==row["Period"],
+                                                                     j-i.start==-1)) +
                                nrow(D_use %>% filter(Type %in% 1:3,
-                                                    i.start==row["Cohort"],
-                                                    i.prime %in% Ctrl.is,
-                                                    j.prime-i.start==-1,
-                                                    j-i.start==row["Period"])))
+                                                     i.start==row["Cohort"],
+                                                     i.prime %in% Ctrl.is,
+                                                     j.prime-i.start==-1,
+                                                     j-i.start==row["Period"])))
     CATT_el_key <- CATT_el_key %>% filter(Num != 0) %>%
       mutate(Column=1:n())
     CATT_el_w_int <- apply(CATT_el_key, MARGIN=1,
@@ -119,11 +164,11 @@ Comp_Ests <- function(DFT_obj,
     SA_l_w <- apply(SA_l_key,
                     MARGIN=1,
                     FUN=function(row) SA_CATT_agg(CATT_el_key,
-                                               CATT_el_w,
-                                               as.numeric(row["Period"]))/as.numeric(row["Num"]))
+                                                  CATT_el_w,
+                                                  as.numeric(row["Period"]))/as.numeric(row["Num"]))
     res <- c(res,
              list(Key_SA_l=SA_l_key, W_SA_l=SA_l_w,
-             W_SA=SA_l_w %*% as.matrix(SA_l_key %>% dplyr::select(W_SA.W_ATT))))
+                  W_SA=SA_l_w %*% as.matrix(SA_l_key %>% dplyr::select(W_SA.W_ATT))))
   }
 
   if ("CH" %in% estimator) {
@@ -136,7 +181,7 @@ Comp_Ests <- function(DFT_obj,
       rename(Period=j.prime) %>%
       mutate(Column=1:n())
     CH_Pt_w_int <- apply(CH_Pt_key, MARGIN=1,
-                           FUN=function(row) CH_wt_fun(D_use,row["Period"]))
+                         FUN=function(row) CH_wt_fun(D_use,row["Period"]))
     CH_Pt_w <- apply(CH_Pt_w_int, 2, function(x) x/sum(abs(x)))
     res <- c(res, list(W_CH=tibble(W_CH.W_M = CH_Pt_w %*% CH_Pt_key$Num.Trt/sum(CH_Pt_key$Num.Trt))))
   }
@@ -166,9 +211,9 @@ Comp_Ests <- function(DFT_obj,
       rename(Period=j.prime) %>%
       mutate(Column=1:n())
     CO_Pt_w_int <- apply(CO_Pt_key, MARGIN=1,
-                            FUN=function(row) CO_wt_fun(D_use,row["Period"]))
+                         FUN=function(row) CO_wt_fun(D_use,row["Period"]))
     CO_Pt_All <- apply(CO_Pt_w_int, 2,
-                      function(x) x/if_else(sum(abs(x))==0,1,sum(abs(x))))
+                       function(x) x/if_else(sum(abs(x))==0,1,sum(abs(x))))
     CO_Pt_All <- apply(CO_Pt_w_int,
                        2, function(x) x/sum(abs(x)))
     CO_Pt_Res <- apply(CO_Pt_w_int,
@@ -188,10 +233,53 @@ Comp_Ests <- function(DFT_obj,
                       W_CO_Pt_Res=CO_Pt_Res,
                       W_CO=CO_w))
   }
- Weights <- do.call(cbind, res[paste0("W_",estimator)])
+  Weights <- do.call(cbind, res[paste0("W_",estimator)])
   return(list(Weights=Weights,Full=res))
 }
 
+
+#' Compute Weights for Various Estimators and Observational Data
+#'
+#' This function calculates weights for different estimators and applies an observational weighting matrix
+#' to the Difference-in-Differences (DID) results.
+#'
+#' @param DFT_obj A list containing the output of the Difference-in-Differences Factorization (DFT) method.
+#'   Must include:
+#'   - `Theta`: A list containing `Schematic` (a matrix indicating treatment status) and other elements.
+#'   - `N`: Total number of clusters.
+#' @param Amat A matrix specifying observational weights to be applied to the computed DID weights.
+#' @param estimator A character vector specifying the estimators to compute. Options include:
+#'   - `"TW"`: Goodman-Bacon (2021) weights.
+#'   - `"CS"`: Callaway and Sant'Anna weights.
+#'   - `"SA"`: Sun and Abraham weights.
+#'   - `"CH"`: Chaisemartin and D’Haultfœuille weights.
+#'   - `"CO"`: Cohort-based weights.
+#'   - `"NP"`: Naive pooled weights.
+#'   - `"CLWP"` and `"CLWPA"`: Additional observational weights, if applicable.
+#'
+#' @details
+#' - For the DID-based estimators (`"TW"`, `"CS"`, `"SA"`, `"CH"`, `"CO"`), weights are derived using the
+#'   \code{\link{Comp_Ests}} function and transformed using the matrix `Amat`.
+#' - For `"NP"` (naive pooled weights), treatment and control group sizes are used to compute weights
+#'   for equal weighting (`W_NP_Eq`), ATT-style weighting (`W_NP_ATT`), and inverse-variance weighting (`W_NP_IV`).
+#'
+#' @return A list with two elements:
+#' - `DID.weights`: A matrix containing computed DID weights for the specified estimators.
+#' - `Obs.weights`: A matrix of observational weights, derived from the product of \code{Amat} and the DID weights,
+#'   plus additional weights for `"NP"`.
+#'
+#' @examples
+#' # Example usage:
+#' DFT_output <- list(
+#'   Theta = list(Schematic = matrix(c(1, 0, 1, 1, 0), ncol = 1)),
+#'   N = 5
+#' )
+#' Amat <- matrix(runif(25), nrow = 5)
+#' result <- Comp_Ests_Weights(DFT_output, Amat, estimator = c("TW", "NP"))
+#' print(result$DID.weights)
+#' print(result$Obs.weights)
+#'
+#' @export
 Comp_Ests_Weights <- function(DFT_obj, Amat,
                               estimator=c("TW","CS","SA","CH","CO","NP","CLWP","CLWPA")) {
   DID.weights <- NULL
@@ -221,6 +309,10 @@ Comp_Ests_Weights <- function(DFT_obj, Amat,
   return(list(DID.weights=DID.weights,
               Obs.weights=Obs.weights))
 }
+
+
+
+
 
 ### Helper functions:
 CS_wt_fun <- function(D_use,group,time) {
@@ -408,9 +500,9 @@ loglik_vertical_CML_adj <- function(theta, sigma, betabase, my.data.full){
     #Note: assuming here that the first period is all-control
     #(so won't be contributing to vertical contrasts, and don't need to account for differing trt status)
     treated_list_base.j <- my.data.full$Y.ij.bar[my.data.full$Period == 1 &
-                                                       my.data.full$Cluster %in% my.data.full$Cluster[my.data.full$Period == j & my.data.full$Interv == 1]]
+                                                   my.data.full$Cluster %in% my.data.full$Cluster[my.data.full$Period == j & my.data.full$Interv == 1]]
     control_list_base.j <- my.data.full$Y.ij.bar[my.data.full$Period == 1 &
-                                                       my.data.full$Cluster %in% my.data.full$Cluster[my.data.full$Period == j & my.data.full$Interv == 0]]
+                                                   my.data.full$Cluster %in% my.data.full$Cluster[my.data.full$Period == j & my.data.full$Interv == 0]]
     combos.base.j <- expand.grid(treated=treated_list_base.j,control=control_list_base.j)
     my.data.base.combos <- rbind(my.data.base.combos,combos.base.j)
   }

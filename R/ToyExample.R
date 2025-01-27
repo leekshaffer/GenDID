@@ -23,7 +23,7 @@ A_mat <- gen_A(N,J)
 ### Assumption (5): Homogeneity ###
 v.5 <- 1
 
-DFT_list.5 <- gen_DFT(Clusters, StartPeriods, 
+DFT_list.5 <- gen_DFT(Clusters, StartPeriods,
                       OrderedPds=1:3, Assumption=5)
 Solve.5 <- solve_WA(DFT_obj=DFT_list.5,
                     A_mat=A_mat,
@@ -47,7 +47,7 @@ v.4 <- c(1/2,1/2)
 v.4.alt <- c(1,0)
 v.4.alt.2 <- c(0,1)
 
-DFT_list.4 <- gen_DFT(Clusters, StartPeriods, 
+DFT_list.4 <- gen_DFT(Clusters, StartPeriods,
                       OrderedPds=1:3, Assumption=4)
 Solve.4 <- solve_WA(DFT_obj=DFT_list.4,
                     A_mat=A_mat,
@@ -62,7 +62,7 @@ MVar.4 <- min_var(solve_obj=Solve.4,
 v.3 <- c(1/2,1/2)
 v.3.alt <- c(1,0)
 
-DFT_list.3 <- gen_DFT(Clusters, StartPeriods, 
+DFT_list.3 <- gen_DFT(Clusters, StartPeriods,
                       OrderedPds=1:3, Assumption=3)
 Solve.3 <- solve_WA(DFT_obj=DFT_list.3,
                     A_mat=A_mat,
@@ -78,7 +78,7 @@ v.2.1 <- c(1,0,0)
 v.2.2 <- c(0,1,0)
 v.2.3 <- c(0,0,1)
 
-DFT_list.2 <- gen_DFT(Clusters, StartPeriods, 
+DFT_list.2 <- gen_DFT(Clusters, StartPeriods,
                       OrderedPds=1:3, Assumption=2)
 Solve.2 <- solve_WA(DFT_obj=DFT_list.2,
                     A_mat=A_mat,
@@ -102,7 +102,7 @@ A_mat <- gen_A(N,J)
 ### Assumption (5): Homogeneity ###
 v.5 <- 1
 
-DFT_list.5 <- gen_DFT(Clusters, StartPeriods, 
+DFT_list.5 <- gen_DFT(Clusters, StartPeriods,
                       OrderedPds=1:3, Assumption=5)
 Solve.5 <- solve_WA(DFT_obj=DFT_list.5,
                     A_mat=A_mat,
@@ -117,7 +117,7 @@ MVar.5 <- min_var(solve_obj=Solve.5,
 v.3 <- c(1/2,1/2)
 v.3.alt <- c(1,0)
 
-DFT_list.3 <- gen_DFT(Clusters, StartPeriods, 
+DFT_list.3 <- gen_DFT(Clusters, StartPeriods,
                       OrderedPds=1:3, Assumption=3)
 Solve.3 <- solve_WA(DFT_obj=DFT_list.3,
                     A_mat=A_mat,
