@@ -84,13 +84,13 @@ solve_WA <- function(DFT_obj,
     # If still rank-deficient, find linear dependent column in F:
     if (FT_qr$rank < ncol(F_mat)) {
       RankCols <- sapply(
-        X = 1:ncol(F_mat),
-        FUN = function(i) qr(F_mat[, 1:i])$rank
+        1:ncol(F_mat),
+        function(i) qr(F_mat[, 1:i])$rank
       )
       RankPrev <- c(RankCols[1], RankCols[2:length(RankCols)] - RankCols[1:(length(RankCols) - 1)])
       KeepCols <- (1:length(RankPrev))[RankPrev == 1]
       F_mat <- F_mat[, KeepCols, drop = FALSE]
-      FT_qr <- qr(x = t(F_mat), LAPACK = FALSE)
+      FT_qr <- qr(t(F_mat), LAPACK = FALSE)
       v <- v[KeepCols, , drop = FALSE]
     }
   }
@@ -123,7 +123,7 @@ solve_WA <- function(DFT_obj,
   } ## If there are non-unique DID estimator weights
   ## Use SVD of A' to find basis for its kernel
   AT_svd <- svd(
-    x = t(A_mat),
+    t(A_mat),
     nu = 0,
     nv = nrow(A_mat)
   )
@@ -138,7 +138,7 @@ solve_WA <- function(DFT_obj,
   if (FT_rank < RankAT) {
     ## Use SVD of F' to find basis for its kernel
     FT_svd <- svd(
-      x = t(F_mat),
+      t(F_mat),
       nu = 0,
       nv = nrow(F_mat)
     )
@@ -151,8 +151,8 @@ solve_WA <- function(DFT_obj,
     kerFT_only <- qr.Q(qr(cbind(kerAT_basis, kerFT_basis), LAPACK = FALSE))[, (dim(kerAT_basis)[2] + 1):(dim(kerFT_basis)[2]), drop = FALSE]
     ### Re-normalize them to sum (in abs. value) to 1 and smooth near-zeros:
     kerFT_norm <- apply(kerFT_only,
-                        MARGIN = 2,
-                        FUN = function(col) ifelse(abs(col) < .Machine$double.eps, 0, col / sum(abs(col)))
+                        2,
+                        function(col) ifelse(abs(col) < .Machine$double.eps, 0, col / sum(abs(col)))
     )
 
     ## Get observation weights of these F'\A' basis vectors
@@ -162,8 +162,8 @@ solve_WA <- function(DFT_obj,
     #                     FUN=function(col) ifelse(abs(col) < .Machine$double.eps, 0, col/sum(abs(col))))
     ## Use normalized DID weights to get observation weights:
     ATw_norm <- apply(t(A_mat) %*% kerFT_norm,
-                      MARGIN = 2,
-                      FUN = function(col) ifelse(abs(col) < .Machine$double.eps, 0, col)
+                      2,
+                      function(col) ifelse(abs(col) < .Machine$double.eps, 0, col)
     )
 
     ## Append F'\A' basis vector weights to Obs.weights and DID.weights as "Add.Obs.weights"
@@ -180,10 +180,11 @@ solve_WA <- function(DFT_obj,
     print("Note: returning only a single solution for the DID estimator weights, althoughs others may exist that yield equivalent observation weights.")
   }
 
-  return(list(
-    DID.weights = DID.weights,
-    Obs.weights = Obs.weights
-  ))
+  return(
+    list(
+      DID.weights = DID.weights,
+      Obs.weights = Obs.weights
+    ))
 }
 
 ## Helper function to create v vectors
