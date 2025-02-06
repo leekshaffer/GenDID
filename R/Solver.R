@@ -194,9 +194,10 @@ solve_WA <- function(
 ### And the indices of the values that should be non-zero (NonZero)
 ### If value==NULL (the default), the non-zero values will be given equal weight adding to 1
 ### Otherwise, specify the weight for each, in the same order as NonZero
-create_V <- function(Length,
-                     NonZero,
-                     Values = NULL) {
+create_V <- function(
+    Length,
+    NonZero,
+    Values = NULL) {
   v <- rep(0, Length)
   if (is.null(Values)) {
     v[NonZero] <- 1 / length(NonZero)
