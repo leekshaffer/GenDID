@@ -13,7 +13,7 @@ solve_WA <- function(DFT_obj,
                      A_mat,
                      v,
                      rank_obj = NULL,
-                     DID_full = FALSE) {
+                     DID_full = TRUE) {
   ## If v is a vector, put it into matrix form:
   if (is.vector(v)) {
     v <- matrix(data = v, ncol = 1)
