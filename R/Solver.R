@@ -52,13 +52,11 @@ solve_WA <- function(
     FT_rank <- FT_qr$rank
 
     ## Check Rank Conditions for each v
-    solvable <- apply(v, 2,
+    no_solution <- apply(v, 2,
                       function(col) qr(cbind(t(F_mat), col))$rank > FT_rank)
-    if (all(!solvable)) {
-      # TODO
-    } else if (sum(FTv.Check) == ncol(v)) {
+    if (all(no_solution)) {
       stop("No columns of v have solutions.")
-    } else {
+    } else if (any(no_solution)) {
       warning(paste0(
         "The following columns of v have no solutions and were dropped: ",
         paste((1:ncol(v))[FTv.Check], collapse = ", "),
@@ -97,8 +95,6 @@ solve_WA <- function(
     }
   }
 
-  ## Old approach: In any case, get LAPACK version of FT_qr:
-  # FT_qr <- qr(x=t(F_mat), LAPACK=TRUE)
   if (nrow(v) != ncol(F_mat)) {
     stop("v must be a vector with length corresponding to the number of columns in F_mat, or a matrix of such column vectors.")
   }
