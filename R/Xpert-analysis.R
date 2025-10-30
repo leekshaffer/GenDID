@@ -262,11 +262,11 @@ for (row in 1:(dim(Map_Settings)[1])) {
                            Map_Settings[row,] %>% pull("Estimators"),".eps"),
            plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
              geom_tile(color="grey80", lty=1) + theme_bw() +
-             coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5),
-                             clip="off", expand=FALSE) +
+             geom_text(aes(label=format(round(Value, digits=3), nsmall=3))) +
+             coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
              scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
              scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
-             scale_fill_gradient2(low="#542788",high="#b35806") +
+             scale_fill_gradient2(low="#7938C6",high="#DE6D07") +
              labs(x="Period (Month of Study)", y="Cluster", fill="Weight",
                   title=paste0("Observation Weights: ",
                                Map_Settings[row,] %>% pull("Est_labs"))),
