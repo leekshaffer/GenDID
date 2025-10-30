@@ -31,7 +31,7 @@ Ord_Data <- xpert.dat %>% left_join(StartTimes, by="Cluster") %>%
 Obs_Y <- matrix(data=c(Ord_Data$Outcome, Ord_Data$logOdds), ncol=2)
 colnames(Obs_Y) <- c("Probability","Log Odds")
 
-## Create Schematic Figure:
+## Creating Schematic Figure:
 ggsave(filename="figs/Xpert-Weights_Schematic.eps",
        plot=ggplot(data=Ord_Data %>%
                      dplyr::left_join(StartTimes %>% dplyr::mutate(ClusterNum=1:N),
