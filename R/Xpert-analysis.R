@@ -31,6 +31,25 @@ Ord_Data <- xpert.dat %>% left_join(StartTimes, by="Cluster") %>%
 Obs_Y <- matrix(data=c(Ord_Data$Outcome, Ord_Data$logOdds), ncol=2)
 colnames(Obs_Y) <- c("Probability","Log Odds")
 
+## Create Schematic Figure:
+ggsave(filename="figs/Xpert-Weights_Schematic.eps",
+       plot=ggplot(data=Ord_Data %>%
+                     dplyr::left_join(StartTimes %>% dplyr::mutate(ClusterNum=1:N),
+                                                      by=join_by(Cluster,StartPd)) %>%
+                     dplyr::mutate(Treatment=factor(Interv,
+                                                    levels=c(0,1),
+                                                    labels=c("Control","Intervention"))),
+                   mapping=aes(x=Period, y=ClusterNum, fill=Treatment)) +
+         geom_tile(color="grey80", lty=1) + theme_bw() +
+         coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5),
+                         clip="off", expand=FALSE) +
+         scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
+         scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
+         scale_fill_manual(values=c("white","grey20")) +
+         labs(x="Period (Month of Study)", y="Cluster", fill="Treatment",
+              title="Trial Schematic for Example SWT"),
+       width=6, height=4, units="in")
+
 ## Generate A matrix:
 Amat <- gen_A(N,J)
 
@@ -242,7 +261,7 @@ for (row in 1:(dim(Map_Settings)[1])) {
                            Map_Settings[row,] %>% pull("j"),"_",
                            Map_Settings[row,] %>% pull("Estimators"),".eps"),
            plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
-             geom_tile() + theme_bw() +
+             geom_tile(color="grey80", lty=1) + theme_bw() +
              coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5),
                              clip="off", expand=FALSE) +
              scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
