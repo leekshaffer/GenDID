@@ -8,11 +8,12 @@ require(tibble)
 require(tidyr)
 require(stringr)
 
-# source("R/Mat_Const.R")
-# source("R/Rank_Analysis.R")
-# source("R/Var_Min.R")
-# source("R/Solver.R")
-# source("R/Permuation_Fns.R")
+source("R/Mat_Const.R")
+source("R/Sigmas.R")
+source("R/Rank_Analysis.R")
+source("R/Var_Min.R")
+source("R/Solver.R")
+source("R/Permutation_Fns.R")
 
 # MV_Assumption function
 
@@ -37,9 +38,10 @@ MV_Assumption <- function(SolveOut,
                           Sigma,
                           SigmaName=NULL,
                           Observations=NULL,
-                          Permutations=NULL,
-                          save_loc="",
-                          save_prefix="mv-a_") {
+                          Permutations=NULL #,
+                          # save_loc="",
+                          # save_prefix="mv-a_"
+                          ) {
   MV_int <- min_var(solve_obj=SolveOut$Solve,
                     A_mat=SolveOut$ADFT$A_mat,
                     Sigma=Sigma)
@@ -64,7 +66,7 @@ MV_Assumption <- function(SolveOut,
       Perms <- replicate(n=Permutations,
                          expr=Permute_obs(Observations=Observations,
                                           N=SolveOut$ADFT$N, J=SolveOut$ADFT$J,
-                                          Obs.weights=MV_int$Obs.weights))
+                                          Obs.weights=MV_int$Obs.weights)$Ests)
       PermRes <- simplify2array(apply(Perms, 3,
                                       FUN=function(x) abs(x) >= abs(Estimates), simplify=FALSE))
       PVals <- apply(PermRes, c(1,2), mean)

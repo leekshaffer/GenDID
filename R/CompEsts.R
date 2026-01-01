@@ -1,74 +1,39 @@
 #######################################
 ###### File: CompEsts.R ###############
 ###### Lee Kennedy-Shaffer ############
-###### Created 2024/07/18 #############
 #######################################
 
 ## Load packages
-require(dplyr)
-require(tibble)
-require(tidyr)
 require(bbmle)
 
+# Comp_Ests function
 
-#' Compute Weights for Various Estimators
-#'
-#' This function calculates weights for a variety of estimators based on an output object from the
-#' Difference-in-Differences Factorization (DFT) method.
-#'
-#' @param DFT_obj A list containing the output of the DFT method. Must include elements:
-#'   - `Theta`: A dataframe with at least `Cl.Num` and `Start_j`.
-#'   - `D_aug`: A dataframe with columns `i`, `i.prime`, `j`, `j.prime`, `Type`, and `TypeLabel`.
-#'   - `N`: Total number of clusters.
-#'   - `J`: Total number of periods.
-#' @param estimator A character vector specifying the estimators to compute. Options are:
-#'   - `"TW"`: Weights from Goodman-Bacon (2021).
-#'   - `"CS"`: Callaway and Sant'Anna weights.
-#'   - `"SA"`: Sun and Abraham weights.
-#'   - `"CH"`: Chaisemartin and D’Haultfœuille weights.
-#'   - `"CO"`: Cohort-based weights.
-#'
-#' @details
-#' - **TW:** Computes weights based on treatment timing heterogeneity using Goodman-Bacon decomposition.
-#' - **CS:** Computes group-time average treatment effects as in Callaway and Sant’Anna.
-#' - **SA:** Aggregates cohort-specific average treatment effects over relative periods following Sun and Abraham.
-#' - **CH:** Constructs period-specific weights as in Chaisemartin and D’Haultfœuille.
-#' - **CO:** Derives cohort-specific weights for different periods of comparison.
-#'
-#' The function uses internal helper functions (e.g., `CS_wt_fun`, `SA_wt_fun`, `CH_wt_fun`, `CO_wt_fun`)
-#' to compute the respective weights for each estimator.
-#'
-#' @return A list with two elements:
-#' - `Weights`: A matrix containing the computed weights for the specified estimators.
-#' - `Full`: A detailed list containing intermediate and final results for each estimator.
-#'
-#' @examples
-#' # Example usage:
-#' DFT_output <- list(
-#'   Theta = data.frame(Cl.Num = 1:5, Start_j = c(1, 2, 3, 4, 5)),
-#'   D_aug = data.frame(
-#'     i = 1:10, i.prime = 2:11, j = 1:10, j.prime = 2:11,
-#'     Type = c(1, 2, 3, 5), TypeLabel = c("A", "B", "C", "D")
-#'   ),
-#'   N = 10,
-#'   J = 5
-#' )
-#' result <- Comp_Ests(DFT_output, estimator = c("TW", "CS"))
-#' print(result$Weights)
-#'
-#' @export
-Comp_Ests <- function(DFT_obj,
+## main Comp_Ests function
+
+### Inputs:
+#### ADFT_obj: output from gen_ADFT
+#### estimator: A character vector of estimators to compute. Options are:
+####  "TW": Two-way fixed effects estimator; see Goodman-Bacon (2021).
+####  "CS": Callaway and Sant'Anna estimator.
+####  "SA": Sun and Abraham estimator.
+####  "CH": Chaisemartin and D’Haultfœuille estimator.
+####  "CO": Crossover-based estimator; see Kennedy-Shaffer et al. (2020).
+### Output: List of the following:
+#### Weights: A matrix containing the computed weights for the specified estimators.
+#### Full: A detailed list containing intermediate and final results for each estimator.
+
+Comp_Ests <- function(ADFT_obj,
                       estimator=c("TW","CS","SA","CH","CO")) {
   ### First, augment D with start times:
-  Starts <- DFT_obj$Theta$Full %>%
+  Starts <- ADFT_obj$Theta$Full %>%
     dplyr::select(Cl.Num,Start_j) %>%
     distinct()
-  if (max(Starts$Cl.Num) < DFT_obj$N) {
+  if (max(Starts$Cl.Num) < ADFT_obj$N) {
     Starts <- Starts %>%
-      bind_rows(tibble(Cl.Num=(max(Starts$Cl.Num)+1):DFT_obj$N,
+      bind_rows(tibble(Cl.Num=(max(Starts$Cl.Num)+1):ADFT_obj$N,
                        Start_j=Inf))
   }
-  D_use <- DFT_obj$D_aug %>% dplyr::select(i,i.prime,j,j.prime,Type,TypeLabel) %>%
+  D_use <- ADFT_obj$D_aug %>% dplyr::select(i,i.prime,j,j.prime,Type,TypeLabel) %>%
     left_join(Starts %>% rename(i.start=Start_j),
               by=join_by(i == Cl.Num)) %>%
     left_join(Starts %>% rename(i.prime.start=Start_j),
@@ -81,7 +46,7 @@ Comp_Ests <- function(DFT_obj,
       dplyr::summarize(n.Clust=n()) %>%
       dplyr::mutate(n=n.Clust/sum(n.Clust),
                     Dbar=if_else(is.infinite(Start_j),0,
-                                 (DFT_obj$J-Start_j+1)/DFT_obj$J)) %>%
+                                 (ADFT_obj$J-Start_j+1)/ADFT_obj$J)) %>%
       dplyr::rename(G=Start_j)
     Cross_starts <- cross_join(Starts_n, Starts_n,
                                suffix=c(".k",".l")) %>%
@@ -90,9 +55,9 @@ Comp_Ests <- function(DFT_obj,
       dplyr::mutate(s.num=if_else(Dbar.l==0, n.k*(n.l)*Dbar.k*(1-Dbar.k),
                                   if_else(G.k < G.l, n.k*n.l*(Dbar.k-Dbar.l)*(1-Dbar.k),
                                           -1*n.k*n.l*Dbar.k*(Dbar.l-Dbar.k))),
-                    n.DID=if_else(Dbar.l==0, (DFT_obj$J-G.k+1)*(G.k-1)*n.Clust.k*n.Clust.l,
+                    n.DID=if_else(Dbar.l==0, (ADFT_obj$J-G.k+1)*(G.k-1)*n.Clust.k*n.Clust.l,
                                   if_else(G.k < G.l, (G.l-G.k)*(G.k-1)*n.Clust.k*n.Clust.l,
-                                          (DFT_obj$J-G.k+1)*(G.k-G.l)*n.Clust.k*n.Clust.l))) %>%
+                                          (ADFT_obj$J-G.k+1)*(G.k-G.l)*n.Clust.k*n.Clust.l))) %>%
       dplyr::mutate(s=s.num/sum(abs(s.num)),
                     W_TW=s/n.DID)
     TW_w <- D_use %>% mutate(G.k=if_else(Type==2, i.start,
@@ -237,62 +202,30 @@ Comp_Ests <- function(DFT_obj,
   return(list(Weights=Weights,Full=res))
 }
 
+# Comp_Ests_Weights function
 
-#' Compute Weights for Various Estimators and Observational Data
-#'
-#' This function calculates weights for different estimators and applies an observational weighting matrix
-#' to the Difference-in-Differences (DID) results.
-#'
-#' @param DFT_obj A list containing the output of the Difference-in-Differences Factorization (DFT) method.
-#'   Must include:
-#'   - `Theta`: A list containing `Schematic` (a matrix indicating treatment status) and other elements.
-#'   - `N`: Total number of clusters.
-#' @param Amat A matrix specifying observational weights to be applied to the computed DID weights.
-#' @param estimator A character vector specifying the estimators to compute. Options include:
-#'   - `"TW"`: Goodman-Bacon (2021) weights.
-#'   - `"CS"`: Callaway and Sant'Anna weights.
-#'   - `"SA"`: Sun and Abraham weights.
-#'   - `"CH"`: Chaisemartin and D’Haultfœuille weights.
-#'   - `"CO"`: Cohort-based weights.
-#'   - `"NP"`: Naive pooled weights.
-#'   - `"CLWP"` and `"CLWPA"`: Additional observational weights, if applicable.
-#'
-#' @details
-#' - For the DID-based estimators (`"TW"`, `"CS"`, `"SA"`, `"CH"`, `"CO"`), weights are derived using the
-#'   \code{\link{Comp_Ests}} function and transformed using the matrix `Amat`.
-#' - For `"NP"` (naive pooled weights), treatment and control group sizes are used to compute weights
-#'   for equal weighting (`W_NP_Eq`), ATT-style weighting (`W_NP_ATT`), and inverse-variance weighting (`W_NP_IV`).
-#'
-#' @return A list with two elements:
-#' - `DID.weights`: A matrix containing computed DID weights for the specified estimators.
-#' - `Obs.weights`: A matrix of observational weights, derived from the product of \code{Amat} and the DID weights,
-#'   plus additional weights for `"NP"`.
-#'
-#' @examples
-#' # Example usage:
-#' DFT_output <- list(
-#'   Theta = list(Schematic = matrix(c(1, 0, 1, 1, 0), ncol = 1)),
-#'   N = 5
-#' )
-#' Amat <- matrix(runif(25), nrow = 5)
-#' result <- Comp_Ests_Weights(DFT_output, Amat, estimator = c("TW", "NP"))
-#' print(result$DID.weights)
-#' print(result$Obs.weights)
-#'
-#' @export
-Comp_Ests_Weights <- function(DFT_obj, Amat,
+## main Comp_Ests_Weights function
+
+### Inputs:
+#### ADFT_obj: output from gen_ADFT
+#### estimator: A character vector of estimators to compute; see Comp_Ests for options
+### Output: List of the following:
+#### DID.weights:  A matrix containing computed DID weights for the specified estimators.
+#### Obs.weights: A matrix containing computed observation weights for the specified estimators.
+
+Comp_Ests_Weights <- function(ADFT_obj,
                               estimator=c("TW","CS","SA","CH","CO","NP","CLWP","CLWPA")) {
   DID.weights <- NULL
   Obs.weights <- NULL
   if (sum(c("TW","CS","SA","CH","CO") %in% estimator) > 0) {
     DID.ests <- estimator[estimator %in% c("TW","CS","SA","CH","CO")]
-    DID.weights <- bind_cols(DID.weights,Comp_Ests(DFT_obj,
+    DID.weights <- bind_cols(DID.weights,Comp_Ests(ADFT_obj,
                                                    DID.ests)$Weights)
-    Obs.weights <- bind_cols(Obs.weights, t(Amat) %*% as.matrix(DID.weights))
+    Obs.weights <- bind_cols(Obs.weights, t(ADFT_obj$A_mat) %*% as.matrix(DID.weights))
   }
   if ("NP" %in% estimator) {
-    N_Trt <- apply(DFT_obj$Theta$Schematic, 2, function(x) sum(x > 0))
-    N_Ctrl <- DFT_obj$N - N_Trt
+    N_Trt <- apply(ADFT_obj$Theta$Schematic, 2, function(x) sum(x > 0))
+    N_Ctrl <- ADFT_obj$N - N_Trt
     W_Trt <- if_else(N_Trt==0 | N_Ctrl==0,0,1/N_Trt)
     W_Ctrl <- if_else(N_Trt==0 | N_Ctrl==0,0,-1/(N_Ctrl))
     Mat <- matrix(c(W_Trt, N_Trt, W_Ctrl, N_Ctrl), nrow=4, byrow=TRUE)
@@ -302,38 +235,31 @@ Comp_Ests_Weights <- function(DFT_obj, Amat,
     Mult_ATT <- if_else(N_Trt > 0 & N_Ctrl > 0, N_Trt, 0)/sum(if_else(N_Trt > 0 & N_Ctrl > 0, N_Trt, 0))
     Mult_IV <- if_else(N_Trt > 0 & N_Ctrl > 0, (1/N_Trt + 1/N_Ctrl)^(-1),0)/sum(if_else(N_Trt > 0 & N_Ctrl > 0, (1/N_Trt + 1/N_Ctrl)^(-1),0))
     Obs.weights <- bind_cols(Obs.weights,
-                             W_NP_Eq=NP_w_int * rep(Mult_Eq, times=DFT_obj$N),
-                             W_NP_ATT=NP_w_int * rep(Mult_ATT, times=DFT_obj$N),
-                             W_NP_IV=NP_w_int * rep(Mult_IV, times=DFT_obj$N))
+                             W_NP_Eq=NP_w_int * rep(Mult_Eq, times=ADFT_obj$N),
+                             W_NP_ATT=NP_w_int * rep(Mult_ATT, times=ADFT_obj$N),
+                             W_NP_IV=NP_w_int * rep(Mult_IV, times=ADFT_obj$N))
   }
   return(list(DID.weights=DID.weights,
               Obs.weights=Obs.weights))
 }
 
+# Helper functions for specific methods
 
+## CS_wt_fun function:
 
-
-
-### Helper functions:
 CS_wt_fun <- function(D_use,group,time) {
   if (time >= group) {
     if_else(D_use$Type %in% 1:3 & D_use$i.start==group & D_use$i.prime.start != group &
               D_use$j.prime==time & D_use$j==group-1,
             1,0)
-    # apply(D_use, MARGIN=1,
-    #       FUN=function(r) if_else(r["Type"] %in% 1:3 & r["i.start"]==group &
-    #                                 r["i.prime.start"] != group & r["j.prime"]==time &
-    #                                 r["j"]==group-1,1,0))
   } else {
     if_else(D_use$Type & D_use$j.prime & D_use$j==time-1,
             if_else(D_use$i.start==group & D_use$i.prime.start != group, 1,
                     if_else(D_use$i.start != group & D_use$i.prime.start == group, -1, 0)), 0)
-    # apply(D_use, MARGIN=1,
-    #       FUN=function(r) if_else(r["Type"]==1 & r["j.prime"]==time & r["j"]==time-1,
-    #                               if_else(r["i.start"]==group & r["i.prime.start"] != group,1,
-    #                                       if_else(r["i.start"] != group & r["i.prime.start"] == group,-1,0)),0))
   }
 }
+
+## SA_wt_fun function:
 
 SA_wt_fun <- function(D_use,Ctrl.is,period,cohort) {
   if (period >= 0) {
@@ -342,45 +268,31 @@ SA_wt_fun <- function(D_use,Ctrl.is,period,cohort) {
               as.numeric(D_use$j.prime) - as.numeric(D_use$i.start) == period &
               as.numeric(D_use$j) - as.numeric(D_use$i.start) == -1,
             1, 0)
-    # apply(D_use, MARGIN=1,
-    #       FUN=function(r) if_else(r["Type"] %in% 1:3 &
-    #                                 r["i.start"]==cohort &
-    #                                 r["i.prime"] %in% Ctrl.is &
-    #                                 as.numeric(r["j.prime"])-as.numeric(r["i.start"])==period &
-    #                                 as.numeric(r["j"])-as.numeric(r["i.start"])==-1,
-    #                               1,0))
   } else {
     if_else(D_use$Type %in% 1:3 & D_use$i.start==cohort &
               D_use$i.prime %in% Ctrl.is &
               as.numeric(D_use$j.prime) - as.numeric(D_use$i.start) == -1 &
               as.numeric(D_use$j) - as.numeric(D_use$i.start) == period,
             -1, 0)
-    # apply(D_use, MARGIN=1,
-    #       FUN=function(r) if_else(r["Type"] %in% 1:3 &
-    #                                 r["i.start"]==cohort &
-    #                                 r["i.prime"] %in% Ctrl.is &
-    #                                 as.numeric(r["j.prime"])-as.numeric(r["i.start"])==-1 &
-    #                                 as.numeric(r["j"])-as.numeric(r["i.start"])==period,
-    #                               -1,0))
   }
 }
+
+## SA_CATT_agg function:
 
 SA_CATT_agg <- function(key_tbl, wt_tbl, period) {
   key_vals <- key_tbl %>% dplyr::filter(Period==period)
   wt_tbl[,key_vals$Column,drop=FALSE] %*% key_vals$Num
 }
 
+## CH_wt_fun function:
+
 CH_wt_fun <- function(D_use,period) {
   if_else(D_use$Type==2 & D_use$j.prime==D_use$i.start &
             D_use$j.prime==period & D_use$j == period-1,
           1,0)
-  # apply(D_use, MARGIN=1,
-  #       FUN=function(r) if_else(r["Type"]==2 &
-  #                                 r["j.prime"]==r["i.start"] &
-  #                                 r["j.prime"]==period &
-  #                                 r["j"]==period-1,
-  #                               1,0))
 }
+
+## CO_wt_fun function:
 
 CO_wt_fun <- function(D_use,period) {
   if_else(D_use$Type==2,
@@ -391,34 +303,23 @@ CO_wt_fun <- function(D_use,period) {
                   if_else(D_use$j.prime == D_use$i.prime.start &
                             D_use$j.prime == period & D_use$j == period-1,
                           -1,0),0))
-  # apply(D_use, MARGIN=1,
-  #       FUN=function(r) if_else(r["Type"]==2,
-  #                               if_else(r["j.prime"]==r["i.start"] &
-  #                                         r["j.prime"]==period &
-  #                                         r["j"]==period-1,1,0),
-  #                               if_else(r["Type"]==5,
-  #                                       if_else(r["j.prime"]==r["i.prime.start"] &
-  #                                                 r["j.prime"]==period &
-  #                                                 r["j"]==period-1,-1,0),0)))
 }
 
+# CLWP and CLWPA functions
 
-#### CLWP and CLWPA analysis functions ####
 ## See Voldal et al., Statist Med, 2024, https://doi.org/10.1002/sim.10120 ##
 ## and its supplemental material for details on these methods and the ##
 ## underlying code. If using these methods, please refer to and cite ##
 ## Voldal et al. 2024 ##
 
-#####
-#Helper functions for the unadjusted vertical CL
-#####
+## Helper function: loglik_vertical_CML
 
-#Composite likelihood
-#Inputs:
-#theta - a value for the treatment effect
-#sigma - a value for the standard deviation of the vertical contrasts
-#my.data.full - a dataset in the format produced by swCRTdesign
-#Returns: negative log likelihood
+### Inputs:
+#### theta: a value for the treatment effect
+#### sigma: a value for the standard deviation of the vertical contrasts
+#### my.data.full: a dataset in the format produced by swCRTdesign
+### Output: negative log likelihood
+
 loglik_vertical_CML <- function(theta, sigma, my.data.full){
   #First, we need to go from a data frame of cluster-period observations to a data frame with
   #every vertical contrast between treatment and control cluster-periods.
@@ -434,10 +335,13 @@ loglik_vertical_CML <- function(theta, sigma, my.data.full){
   return(-sum(log(R)))
 }
 
-#Inputs:
-#fitted_params - fitted parameters from the vertical CL, e.g. my.fitted.cl@coef, a vector of (theta, sigma)
-#difference - one vertical difference
-#Returns: u (composite score function) for one vertical difference
+## Helper function: get_u_per_contrast
+
+### Inputs:
+#### fitted_params: fitted parameters from the vertical CL, e.g. my.fitted.cl@coef, a vector of (theta, sigma)
+#### difference: one vertical difference
+### Output: u (composite score function) for one vertical difference
+
 get_u_per_contrast <- function(fitted_params,difference){
   theta_cl <- fitted_params["theta"]
   sigmasq_cl <- fitted_params["sigma"]^2#Note: going from sd to var
@@ -450,10 +354,13 @@ get_u_per_contrast <- function(fitted_params,difference){
 
 }
 
-#Inputs:
-#fitted_params - fitted parameters from the vertical CL, e.g. my.fitted.cl@coef, a vector of (theta, sigma)
-#difference - one vertical difference
-#Returns: a matrix of the second derivatives (derivative of the score) for one vertical difference
+## Helper function: get_triangledown_u_per_contrast
+
+### Input:
+#### fitted_params: fitted parameters from the vertical CL, e.g. my.fitted.cl@coef, a vector of (theta, sigma)
+#### difference: one vertical difference
+### Output: a matrix of the second derivatives (derivative of the score) for one vertical difference
+
 get_triangledown_u_per_contrast <- function(fitted_params,difference){
   theta_cl <- fitted_params["theta"]
   sigmasq_cl <- fitted_params["sigma"]^2#Note: going from sd to var
@@ -473,19 +380,15 @@ get_triangledown_u_per_contrast <- function(fitted_params,difference){
 
 }
 
+## Helper function: loglik_vertical_CML_adj
 
-## ---------------------------------------------------------------------------------
-#####
-#Helper functions for the adjusted vertical CL
-#####
+### Inputs:
+#### theta: a value for the treatment effect
+#### sigma: a value for the standard deviation of the vertical contrasts, after adjusting for baseline
+#### betabase: a value for the coefficient for the baseline difference
+#### my.data.full: a dataset in the format produced by swCRTdesign
+### Output: negative log likelihood
 
-#Composite likelihood
-#Inputs:
-#theta - a value for the treatment effect
-#sigma - a value for the standard deviation of the vertical contrasts, after adjusting for baseline
-#betabase - a value for the coefficient for the baseline difference
-#my.data.full - a dataset in the format produced by swCRTdesign
-#Returns: negative log likelihood
 loglik_vertical_CML_adj <- function(theta, sigma, betabase, my.data.full){
   #First, we need to go from a data frame of cluster-period observations to a data frame with
   #every vertical contrast between treatment and control cluster-periods.
@@ -512,12 +415,14 @@ loglik_vertical_CML_adj <- function(theta, sigma, betabase, my.data.full){
   return(-sum(log(R)))
 }
 
+## Helper function: get_u_per_contrast_adj
 
-#Inputs:
-#fitted_params - fitted parameters from the vertical CL, e.g. my.fitted.cl@coef, a vector of (theta, sigma, betabase)
-#difference - one vertical difference
-#difference_base - the analogous difference at baseline
-#Returns: u (composite score function) for one vertical difference
+### Inputs:
+#### fitted_params: fitted parameters from the vertical CL, e.g. my.fitted.cl@coef, a vector of (theta, sigma, betabase)
+#### difference: one vertical difference
+#### difference_base: the analogous difference at baseline
+### Output: u (composite score function) for one vertical difference
+
 get_u_per_contrast_adj <- function(fitted_params,difference,difference_base){
   theta_cl <- fitted_params["theta"]
   sigmasq_cl <- fitted_params["sigma"]^2#Note: going from sd to var
@@ -534,11 +439,14 @@ get_u_per_contrast_adj <- function(fitted_params,difference,difference_base){
 
 }
 
-#Inputs:
-#fitted_params - fitted parameters from the vertical CL, e.g. my.fitted.cl@coef, a vector of (theta, sigma, betabase)
-#difference - one vertical difference
-#difference_base - the analogous difference at baseline
-#Returns: a matrix of the second derivatives (derivative of the score) for one vertical difference
+## Helper function: get_triangledown_u_per_contrast_adj
+
+### Inputs:
+#### fitted_params: fitted parameters from the vertical CL, e.g. my.fitted.cl@coef, a vector of (theta, sigma, betabase)
+#### difference: one vertical difference
+#### difference_base: the analogous difference at baseline
+### Output: a matrix of the second derivatives (derivative of the score) for one vertical difference
+
 get_triangledown_u_per_contrast_adj <- function(fitted_params,difference,difference_base){
   theta_cl <- fitted_params["theta"]
   sigmasq_cl <- fitted_params["sigma"]^2#Note: going from sd to var
@@ -567,13 +475,21 @@ get_triangledown_u_per_contrast_adj <- function(fitted_params,difference,differe
 
 }
 
-#####
-#Composite likelihood within period (CLWP)
+## Main CLWP_fit function
 
-#using starting values from GEE
-#Note - I did do some experimenting, and it doesn't seem to be very sensitive to starting values.
-# start_theta <- summary(gee.independence)$coef["tx.var","Estimate"]
-# start_sigma <- sqrt(2*var(gee.independence$residuals))
+### using starting values from GEE
+### Note - I did do some experimenting, and it doesn't seem to be very sensitive to starting values.
+
+### Inputs:
+#### my.data: data to analyze
+#### start_theta: starting value for theta, e.g., summary(gee.independence)$coef["tx.var","Estimate"]
+#### start_sigma: starting value for sigma, e.g., sqrt(2*var(gee.independence$residuals))
+#### N:
+### Output: List of the following:
+#### CLWP_est: estimated effect
+#### CLWP_se: SE of estimate
+#### CLWP_pval: p-value of estimate
+
 CLWP_fit <- function(my.data, start_theta, start_sigma, N) {
   cml.vertical <-mle2(function(theta,sigma){loglik_vertical_CML(theta=theta, sigma=sigma,my.data.full=my.data)},
                       start=list(theta=start_theta, sigma=start_sigma))
@@ -627,13 +543,26 @@ CLWP_fit <- function(my.data, start_theta, start_sigma, N) {
                                lower.tail = FALSE)))
 }
 
+## Main CLWPA_fit function
+
+### using same starting values from GEE as the unadjusted version
+### the starting standard deviation will be a little too large for the adjusted version
+### based on informal experimenting, starting vals too big are fine (too small are riskier).
+### If desired, could fit a GEE that adjusted for baseline to get a better start.
+
+### Inputs:
+#### my.data: data to analyze
+#### start_theta: starting value for theta
+#### start_sigma: starting value for sigma
+#### N:
+### Output: List of the following:
+#### CLWPA_est: estimated effect
+#### CLWPA_se: SE of estimate
+#### CLWPA_pval: p-value of estimate
+
 
 CLWPA_fit <- function(my.data, start_theta, start_sigma, N) {
 
-  #using same starting values from GEE as the unadjusted version
-  #the starting standard deviation will be a little too large for the adjusted version
-  #based on informal experimenting, starting vals too big are fine (too small are riskier).
-  #If desired, could fit a GEE that adjusted for baseline to get a better start.
   cml.vertical.adj <- mle2(function(theta,sigma,betabase){loglik_vertical_CML_adj(theta=theta, sigma=sigma,betabase=betabase,
                                                                                   my.data.full=my.data)},start=list(theta=start_theta, sigma=start_sigma,betabase=0))
   #Recreate data frame of all the differences

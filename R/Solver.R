@@ -205,8 +205,7 @@ solve_WA <- function(
 #### ADFT: output from gen_ADFT
 #### Solve: output from solve_WA
 
-Solve_Assumption <- function(Amat,
-                             StartTimes,
+Solve_Assumption <- function(StartTimes,
                              OrderedPds,
                              Assumption,
                              v.Mat #,
