@@ -231,25 +231,28 @@ gen_F <- function(D,Theta) {
   return(list(D_aug=D_aug, F_mat=F_mat))
 }
 
-# gen_DFT function
+# gen_ADFT function
 
-## Main gen_DFT function
+## Main gen_ADFT function
 
 ### Inputs:
 #### Clusters, StartPeriods, OrderedPds (as in gen_js input)
 #### Assumption (as in gen_Theta input)
 ### Output: List of the following:
+#### A_mat: output from gen_A
 #### D_aug, F_mat from gen_F
 #### Theta from gen_Theta
 #### N, J from gen_js
 
-gen_DFT <- function(Clusters, StartPeriods, OrderedPds,
+gen_ADFT <- function(Clusters, StartPeriods, OrderedPds,
                     Assumption=5) {
   js_Obj <- gen_js(Clusters, StartPeriods, OrderedPds)
 
+  A_mat <- gen_A(N=js_Obj$N, J=js_Obj$J)
+
   Theta <- gen_Theta(js_Obj, Assumption)
 
-  D <- gen_D(js_Obj$N,js_Obj$J) %>%
+  D <- gen_D(N=js_Obj$N,J=js_Obj$J) %>%
     left_join(js_Obj$Start_js %>%
                 dplyr::rename(i=Cl.Num,Start.i=Start_j,
                               Cl.i=Clusters), by="i") %>%
@@ -278,7 +281,7 @@ gen_DFT <- function(Clusters, StartPeriods, OrderedPds,
                                                  "Both Always-Treated")))
 
   Fres <- gen_F(D, Theta)
-  return(list(D_aug=Fres$D_aug, F_mat=Fres$F_mat, Theta=Theta,
+  return(list(A_mat=A_mat, D_aug=Fres$D_aug, F_mat=Fres$F_mat, Theta=Theta,
               N=js_Obj$N, J=js_Obj$J))
 }
 

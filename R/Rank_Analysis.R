@@ -6,7 +6,7 @@
 # rank_an function
 
 ### Inputs:
-#### DFT_obj: the output from gen_DFT
+#### ADFT_obj: the output from gen_ADFT
 #### v: a vector or matrix of estimand weights (e.g., output of create_V)
 ### Output: List of the following:
 #### FT_qr: QR decomposition of F matrix
@@ -14,22 +14,22 @@
 #### Length_w: Length of the w vector
 #### FTv_Ranks: Relevant ranks and W space dimensions for the v's, in order
 
-rank_an <- function(DFT_obj, v) {
+rank_an <- function(ADFT_obj, v) {
   ## Turn vector v into a matrix if needed:
   if (is.vector(v)) {
     v <- matrix(data=v, ncol=1)
   }
 
   ## Check dimension compatibility of v and F_mat:
-  if (nrow(v) != ncol(DFT_obj$F_mat)) {
+  if (nrow(v) != ncol(ADFT_obj$F_mat)) {
     stop(simpleError("v must be a vector with length equal to the number of columns in F or a matrix of such column vectors."))
   }
 
   ## Pull key features that don't depend on v:
-  RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
-  F_mat <- DFT_obj$F_mat
+  RankAT <- (ADFT_obj$N-1)*(ADFT_obj$J-1)
+  F_mat <- ADFT_obj$F_mat
   FT_qr <- qr(x=t(F_mat), LAPACK=FALSE)
-  Length_w <- (DFT_obj$N)*(DFT_obj$N-1)*(DFT_obj$J)*(DFT_obj$J-1)/4
+  Length_w <- (ADFT_obj$N)*(ADFT_obj$N-1)*(ADFT_obj$J)*(ADFT_obj$J-1)/4
 
   FTv_Rank_Res <- function(v) {
     FTv_Rank <- qr(x=cbind(t(F_mat),v), LAPACK=FALSE)$rank

@@ -3,13 +3,21 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-## Note v can be a vector to solve for one target,
-### or it can be a matrix of column vectors to solve for.
-### If Rank_Analysis has been done, the rank_an output can be inputted to avoid repeating rank-finding.
-### DFT_obj is an output from the gen_DFT() function
+# solve_WA function
+
+### Inputs:
+#### ADFT_obj: the output from gen_ADFT
+#### v: a vector or matrix of estimand weights (e.g., output of create_V)
+#### rank_obj: the output from rank_an (if available)
+#### DID_full: Boolean:
+####  TRUE adds weight vectors that only change DID decomposition, not observation weights;
+####  FALSE omits these
+### Output: List of the following:
+#### DID.weights: basis vectors for the DID estimators weights that solve the constraints
+#### Obs.weights: basis vectors for the observation weights that solve the constraints
+
 solve_WA <- function(
-    DFT_obj,
-    A_mat,
+    ADFT_obj,
     v,
     rank_obj = NULL,
     DID_full = TRUE
@@ -19,7 +27,9 @@ solve_WA <- function(
     v <- matrix(data = v, ncol = 1)
   }
 
-  F_mat <- DFT_obj$F_mat
+  F_mat <- ADFT_obj$F_mat
+
+  A_mat <- ADFT_obj$A_mat
 
   if (!is.null(rank_obj)) { # if given a rank object, use it:
     if (ncol(v) != ncol(rank_obj$FTv_Ranks)) {
@@ -45,7 +55,7 @@ solve_WA <- function(
     }
   } else { # otherwise (rank_obj is missing)
     ## Get the key info from A and F
-    RankAT <- (DFT_obj$N - 1) * (DFT_obj$J - 1)
+    RankAT <- (ADFT_obj$N - 1) * (ADFT_obj$J - 1)
     FT_qr <- qr(x = t(F_mat), LAPACK = FALSE)
     FT_rank <- FT_qr$rank
 
