@@ -1,27 +1,36 @@
 #######################################
 ###### File: Rank_Analysis.R ##########
 ###### Lee Kennedy-Shaffer ############
-###### Created 2024/04/18 #############
-###### Updated 2024/04/27 #############
 #######################################
+
+# rank_an function
+
+### Inputs:
+#### DFT_obj: the output from gen_DFT
+#### v: a vector or matrix of estimand weights (e.g., output of create_V)
+### Output: List of the following:
+#### FT_qr: QR decomposition of F matrix
+#### RankAT: Rank of the transpose of A
+#### Length_w: Length of the w vector
+#### FTv_Ranks: Relevant ranks and W space dimensions for the v's, in order
 
 rank_an <- function(DFT_obj, v) {
   ## Turn vector v into a matrix if needed:
   if (is.vector(v)) {
     v <- matrix(data=v, ncol=1)
   }
-  
+
   ## Check dimension compatibility of v and F_mat:
   if (nrow(v) != ncol(DFT_obj$F_mat)) {
     stop(simpleError("v must be a vector with length equal to the number of columns in F or a matrix of such column vectors."))
   }
-  
+
   ## Pull key features that don't depend on v:
   RankAT <- (DFT_obj$N-1)*(DFT_obj$J-1)
   F_mat <- DFT_obj$F_mat
   FT_qr <- qr(x=t(F_mat), LAPACK=FALSE)
   Length_w <- (DFT_obj$N)*(DFT_obj$N-1)*(DFT_obj$J)*(DFT_obj$J-1)/4
-  
+
   FTv_Rank_Res <- function(v) {
     FTv_Rank <- qr(x=cbind(t(F_mat),v), LAPACK=FALSE)$rank
     if (FTv_Rank > FT_qr$rank) {
@@ -45,7 +54,7 @@ rank_an <- function(DFT_obj, v) {
   FTv_Ranks <- apply(v, MARGIN=2,
                      FUN=FTv_Rank_Res)
   rownames(FTv_Ranks) <- c("FTv_Rank","Dim_W","Dim_WA")
-  
+
   if (ncol(FTv_Ranks)==1) {
     if (FTv_Ranks["Dim_W",1] < 0) {
       print(paste0("There are no unique solutions for v"))
@@ -69,7 +78,7 @@ rank_an <- function(DFT_obj, v) {
       }
     }
   }
-  
+
   return(list(FT_qr=FT_qr,
               RankAT=RankAT,
               Length_w=Length_w,
