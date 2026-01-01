@@ -3,12 +3,6 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-# Load packages
-
-require(dplyr)
-require(tibble)
-require(tidyr)
-
 # gen_js function
 
 ## Main gen_js function

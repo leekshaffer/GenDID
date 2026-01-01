@@ -192,3 +192,45 @@ solve_WA <- function(
       Obs.weights = Obs.weights
     ))
 }
+
+# Solve_Assumption function
+
+### Inputs:
+#### StartTimes: a DF with columns Cluster and StartPd, giving the unique clusters and start periods
+#### OrderedPds: a vector of the temporal order of the period labels that will
+####  have outcomes (may have more periods that are not start periods)
+#### Assumption: Number 1--5 corresponding to the Assumption Settings
+#### v.Mat: a vector or matrix of estimand weights (e.g., output of create_V)
+### Output: List of the following:
+#### ADFT: output from gen_ADFT
+#### Solve: output from solve_WA
+
+Solve_Assumption <- function(Amat,
+                             StartTimes,
+                             OrderedPds,
+                             Assumption,
+                             v.Mat #,
+                             # save_loc="",
+                             # save_prefix="solve-a_"
+                             ) {
+  ## Generate A,D,F,Theta matrices:
+  ADFT_int <- gen_ADFT(Clusters=StartTimes$Cluster,
+                     StartPeriods=StartTimes$StartPd,
+                     OrderedPds=OrderedPds,
+                     Assumption=Assumption)
+  rank_int <- rank_an(ADFT_obj=ADFT_int,
+                      v=v.Mat)
+  solve_int <- solve_WA(ADFT_obj=ADFT_int,
+                        v=v.Mat,
+                        rank_obj=rank_int,
+                        DID_full=TRUE)
+  assign(x=paste0("SolveOut_",Assumption),
+         value=list(ADFT=ADFT_int,
+                    Solve=solve_int))
+
+  # TODO: Inform user that you are saving variable
+  # to a .Rda file using the specified save_loc and save_prefix.
+  # save(list=paste0("SolveOut_",Assumption),
+  #      file=paste0(save_loc,save_prefix,Assumption,".Rda"))
+  return(get(paste0("SolveOut_",Assumption)))
+}
