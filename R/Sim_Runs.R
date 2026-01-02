@@ -1,7 +1,6 @@
 #######################################
 ###### File: Sim_Runs.R ###############
 ###### Lee Kennedy-Shaffer ############
-###### Created 2024/10/04 #############
 #######################################
 
 source("R/Simulations.R")
@@ -12,7 +11,7 @@ simulate_FromSet_Par <- function(Param_Set,
                              StartingPds=NULL,
                              Alpha1,
                              T1, T2,
-                             MVO_list, SO_list=NULL,
+                             MVO_list, ADFT_list=NULL,
                              outdir=NULL,
                              outname=NULL,
                              parallel=TRUE, ## allows simple parallelization across settings
@@ -20,7 +19,7 @@ simulate_FromSet_Par <- function(Param_Set,
   if (!parallel) {
     simulate_FromSet(Param_Set, Theta_Set, StartingPds,
                      Alpha1, T1, T2,
-                     MVO_list, SO_list,
+                     MVO_list, ADFT_list,
                      outdir, outname)
   } else {
     require(foreach)
@@ -33,7 +32,7 @@ simulate_FromSet_Par <- function(Param_Set,
     foreach (i=1:(dim(Param_Set)[1])) %dopar% {
       source("R/Simulations.R")
       row <- Param_Set[i,]
-      print(paste("Starting Sim. Number",row$SimNo))
+      print(paste("Starting Sim. Setting Number",row$SimNo))
       assign(x=paste0("Res_Sim_",i),
              value=simulate_SWT(row$NumSims,
                                 row$N, row$J, StartingPds,
@@ -41,7 +40,7 @@ simulate_FromSet_Par <- function(Param_Set,
                                 T1, T2, row$ProbT1,
                                 row$sig_nu, row$sig_e, row$m,
                                 Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
-                                MVO_list, SO_list,
+                                MVO_list, ADFT_list,
                                 Comparisons=Theta_Set[[i]]$Comps, Theta_Set[[i]]$corstr,
                                 Permutations=row$NumPerms))
       save(list=paste0("Res_Sim_",row$SimNo),
@@ -54,8 +53,8 @@ simulate_FromSet_Par <- function(Param_Set,
 ## Simulation runs:
 
 ### Parameters for Simulation:
-NumSims.all <- 1000 # Full: 1000
-NumPerms.all <- 250 # Full: 250
+NumSims.all <- 10 # Full: 1000
+NumPerms.all <- 50 # Full: 250
 Param_Set <- tribble(
   ~SimNo, ~NumSims, ~NumPerms, ~mu, ~ProbT1, ~sig_nu, ~sig_e, ~m, ~J, ~N,
   1, NumSims.all, NumPerms.all, 0.3, 1, 0.01, 0.1, 100, 8, 14,
@@ -98,12 +97,15 @@ load("int/xpert-mv-a_2_Ind.Rda")
 load("int/xpert-mv-a_3_Ind.Rda")
 load("int/xpert-mv-a_4_Ind.Rda")
 load("int/xpert-mv-a_5_Ind.Rda")
-load("../int_large/xpert-solve-a_2.Rda")
-load("../int_large/xpert-solve-a_3.Rda")
-load("../int_large/xpert-solve-a_4.Rda")
-load("../int_large/xpert-solve-a_5.Rda")
+
+## Timing:
+### 3 cores on home comp, 10 sims/scenario, 25 perms/sim: 15 mins
+### 3 cores on home comp, 10 sims/scenario, 50 perms/sim: 15 mins
+pt <- proc.time()
 
 set.seed(73475)
+
+folder <- "sim_res_new" ## sim_res
 
 simulate_FromSet_Par(Param_Set, Theta_Set,
                  StartingPds=NULL,
@@ -120,8 +122,9 @@ simulate_FromSet_Par(Param_Set, Theta_Set,
                                A3_Ind=MVOut_3_Ind,
                                A4_Ind=MVOut_4_Ind,
                                A5_Ind=MVOut_5_Ind),
-                 SO_list=list(Comp=SolveOut_5),
-                 outdir="sim_res", outname="Sim_Set",
+                 # ADFT_list=list(Comp=ADFT_5),
+                 ADFT_list=NULL,
+                 outdir=folder, outname="Sim_Set",
                  parallel=TRUE,
                  n_cores=9)
 
@@ -130,7 +133,7 @@ simulate_FromSet_Par(Param_Set, Theta_Set,
 ### Get simulation results:
 Full_Sim_Res <- NULL
 for (i in Param_Set$SimNo) {
-  load(paste0("sim_res/Sim_Set_",i,".Rda"))
+  load(paste0(folder,"/Sim_Set_",i,".Rda"))
   assign(x="Res1", value=get(paste0("Res_Sim_",i)))
   Ests <- Res1$Estimates
   PVs <- Res1$PValues
@@ -143,7 +146,8 @@ for (i in Param_Set$SimNo) {
   rm(list=c("Res1","Ests","PVs",
             paste0("Res_Sim_",i),"Res_int"))
 }
+
 save(Full_Sim_Res,
-     file="int/Full_Sim_Res.Rda")
-# write_csv(x=Full_Sim_Res,
-#           file="sim_res/Full_Sim_Res.csv")
+     file=paste0(folder,"/Full_Sim_Res.Rda"))
+
+proc.time() - pt

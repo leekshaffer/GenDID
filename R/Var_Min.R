@@ -1,19 +1,34 @@
 #######################################
 ###### File: Var_Min.R ################
 ###### Lee Kennedy-Shaffer ############
-###### Created 2024/04/18 #############
-###### Updated 2024/04/25 #############
 #######################################
 
-require(dplyr)
-require(stringr)
+# Helper functions
 
-## Helper function for optimization for single vector
+## opt_fn function
+
+### Inputs:
+#### x: the vector, which with a preceding 1, is on the outsides of the quadratic form
+#### Inner: the square matrix which is inside the quadratic form, of dimension 1 more than x
+### Output: matrix resulting from quadratic form multiplication
+
 opt_fn <- function(x,Inner) {
   matrix(data=c(1,x), nrow=1) %*% Inner %*% matrix(data=c(1,x), ncol=1)
 }
 
-## Helper function to do the minimization for a specific base.w:
+## min_var_single function
+
+### Inputs:
+#### base.w: a single base observations weight that is a solution to the constraint
+#### Add.Obs.w: the additional observation weight bases that do not affect the expectation
+#### ASigAT: the matrix resulting from the quadratic form of A and Sigma
+#### method: the method for optimization in the optim() function (default="CG")
+#### maxit: passed to the control input of optim() (default=10000)
+### Outputs: List of the following:
+#### Cvec: the optimal observation weights
+#### Variance: the optimal (minimum) variance, based on input Sigma
+#### DID.weights: one set of corresponding DID weights
+
 min_var_single <- function(base.w,Add.Obs.w,ASigAT,method="CG", maxit=10000) {
   W_mat <- as.matrix(cbind(as.matrix(base.w, ncol=1),Add.Obs.w))
   colnames(W_mat) <- c("base.w",colnames(Add.Obs.w))
@@ -39,8 +54,22 @@ min_var_single <- function(base.w,Add.Obs.w,ASigAT,method="CG", maxit=10000) {
               DID.weights=W_mat %*% matrix(c(1,Min),ncol=1)))
 }
 
+# min_var function
+
+### Inputs:
+#### solve_obj:
+#### base.w: a single base observations weight that is a solution to the constraint
+#### Add.Obs.w: the additional observation weight bases that do not affect the expectation
+#### ASigAT: the matrix resulting from the quadratic form of A and Sigma
+#### method: the method for optimization in the optim() function (default="CG")
+#### maxit: passed to the control input of optim() (default=10000)
+### Outputs: List of the following:
+#### Cvec: the optimal observation weights
+#### Variance: the optimal (minimum) variance
+#### DID.weights: one set of corresponding DID weights
+
 ## A wrapper that outputs the full results of the minimization and can handle a matrix of v's:
-## Note the Var that is returned is based on the input Sigma, 
+## Note the Var that is returned is based on the input Sigma,
 ### and should generally be used only for relative comparisons of weightings
 min_var <- function(solve_obj,A_mat,Sigma,method="CG",maxit=10000) {
   if (nrow(Sigma) != ncol(Sigma) | nrow(Sigma) != ncol(A_mat)) {
@@ -49,13 +78,13 @@ min_var <- function(solve_obj,A_mat,Sigma,method="CG",maxit=10000) {
   if (ncol(A_mat) != nrow(solve_obj$Obs.weights)) {
     stop(simpleError("A must be the same as was used in the Solve function."))
   }
-  
+
   base.w <- solve_obj$DID.weights %>% dplyr::select(starts_with("w.base")) %>%
     dplyr::rename_all(~stringr::str_replace(.,"^w.base.",""))
   Add.Obs.w <- solve_obj$DID.weights %>% dplyr::select(starts_with("Add.Obs.weights"))
   # Add.Obs.w <- solve_obj$DID.weights %>% dplyr::select(starts_with(c("Add.Obs.weights","Add.DID.weights")))
   ASigAT <- A_mat %*% Sigma %*% t(A_mat)
-  
+
   if (ncol(Add.Obs.w) == 0) {
     print("There is a unique solution to the constraint.")
     return(list(Cvec=c(1),
@@ -82,7 +111,7 @@ min_var <- function(solve_obj,A_mat,Sigma,method="CG",maxit=10000) {
 
 
 
-#     Min_Res <- apply(v, MARGIN=2, 
+#     Min_Res <- apply(v, MARGIN=2,
 #                      FUN=function(col) min_var_single()
 #     dim_C <- ncol(Add.Obs.w)
 #     if (is.vector(v)) {

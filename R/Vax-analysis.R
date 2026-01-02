@@ -1,13 +1,11 @@
 #######################################
 ###### File: Vax-analysis.R ###########
 ###### Lee Kennedy-Shaffer ############
-###### Created 2024/08/09 #############
 #######################################
 
 require(tidyverse)
+set.seed(1011)
 
-source("R/A_Const.R")
-source("R/Sigmas.R")
 source("R/Full_Analysis.R")
 source("R/CompEsts.R")
 
@@ -58,12 +56,12 @@ Vax.dat <- Vax_wk_2021 %>%
                              "NE","OH","SD","WI"),
                 Period >= 15)
 
-## Get unique periods, clusters, and start times:
+## Get unique periods, start times, J:
 Periods <- unique(Vax.dat$Period)
 OrderedPds <- Periods[order(Periods)]
 J <- length(OrderedPds)
 
-## Prep Outcome Data in appropriate order and get StartTimes and N:
+## Prep Outcome Data in appropriate order and get StartTimes DF and N:
 Ord_Data <- Vax.dat %>% dplyr::rename(StartPd=lott_week) %>%
   arrange(StartPd,Cluster,Period)
 StartTimes <- Ord_Data %>% dplyr::select(Cluster,StartPd) %>%
@@ -76,9 +74,6 @@ Obs_Y <- matrix(data=c(Ord_Data$First_18Pop_Pct,
 colnames(Obs_Y) <- c("First_18Pop_Pct","Complete_18Pop_Pct",
                      "First_Pct_Diff","Complete_Pct_Diff")
 
-## Generate A matrix:
-Amat <- gen_A(N,J)
-
 ## Generate Theta object to see Theta values:
 Theta2 <- gen_Theta(gen_js(StartTimes$Cluster,
                         StartTimes$StartPd,
@@ -86,67 +81,54 @@ Theta2 <- gen_Theta(gen_js(StartTimes$Cluster,
                  Assumption=2)
 
 ## Run Solver for different assumption settings:
-SolveOut_2 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
-                        Assumption=2,
-                        v.Mat=cbind(Avg=rep(1/26,26),
-                                    D.1=create_V(26, c(1,6,10,19)),
-                                    D.2=create_V(26, c(2,8,13,23)),
-                                    D.3=create_V(26, c(3, 11, 16)),
-                                    D.4=create_V(26, c(4, 14, 20)),
-                                    D.12=create_V(26, c(1, 2, 6, 8, 10, 13, 19, 23)),
-                                    D.1234=create_V(26, c(1:4,6,8,11,14,10,13,16,20)),
-                                    D.234=create_V(26, c(2:4, 8, 11, 14, 13, 16, 20)),
-                                    OH=create_V(26, c(1:5, 7, 9, 12, 15, 18, 22, 26)),
-                                    IL=create_V(26, c(6, 8, 11, 14, 17, 21, 25)),
-                                    MI=create_V(26, c(10, 13, 16, 20, 24)),
-                                    MO=create_V(26, c(19, 23)),
-                                    OH2=create_V(26, 2),
-                                    IL2=create_V(26, 8),
-                                    MI2=create_V(26, 13),
-                                    MO2=create_V(26, 23),
-                                    Group=1/4*(create_V(26, c(1:5, 7, 9, 12, 15, 18, 22, 26))+
-                                                 create_V(26, c(6, 8, 11, 14, 17, 21, 25))+
-                                                 create_V(26, c(10, 13, 16, 20, 24))+
-                                                 create_V(26, c(19, 23)))),
-                        save_loc="../int_large/",
-                        save_prefix="vax-solve-a_")
-SolveOut_3 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
-                        Assumption=3,
-                        v.Mat=cbind(D.1=create_V(12, 1),
-                                    D.2=create_V(12, 2),
-                                    D.12=create_V(12, 1:2),
-                                    D.1234=create_V(12, 1:4),
-                                    D.234=create_V(12, 2:4),
-                                    Avg=create_V(12, 1:12)),
-                        save_loc="../int_large/",
-                        save_prefix="vax-solve-a_")
-SolveOut_4 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
-                        Assumption=4,
-                        v.Mat=cbind(Avg=create_V(12, 1:12),
-                                    T.30=create_V(12, 12)),
-                        save_loc="../int_large/",
-                        save_prefix="vax-solve-a_")
-SolveOut_5 <- Solve_Assumption(Amat, StartTimes, OrderedPds,
-                        Assumption=5,
-                        v.Mat=1,
-                        save_loc="../int_large/",
-                        save_prefix="vax-solve-a_")
+SolveOut_2 <- Solve_Assumption(StartTimes,
+                               OrderedPds,
+                               Assumption=2,
+                               v.Mat=cbind(Avg=rep(1/26,26),
+                                           D.1=create_V(26, c(1,6,10,19)),
+                                           D.2=create_V(26, c(2,8,13,23)),
+                                           D.3=create_V(26, c(3, 11, 16)),
+                                           D.4=create_V(26, c(4, 14, 20)),
+                                           D.12=create_V(26, c(1, 2, 6, 8, 10, 13, 19, 23)),
+                                           D.1234=create_V(26, c(1:4,6,8,11,14,10,13,16,20)),
+                                           D.234=create_V(26, c(2:4, 8, 11, 14, 13, 16, 20)),
+                                           OH=create_V(26, c(1:5, 7, 9, 12, 15, 18, 22, 26)),
+                                           IL=create_V(26, c(6, 8, 11, 14, 17, 21, 25)),
+                                           MI=create_V(26, c(10, 13, 16, 20, 24)),
+                                           MO=create_V(26, c(19, 23)),
+                                           OH2=create_V(26, 2),
+                                           IL2=create_V(26, 8),
+                                           MI2=create_V(26, 13),
+                                           MO2=create_V(26, 23),
+                                           Group=1/4*(create_V(26, c(1:5, 7, 9, 12, 15, 18, 22, 26))+
+                                                        create_V(26, c(6, 8, 11, 14, 17, 21, 25))+
+                                                        create_V(26, c(10, 13, 16, 20, 24))+
+                                                        create_V(26, c(19, 23))))
+                        )
+SolveOut_3 <- Solve_Assumption(StartTimes,
+                               OrderedPds,
+                               Assumption=3,
+                               v.Mat=cbind(D.1=create_V(12, 1),
+                                           D.2=create_V(12, 2),
+                                           D.12=create_V(12, 1:2),
+                                           D.1234=create_V(12, 1:4),
+                                           D.234=create_V(12, 2:4),
+                                           Avg=create_V(12, 1:12))
+                               )
+SolveOut_4 <- Solve_Assumption(StartTimes,
+                               OrderedPds,
+                               Assumption=4,
+                               v.Mat=cbind(Avg=create_V(12, 1:12),
+                                           T.30=create_V(12, 12))
+                               )
+SolveOut_5 <- Solve_Assumption(StartTimes,
+                               OrderedPds,
+                               Assumption=5,
+                               v.Mat=1
+                               )
 
-## Run variance minimizer for different settings:
-set.seed(1011)
-### Independence:
-for (i in 2:5) {
-  assign(x=paste0("MVOut_",i,"_Ind"),
-         value=MV_Assumption(SolveOut=get(paste0("SolveOut_",i)),
-                             Assumption=i,
-                             Sigma=create_Sigma_Ind(N=N,J=J),
-                             SigmaName="Ind",
-                             Observations=Obs_Y,
-                             Permutations=1000,
-                             save_loc="int/",
-                             save_prefix="vax-mv-a_"))
-}
 
+## Estimation of Correlation Parameters:
 #### Estimate AR correlation on unused non-lottery states
 ar.dat <- Vax_wk_2021 %>%
   dplyr::filter(!(Cluster %in% c("IA","IL","IN","KS","MI","MN","MO","ND","NE","OH","SD","WI")),
@@ -155,51 +137,54 @@ ar.dat <- Vax_wk_2021 %>%
 require(geepack)
 ##### Correlation estimate for cumulative population percent with >= 1 dose:
 GEE_c <- geepack::geeglm(First_18Pop_Pct~as.factor(Period)+as.factor(Cluster),
-                       data=ar.dat,
-                       family=gaussian,
-                       id=Cluster,
-                       corstr="ar1")
+                         data=ar.dat,
+                         family=gaussian,
+                         id=Cluster,
+                         corstr="ar1")
 ##### Correlation estimate for weekly percentage of pop getting first dose:
 GEE_d <- geepack::geeglm(Diff_First~as.factor(Period)+as.factor(Cluster),
-                       data=ar.dat,
-                       family=gaussian,
-                       id=Cluster,
-                       corstr="ar1")
+                         data=ar.dat,
+                         family=gaussian,
+                         id=Cluster,
+                         corstr="ar1")
 
-### AR(1) (rho = 0.95 estimated from above; First_Diff has 0.34 instead):
-for (i in 2:5) {
-  assign(x=paste0("MVOut_",i,"_AR1_0_95"),
-         value=MV_Assumption(SolveOut=get(paste0("SolveOut_",i)),
-                             Assumption=i,
-                             Sigma=create_Sigma_AR1(rho=0.95,N=N,J=J),
-                             SigmaName="AR1_0_95",
-                             Observations=Obs_Y,
-                             Permutations=1000,
-                             save_loc="int/",
-                             save_prefix="vax-mv-a_"))
-}
-
-for (i in 2:5) {
-  assign(x=paste0("MVOut_",i,"_AR1_0_95"),
-         value=MV_Assumption(SolveOut=get(paste0("SolveOut_",i)),
-                             Assumption=i,
-                             Sigma=create_Sigma_AR1(rho=0.34,N=N,J=J),
-                             SigmaName="AR1_0_34",
-                             Observations=Obs_Y,
-                             Permutations=1000,
-                             save_loc="int/",
-                             save_prefix="vax-mv-a_"))
-}
-
-## Import Results:
+## Run variance minimizer for different settings:
 Assns <- 2:5
 SigmaNames <- c("Ind","AR1_0_95","AR1_0_34")
 
-for (j in SigmaNames) {
+for (SigName in SigmaNames) {
+  if (SigName=="Ind") {
+    Sig <- create_Sigma_Ind(N=N, J=J)
+  } else if (SigName=="AR1_0_95") {
+    Sig <- create_Sigma_AR1(rho=0.95, N=N, J=J)
+  } else if (SigName=="AR1_0_34") {
+    Sig <- create_Sigma_AR1(rho=0.34, N=N, J=J)
+  }
   for (i in Assns) {
-    load(file=paste0("int/vax-mv-a_",i,"_",j,".Rda"))
+    assign(x=paste("MVOut",i,SigName, sep="_"),
+           value=MV_Assumption(SolveOut=get(paste("SolveOut",i, sep="_")),
+                               Assumption=i,
+                               Sigma=Sig,
+                               SigmaName=SigName,
+                               Observations=Obs_Y,
+                               Permutations=1000))
   }
 }
+
+## Export/Import Results:
+
+for (j in SigmaNames) {
+  for (i in Assns) {
+    save(list=paste("MVOut",i,j, sep="_"),
+         file=paste0("int/vax-mv-a_",i,"_",j,".Rda"))
+  }
+}
+
+# for (j in SigmaNames) {
+#   for (i in Assns) {
+#     load(file=paste0("int/vax-mv-a_",i,"_",j,".Rda"))
+#   }
+# }
 
 ## Summarize Results:
 for (j in SigmaNames) {
@@ -293,8 +278,7 @@ for (row in 1:(dim(Map_Settings)[1])) {
 
 ## Comparisons to other methods:
 ### Get comparison estimates:
-DFT <- SolveOut_5$DFT
-Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
+Comp_wts <- Comp_Ests_Weights(ADFT_obj=SolveOut_5$ADFT,
                               estimator=c("TW","CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
@@ -303,8 +287,8 @@ Comp_ests
 set.seed(12959)
 Comp_perms <- replicate(n=1000,
                         expr=Permute_obs(Observations=Obs_Y,
-                                         N=DFT$N, J=DFT$J,
-                                         Obs.weights=Comp_wts$Obs.weights))
+                                         N=SolveOut_5$ADFT$N, J=SolveOut_5$ADFT$J,
+                                         Obs.weights=Comp_wts$Obs.weights)$Ests)
 Comp_perms2 <- simplify2array(apply(Comp_perms, 3,
                                     FUN=function(x) abs(x) >= abs(Comp_ests),
                                     simplify=FALSE))
@@ -312,7 +296,7 @@ Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
 Comparisons=list(Estimates=Comp_ests, P_Values=Comp_pvals)
 
 ### Save comparisons:
-save(Comparisons, file="int/Vax-Comp-Ests.Rda")
+save(Comparisons, file="int/vax-Comp-Ests.Rda")
 
 ## Check against existing packages for staggered adoption methods:
 ### Packages:
@@ -355,7 +339,8 @@ SA <- feols(First_18Pop_Pct~sunab(cohort=StartPd,
 summary(SA)
 
 ### de Chaisemartin and d'Haultfoeuille (2020):
-CH <- did_multiplegt(df=Vax.dat.2,
+CH <- did_multiplegt(mode="old",
+                     df=Vax.dat.2,
                      Y="First_18Pop_Pct",
                      G="Cluster",
                      T="Period",

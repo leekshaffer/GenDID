@@ -1,29 +1,28 @@
 #######################################
 ###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
-###### Created 2024/04/25 #############
 #######################################
 
 require(tidyverse)
 require(lme4)
+set.seed(413354)
 
-source("R/A_Const.R")
-source("R/Sigmas.R")
 source("R/Full_Analysis.R")
 source("R/CompEsts.R")
 
 ## Read in (simulated) data from data folder:
 load("data/Xpert-data-sim.Rda")
 
-## Get unique periods, clusters, start times, N, J:
+## Get unique periods, start times, J:
 Periods <- unique(xpert.dat$Period)
 OrderedPds <- Periods[order(Periods)]
 J <- length(OrderedPds)
 
+## Create StartTimes DF and get N:
 StartTimes <- xpert.dat %>% dplyr::filter(Interv==1) %>%
   group_by(Cluster) %>% dplyr::summarize(StartPd=min(Period)) %>%
   dplyr::arrange(StartPd,Cluster)
-N <- length(StartTimes$Cluster)
+N <- nrow(StartTimes)
 
 ## Prep Outcome Data in appropriate order:
 Ord_Data <- xpert.dat %>% left_join(StartTimes, by="Cluster") %>%
@@ -50,11 +49,9 @@ ggsave(filename="figs/Xpert_Schematic.eps",
               title="Trial Schematic for Example SWT"),
        width=6, height=4, units="in")
 
-## Generate A matrix:
-Amat <- gen_A(N,J)
-
 ## Run Solver for different assumption settings:
-SO2 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
+SO2 <- Solve_Assumption(StartTimes,
+                        OrderedPds,
                         Assumption=2,
                         v.Mat=cbind(Avg=c(rep(1/28,28)),
                                     AvgExT8=c(rep(1/21,21),rep(0,7)),
@@ -95,10 +92,10 @@ SO2 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                                     U.21=c(rep(0,20),1,rep(0,7)),
                                     Group=1/6*c(1/6,1/5,1/6,1/4,1/5,1/6,1/3,1/4,1/5,1/6,
                                                 1/2,1/3,1/4,1/5,1/6,1,1/2,1/3,1/4,1/5,1/6,
-                                                rep(0,7))),
-                        save_loc="../int_large/",
-                        save_prefix="xpert-solve-a_")
-SO3 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
+                                                rep(0,7))))
+
+SO3 <- Solve_Assumption(StartTimes,
+                        OrderedPds,
                         Assumption=3,
                         v.Mat=cbind(Avg=rep(1/7,7),
                              AvgEx7=c(rep(1/6,6),0),
@@ -109,10 +106,10 @@ SO3 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                              D.5=c(rep(0,4),1,0,0),
                              D.6=c(rep(0,5),1,0),
                              D.7=c(rep(0,6),1),
-                             Middle=c(0,1/3,1/3,1/3,0,0,0)),
-                        save_loc="../int_large/",
-                        save_prefix="xpert-solve-a_")
-SO4 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
+                             Middle=c(0,1/3,1/3,1/3,0,0,0)))
+
+SO4 <- Solve_Assumption(StartTimes,
+                        OrderedPds,
                         Assumption=4,
                         v.Mat=cbind(AvgEx8=c(rep(1/6,6),0),
                              T.2=c(1,rep(0,6)),
@@ -122,91 +119,81 @@ SO4 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
                              T.6=c(rep(0,4),1,0,0),
                              T.7=c(rep(0,5),1,0),
                              T.8=c(rep(0,6),1),
-                             Middle=c(0,1/3,1/3,1/3,0,0,0)),
-                        save_loc="../int_large/",
-                        save_prefix="xpert-solve-a_")
-SO5 <- Solve_Assumption(Amat,StartTimes,OrderedPds,
-                        Assumption=5,
-                        v.Mat=1,
-                        save_loc="../int_large/",
-                        save_prefix="xpert-solve-a_")
+                             Middle=c(0,1/3,1/3,1/3,0,0,0)))
 
-set.seed(413354)
+SO5 <- Solve_Assumption(StartTimes,
+                        OrderedPds,
+                        Assumption=5,
+                        v.Mat=1)
 
 ## Run variance minimizer for different settings:
-### Independence:
-for (i in 2:5) {
-  assign(x=paste0("MVOut_",i,"_Ind"),
-         value=MV_Assumption(SolveOut=get(paste0("SO",i)),
-                             Assumption=i,
-                             Sigma=create_Sigma_Ind(N=N,J=J),
-                             SigmaName="Ind",
-                             Observations=Obs_Y,
-                             Permutations=1000,
-                             save_loc="int/",
-                             save_prefix="xpert-mv-a_"))
-}
-
-### Exchangeable (rho = 0.003 from Thompson et al. 2018):
-for (i in 2:5) {
-  assign(x=paste0("MVOut_",i,"_CS_0_003"),
-         value=MV_Assumption(SolveOut=get(paste0("SO",i)),
-                             Assumption=i,
-                             Sigma=create_Sigma_CS(rho=0.003,N=N,J=J),
-                             SigmaName="CS_0_003",
-                             Observations=Obs_Y,
-                             Permutations=1000,
-                             save_loc="int/",
-                             save_prefix="xpert-mv-a_"))
-}
-
-### AR(1) (rho = 0.012 gives average ICC within a cluster ~0.003):
-for (i in 2:5) {
-  assign(x=paste0("MVOut_",i,"_AR1_0_012"),
-         value=MV_Assumption(SolveOut=get(paste0("SO",i)),
-                             Assumption=i,
-                             Sigma=create_Sigma_AR1(rho=0.012,N=N,J=J),
-                             SigmaName="AR1_0_012",
-                             Observations=Obs_Y,
-                             Permutations=1000,
-                             save_loc="int/",
-                             save_prefix="xpert-mv-a_"))
-}
-
-### Add additional version (exch, rho = 0.333) for simulations:
-for (i in 2:5) {
-  assign(x=paste0("MVOut_",i,"_CS_0_333"),
-         value=MV_Assumption(SolveOut=get(paste0("SO",i)),
-                             Assumption=i,
-                             Sigma=create_Sigma_CS(rho=1/3,N=N,J=J),
-                             SigmaName="CS_0_333",
-                             Observations=Obs_Y,
-                             Permutations=1000,
-                             save_loc="int/",
-                             save_prefix="xpert-mv-a_"))
-}
-
-## Import Results:
 Assns <- 2:5
 SigmaNames <- c("Ind","CS_0_003","CS_0_333","AR1_0_012")
 
-for (j in SigmaNames) {
+for (SigName in SigmaNames) {
+  if (SigName=="Ind") {
+    Sig <- create_Sigma_Ind(N=N, J=J)
+  } else if (SigName=="CS_0_003") {
+    ### Using rho = 0.003 from Thompson et al. 2018
+    Sig <- create_Sigma_CS(rho=0.003, N=N, J=J)
+  } else if (SigName=="CS_0_333") {
+    ### Alternative version to test robustness to input ICC
+    Sig <- create_Sigma_CS(rho=1/3, N=N, J=J)
+  } else if (SigName=="AR1_0_012") {
+    ### (rho = 0.012 gives average ICC within a cluster ~0.003):
+    Sig <- create_Sigma_AR1(rho=0.012, N=N, J=J)
+  }
   for (i in Assns) {
-    load(file=paste0("int/xpert-mv-a_",i,"_",j,".Rda"))
+    assign(x=paste("MVOut",i,SigName, sep="_"),
+           value=MV_Assumption(SolveOut=get(paste0("SO",i)),
+                               Assumption=i,
+                               Sigma=Sig,
+                               SigmaName=SigName,
+                               Observations=Obs_Y,
+                               Permutations=1000))
   }
 }
 
+### Independence:
+# for (i in 2:5) {
+#   assign(x=paste0("MVOut_",i,"_Ind"),
+#          value=MV_Assumption(SolveOut=get(paste0("SO",i)),
+#                              Assumption=i,
+#                              Sigma=create_Sigma_Ind(N=N,J=J),
+#                              SigmaName="Ind",
+#                              Observations=Obs_Y,
+#                              Permutations=1000 #,
+#                              # save_loc="int_new/",
+#                              # save_prefix="xpert-mv-a_"
+#                              ))
+# }
+
+## Export/Import Results:
+
+for (j in SigmaNames) {
+  for (i in Assns) {
+    save(list=paste("MVOut",i,j, sep="_"),
+         file=paste0("int/xpert-mv-a_",i,"_",j,".Rda"))
+  }
+}
+
+# for (j in SigmaNames) {
+#   for (i in Assns) {
+#     load(file=paste0("int/xpert-mv-a_",i,"_",j,".Rda"))
+#   }
+# }
+
 ## Summarize Results:
 for (j in SigmaNames) {
-  print(paste0("Variance ",j))
+  print(paste0("Variance: ",j))
   for (i in Assns) {
-    print(paste0("Assumption ",i))
+    print(paste0("Assumption: ",i))
     print((get(paste0("MVOut_",i,"_",j))[["MV"]])[["Variance"]])
   }
 }
 
 for (i in Assns) {
-  print(paste0("Assumption ",i))
+  print(paste0("Assumption: ",i))
   ProbEsts <- NULL
   OREsts <- NULL
   for (j in SigmaNames) {
@@ -215,14 +202,16 @@ for (i in Assns) {
   }
   colnames(ProbEsts) <- SigmaNames
   colnames(OREsts) <- SigmaNames
+  print("Risk Difference Estimates:")
   print(ProbEsts)
+  print("Odds Ratio:")
   print(OREsts)
 }
 
 
 ### Inference:
 for (i in Assns) {
-  print(paste0("P-Values for Assumption ",i))
+  print(paste0("P-Values for Assumption: ",i))
   for (j in SigmaNames) {
     print(j)
     print((get(paste0("MVOut_",i,"_",j)))[["P_Values"]])
@@ -249,7 +238,6 @@ Map_Settings <- tibble(i=c(5,4,3,2,3,2,rep(4,6),rep(2,6)),
                                   "Pd. 4, Assumption S2", "Pd. 5, Assumption S2",
                                   "Pd. 6, Assumption S2", "Pd. 7, Assumption S2"))
 for (row in 1:(dim(Map_Settings)[1])) {
-    Weights <- (get(paste0("MVOut_",i,"_",j))[["MV"]])[["Obs.weights"]]
     Weights <- (get(paste0("MVOut_",Map_Settings[row,] %>% pull("i"),"_",
                            Map_Settings[row,] %>% pull("j")))[["MV"]])[["Obs.weights"]]
     if (is.null(colnames(Weights))) {
@@ -275,8 +263,7 @@ for (row in 1:(dim(Map_Settings)[1])) {
 
 ## Comparisons to other methods:
 ### Get comparison estimates for methods with known weights:
-DFT <- SO5$DFT
-Comp_wts <- Comp_Ests_Weights(DFT_obj=DFT, Amat=Amat,
+Comp_wts <- Comp_Ests_Weights(ADFT_obj=SO5$ADFT,
                               estimator=c("TW","CS","SA","CH","CO","NP"))
 Comp_ests <- t(as.matrix(Comp_wts$Obs.weights)) %*% Obs_Y
 Comp_ests
@@ -338,7 +325,7 @@ Comp_ests <- rbind(Comp_ests,
 set.seed(7446)
 SinglePerm <- function() {
   Perm_out <- Permute_obs(Observations=Obs_Y,
-                          N=DFT$N, J=DFT$J,
+                          N=SO5$ADFT$N, J=SO5$ADFT$J,
                           Obs.weights=Comp_wts$Obs.weights)
   return(rbind(Perm_out$Ests,
                GetCLWPs(data=xpert.dat %>%
@@ -355,7 +342,7 @@ Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
 Comparisons=list(Estimates=Comp_ests, P_Values=Comp_pvals)
 
 ### Save comparisons:
-save(Comparisons, file="int/Xpert-Comp-Ests.Rda")
+save(Comparisons, file="int/xpert-Comp-Ests.Rda")
 
 
 ## Check against existing packages for staggered adoption methods:
@@ -405,4 +392,175 @@ CH <- did_multiplegt(mode="old",
                      T="Period",
                      D="Interv")
 CH
+
+## MS Results:
+
+Tbl2 <- tibble(Assumption=5:2,
+               Estimator=c("1","AvgEx8","Avg","AvgExT8"),
+               OR_Est=exp(c(MVOut_5_CS_0_003$Estimates[1,"Log Odds"],
+                            MVOut_4_CS_0_003$Estimates["AvgEx8","Log Odds"],
+                            MVOut_3_CS_0_003$Estimates["Avg","Log Odds"],
+                            MVOut_2_CS_0_003$Estimates["AvgExT8","Log Odds"])),
+               OR_P=c(MVOut_5_CS_0_003$P_Values[1,"Log Odds"],
+                      MVOut_4_CS_0_003$P_Values["AvgEx8","Log Odds"],
+                      MVOut_3_CS_0_003$P_Values["Avg","Log Odds"],
+                      MVOut_2_CS_0_003$P_Values["AvgExT8","Log Odds"]),
+               RD_Est=100*c(MVOut_5_CS_0_003$Estimates[1,"Probability"],
+                            MVOut_4_CS_0_003$Estimates["AvgEx8","Probability"],
+                            MVOut_3_CS_0_003$Estimates["Avg","Probability"],
+                            MVOut_2_CS_0_003$Estimates["AvgExT8","Probability"]),
+               RD_P=c(MVOut_5_CS_0_003$P_Values[1,"Probability"],
+                      MVOut_4_CS_0_003$P_Values["AvgEx8","Probability"],
+                      MVOut_3_CS_0_003$P_Values["Avg","Probability"],
+                      MVOut_2_CS_0_003$P_Values["AvgExT8","Probability"])
+)
+
+Vars <- c(MVOut_5_CS_0_003$MV$Variance,
+          MVOut_4_CS_0_003$MV$Variance[1,"AvgEx8"],
+          MVOut_3_CS_0_003$MV$Variance[1,"Avg"],
+          MVOut_2_CS_0_003$MV$Variance[1,"AvgExT8"])
+Rel_Effs <- c(Vars[2]/Vars[1], Vars[3]/Vars[1], Vars[4]/Vars[1])
+
+Tbl3 <- tibble(Month=2:7,
+               OR_S4_Est=exp(c(MVOut_4_CS_0_003$Estimates["T.2","Log Odds"],
+                               MVOut_4_CS_0_003$Estimates["T.3","Log Odds"],
+                               MVOut_4_CS_0_003$Estimates["T.4","Log Odds"],
+                               MVOut_4_CS_0_003$Estimates["T.5","Log Odds"],
+                               MVOut_4_CS_0_003$Estimates["T.6","Log Odds"],
+                               MVOut_4_CS_0_003$Estimates["T.7","Log Odds"])),
+               OR_S4_P=c(MVOut_4_CS_0_003$P_Values["T.2","Log Odds"],
+                         MVOut_4_CS_0_003$P_Values["T.3","Log Odds"],
+                         MVOut_4_CS_0_003$P_Values["T.4","Log Odds"],
+                         MVOut_4_CS_0_003$P_Values["T.5","Log Odds"],
+                         MVOut_4_CS_0_003$P_Values["T.6","Log Odds"],
+                         MVOut_4_CS_0_003$P_Values["T.7","Log Odds"]),
+               OR_S2_Est=exp(c(MVOut_2_CS_0_003$Estimates["T.2","Log Odds"],
+                               MVOut_2_CS_0_003$Estimates["T.3","Log Odds"],
+                               MVOut_2_CS_0_003$Estimates["T.4","Log Odds"],
+                               MVOut_2_CS_0_003$Estimates["T.5","Log Odds"],
+                               MVOut_2_CS_0_003$Estimates["T.6","Log Odds"],
+                               MVOut_2_CS_0_003$Estimates["T.7","Log Odds"])),
+               OR_S2_P=c(MVOut_2_CS_0_003$P_Values["T.2","Log Odds"],
+                         MVOut_2_CS_0_003$P_Values["T.3","Log Odds"],
+                         MVOut_2_CS_0_003$P_Values["T.4","Log Odds"],
+                         MVOut_2_CS_0_003$P_Values["T.5","Log Odds"],
+                         MVOut_2_CS_0_003$P_Values["T.6","Log Odds"],
+                         MVOut_2_CS_0_003$P_Values["T.7","Log Odds"]),
+               RD_S4_Est=100*c(MVOut_4_CS_0_003$Estimates["T.2","Probability"],
+                               MVOut_4_CS_0_003$Estimates["T.3","Probability"],
+                               MVOut_4_CS_0_003$Estimates["T.4","Probability"],
+                               MVOut_4_CS_0_003$Estimates["T.5","Probability"],
+                               MVOut_4_CS_0_003$Estimates["T.6","Probability"],
+                               MVOut_4_CS_0_003$Estimates["T.7","Probability"]),
+               RD_S4_P=c(MVOut_4_CS_0_003$P_Values["T.2","Probability"],
+                         MVOut_4_CS_0_003$P_Values["T.3","Probability"],
+                         MVOut_4_CS_0_003$P_Values["T.4","Probability"],
+                         MVOut_4_CS_0_003$P_Values["T.5","Probability"],
+                         MVOut_4_CS_0_003$P_Values["T.6","Probability"],
+                         MVOut_4_CS_0_003$P_Values["T.7","Probability"]),
+               RD_S2_Est=100*c(MVOut_2_CS_0_003$Estimates["T.2","Probability"],
+                               MVOut_2_CS_0_003$Estimates["T.3","Probability"],
+                               MVOut_2_CS_0_003$Estimates["T.4","Probability"],
+                               MVOut_2_CS_0_003$Estimates["T.5","Probability"],
+                               MVOut_2_CS_0_003$Estimates["T.6","Probability"],
+                               MVOut_2_CS_0_003$Estimates["T.7","Probability"]),
+               RD_S2_P=c(MVOut_2_CS_0_003$P_Values["T.2","Probability"],
+                         MVOut_2_CS_0_003$P_Values["T.3","Probability"],
+                         MVOut_2_CS_0_003$P_Values["T.4","Probability"],
+                         MVOut_2_CS_0_003$P_Values["T.5","Probability"],
+                         MVOut_2_CS_0_003$P_Values["T.6","Probability"],
+                         MVOut_2_CS_0_003$P_Values["T.7","Probability"])
+)
+
+TblWA3 <- tibble(Assumption=5:2,
+                 Estimator=c("1","AvgEx8","Avg","AvgExT8"),
+                 Ind_Est=exp(c(MVOut_5_Ind$Estimates[1,"Log Odds"],
+                               MVOut_4_Ind$Estimates["AvgEx8","Log Odds"],
+                               MVOut_3_Ind$Estimates["Avg","Log Odds"],
+                               MVOut_2_Ind$Estimates["AvgExT8","Log Odds"])),
+                 Ind_P=c(MVOut_5_Ind$P_Values[1,"Log Odds"],
+                         MVOut_4_Ind$P_Values["AvgEx8","Log Odds"],
+                         MVOut_3_Ind$P_Values["Avg","Log Odds"],
+                         MVOut_2_Ind$P_Values["AvgExT8","Log Odds"]),
+                 CS_Est=exp(c(MVOut_5_CS_0_003$Estimates[1,"Log Odds"],
+                              MVOut_4_CS_0_003$Estimates["AvgEx8","Log Odds"],
+                              MVOut_3_CS_0_003$Estimates["Avg","Log Odds"],
+                              MVOut_2_CS_0_003$Estimates["AvgExT8","Log Odds"])),
+                 CS_P=c(MVOut_5_CS_0_003$P_Values[1,"Log Odds"],
+                        MVOut_4_CS_0_003$P_Values["AvgEx8","Log Odds"],
+                        MVOut_3_CS_0_003$P_Values["Avg","Log Odds"],
+                        MVOut_2_CS_0_003$P_Values["AvgExT8","Log Odds"]),
+                 AR1_Est=exp(c(MVOut_5_AR1_0_012$Estimates[1,"Log Odds"],
+                               MVOut_4_AR1_0_012$Estimates["AvgEx8","Log Odds"],
+                               MVOut_3_AR1_0_012$Estimates["Avg","Log Odds"],
+                               MVOut_2_AR1_0_012$Estimates["AvgExT8","Log Odds"])),
+                 AR1_P=c(MVOut_5_AR1_0_012$P_Values[1,"Log Odds"],
+                         MVOut_4_AR1_0_012$P_Values["AvgEx8","Log Odds"],
+                         MVOut_3_AR1_0_012$P_Values["Avg","Log Odds"],
+                         MVOut_2_AR1_0_012$P_Values["AvgExT8","Log Odds"])
+)
+
+TblWA4 <- tibble(Assumption=5:2,
+                 Estimator=c("1","AvgEx8","Avg","AvgExT8"),
+                 Ind_Est=100*c(MVOut_5_Ind$Estimates[1,"Probability"],
+                               MVOut_4_Ind$Estimates["AvgEx8","Probability"],
+                               MVOut_3_Ind$Estimates["Avg","Probability"],
+                               MVOut_2_Ind$Estimates["AvgExT8","Probability"]),
+                 Ind_P=c(MVOut_5_Ind$P_Values[1,"Probability"],
+                         MVOut_4_Ind$P_Values["AvgEx8","Probability"],
+                         MVOut_3_Ind$P_Values["Avg","Probability"],
+                         MVOut_2_Ind$P_Values["AvgExT8","Probability"]),
+                 CS_Est=100*c(MVOut_5_CS_0_003$Estimates[1,"Probability"],
+                              MVOut_4_CS_0_003$Estimates["AvgEx8","Probability"],
+                              MVOut_3_CS_0_003$Estimates["Avg","Probability"],
+                              MVOut_2_CS_0_003$Estimates["AvgExT8","Probability"]),
+                 CS_P=c(MVOut_5_CS_0_003$P_Values[1,"Probability"],
+                        MVOut_4_CS_0_003$P_Values["AvgEx8","Probability"],
+                        MVOut_3_CS_0_003$P_Values["Avg","Probability"],
+                        MVOut_2_CS_0_003$P_Values["AvgExT8","Probability"]),
+                 AR1_Est=100*c(MVOut_5_AR1_0_012$Estimates[1,"Probability"],
+                               MVOut_4_AR1_0_012$Estimates["AvgEx8","Probability"],
+                               MVOut_3_AR1_0_012$Estimates["Avg","Probability"],
+                               MVOut_2_AR1_0_012$Estimates["AvgExT8","Probability"]),
+                 AR1_P=c(MVOut_5_AR1_0_012$P_Values[1,"Probability"],
+                         MVOut_4_AR1_0_012$P_Values["AvgEx8","Probability"],
+                         MVOut_3_AR1_0_012$P_Values["Avg","Probability"],
+                         MVOut_2_AR1_0_012$P_Values["AvgExT8","Probability"])
+)
+
+TblWA5 <- tibble(Method=rownames(Comparisons$Estimates),
+                 Estimate=100*Comparisons$Estimates[,"Probability"],
+                 P_Value=Comparisons$P_Values[,"Probability"],
+                 Estimator_GD=c("S5","S2_AvgExT8","S3_Avg",
+                                "S2_Group","S4_AvgEx8",
+                                "S2_AvgExT8","S2_D.1","S2_D.1",
+                                "S3_D.1","S5",rep(NA_character_,5)),
+                 Estimate_GD=100*c(MVOut_5_CS_0_003$Estimates[1,"Probability"],
+                                   MVOut_2_CS_0_003$Estimates["AvgExT8","Probability"],
+                                   MVOut_3_CS_0_003$Estimates["Avg","Probability"],
+                                   MVOut_2_CS_0_003$Estimates["Group","Probability"],
+                                   MVOut_4_CS_0_003$Estimates["AvgEx8","Probability"],
+                                   MVOut_2_CS_0_003$Estimates["AvgExT8","Probability"],
+                                   MVOut_2_CS_0_003$Estimates["D.1","Probability"],
+                                   MVOut_2_CS_0_003$Estimates["D.1","Probability"],
+                                   MVOut_3_CS_0_003$Estimates["D.1","Probability"],
+                                   MVOut_5_CS_0_003$Estimates[1,"Probability"],
+                                   rep(NA_real_,5)),
+                 P_Value_GD=c(MVOut_5_CS_0_003$P_Values[1,"Probability"],
+                              MVOut_2_CS_0_003$P_Values["AvgExT8","Probability"],
+                              MVOut_3_CS_0_003$P_Values["Avg","Probability"],
+                              MVOut_2_CS_0_003$P_Values["Group","Probability"],
+                              MVOut_4_CS_0_003$P_Values["AvgEx8","Probability"],
+                              MVOut_2_CS_0_003$P_Values["AvgExT8","Probability"],
+                              MVOut_2_CS_0_003$P_Values["D.1","Probability"],
+                              MVOut_2_CS_0_003$P_Values["D.1","Probability"],
+                              MVOut_3_CS_0_003$P_Values["D.1","Probability"],
+                              MVOut_5_CS_0_003$P_Values[1,"Probability"],
+                              rep(NA_real_,5))
+)
+
+save(list=c("Tbl2","Vars","Rel_Effs","Tbl3",
+            "TblWA3","TblWA4","TblWA5"),
+     file="res/xpert_results.Rda")
+
 

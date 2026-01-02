@@ -3,13 +3,21 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-## Note v can be a vector to solve for one target,
-### or it can be a matrix of column vectors to solve for.
-### If Rank_Analysis has been done, the rank_an output can be inputted to avoid repeating rank-finding.
-### DFT_obj is an output from the gen_DFT() function
+# solve_WA function
+
+### Inputs:
+#### ADFT_obj: the output from gen_ADFT
+#### v: a vector or matrix of estimand weights (e.g., output of create_V)
+#### rank_obj: the output from rank_an (if available)
+#### DID_full: Boolean:
+####  TRUE adds weight vectors that only change DID decomposition, not observation weights;
+####  FALSE omits these
+### Output: List of the following:
+#### DID.weights: basis vectors for the DID estimators weights that solve the constraints
+#### Obs.weights: basis vectors for the observation weights that solve the constraints
+
 solve_WA <- function(
-    DFT_obj,
-    A_mat,
+    ADFT_obj,
     v,
     rank_obj = NULL,
     DID_full = TRUE
@@ -19,7 +27,9 @@ solve_WA <- function(
     v <- matrix(data = v, ncol = 1)
   }
 
-  F_mat <- DFT_obj$F_mat
+  F_mat <- ADFT_obj$F_mat
+
+  A_mat <- ADFT_obj$A_mat
 
   if (!is.null(rank_obj)) { # if given a rank object, use it:
     if (ncol(v) != ncol(rank_obj$FTv_Ranks)) {
@@ -45,7 +55,7 @@ solve_WA <- function(
     }
   } else { # otherwise (rank_obj is missing)
     ## Get the key info from A and F
-    RankAT <- (DFT_obj$N - 1) * (DFT_obj$J - 1)
+    RankAT <- (ADFT_obj$N - 1) * (ADFT_obj$J - 1)
     FT_qr <- qr(x = t(F_mat), LAPACK = FALSE)
     FT_rank <- FT_qr$rank
 
@@ -183,20 +193,43 @@ solve_WA <- function(
     ))
 }
 
-## Helper function to create v vectors
-### Input the total length of the vector (Length); i.e. the total number of unique Thetas
-### And the indices of the values that should be non-zero (NonZero)
-### If value==NULL (the default), the non-zero values will be given equal weight adding to 1
-### Otherwise, specify the weight for each, in the same order as NonZero
-create_V <- function(
-    Length,
-    NonZero,
-    Values = NULL) {
-  v <- rep(0, Length)
-  if (is.null(Values)) {
-    v[NonZero] <- 1 / length(NonZero)
-  } else {
-    v[NonZero] <- Values
-  }
-  return(v)
+# Solve_Assumption function
+
+### Inputs:
+#### StartTimes: a DF with columns Cluster and StartPd, giving the unique clusters and start periods
+#### OrderedPds: a vector of the temporal order of the period labels that will
+####  have outcomes (may have more periods that are not start periods)
+#### Assumption: Number 1--5 corresponding to the Assumption Settings
+#### v.Mat: a vector or matrix of estimand weights (e.g., output of create_V)
+### Output: List of the following:
+#### ADFT: output from gen_ADFT
+#### Solve: output from solve_WA
+
+Solve_Assumption <- function(StartTimes,
+                             OrderedPds,
+                             Assumption,
+                             v.Mat #,
+                             # save_loc="",
+                             # save_prefix="solve-a_"
+                             ) {
+  ## Generate A,D,F,Theta matrices:
+  ADFT_int <- gen_ADFT(Clusters=StartTimes$Cluster,
+                     StartPeriods=StartTimes$StartPd,
+                     OrderedPds=OrderedPds,
+                     Assumption=Assumption)
+  rank_int <- rank_an(ADFT_obj=ADFT_int,
+                      v=v.Mat)
+  solve_int <- solve_WA(ADFT_obj=ADFT_int,
+                        v=v.Mat,
+                        rank_obj=rank_int,
+                        DID_full=TRUE)
+  assign(x=paste0("SolveOut_",Assumption),
+         value=list(ADFT=ADFT_int,
+                    Solve=solve_int))
+
+  # TODO: Inform user that you are saving variable
+  # to a .Rda file using the specified save_loc and save_prefix.
+  # save(list=paste0("SolveOut_",Assumption),
+  #      file=paste0(save_loc,save_prefix,Assumption,".Rda"))
+  return(get(paste0("SolveOut_",Assumption)))
 }
