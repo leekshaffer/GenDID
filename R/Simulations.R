@@ -1,20 +1,17 @@
 #######################################
-###### File: Simulations.R ###########
+###### File: Simulations.R ############
 ###### Lee Kennedy-Shaffer ############
-###### Created 2024/09/09 #############
 #######################################
 
 ## Note: some details of the mixed effects model fitting is specific to the setting used in Sim_Runs.R
 ### Please check and alter these or do not use those models if using a different setup.
 
-source("R/A_Const.R")
-source("R/Sigmas.R")
-source("R/Full_Analysis.R")
-source("R/CompEsts.R")
-
 require(tidyverse)
 require(lme4)
 require(geepack)
+
+source("R/Full_Analysis.R")
+source("R/CompEsts.R")
 
 ### Helper Functions for Simulation:
 
