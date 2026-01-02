@@ -87,11 +87,11 @@ Sim_Data <- function(Sim.Fr, mu, Alpha1,
 }
 
 ### Analyze Simulated Data
-#### (run after Solve_Assumption & MV_Assumption (w/ no Obs or Perms) & Comp_Ests_Weights for setting):
+#### (run after gen_ADFT & MV_Assumption (w/ no Obs or Perms) & Comp_Ests_Weights for setting):
 #### Note MV_Out can be a list with multiple MV_Out objects: names are passed on
-#### Solve_Out is used only for comparisons to other estimators; can be a list; names passed on
+#### ADFT_list is used for the comp estimators; can be a named list of ADFT objects or a single one used for all
 Sim_Weights <- function(MV_Out,
-                        Solve_Out=NULL,
+                        ADFT_list=NULL,
                         Comparisons=NULL) {
   Weights <- NULL
   if (!is.null(MV_Out$Obs.Weights)) { #If only one MV_Out object is given
@@ -106,16 +106,14 @@ Sim_Weights <- function(MV_Out,
   }
   CE_Weights <- NULL
   if (sum(c("TW","CS","SA","CH","CO","NP") %in% Comparisons) > 0) {
-    if (!is.null(Solve_Out$DFT)) { #If only one Solve_Out object is given
-      CE_Weights <- Comp_Ests_Weights(DFT_obj=Solve_Out$DFT,
-                                      Amat=Solve_Out$Amat,
+    if (!is.null(ADFT_list$A_mat)) { #If only one ADFT object is given
+      CE_Weights <- Comp_Ests_Weights(ADFT_obj=ADFT_list,
                                       estimator=Comparisons[Comparisons %in% c("TW","CS","SA","CH","CO","NP")])$Obs.weights
     } else {
-      for (i in 1:length(Solve_Out)) { #If list of Solve_Out objects is given
-        CEwi <- Comp_Ests_Weights(DFT_obj=Solve_Out[[i]]$DFT,
-                                  Amat=Solve_Out[[i]]$Amat,
+      for (i in 1:length(ADFT_list)) { #If list of ADFT objects is given
+        CEwi <- Comp_Ests_Weights(ADFT_obj=ADFT_list[[i]],
                                   estimator=Comparisons[Comparisons %in% c("TW","CS","SA","CH","CO","NP")])$Obs.weights
-        colnames(CEwi) <- paste(names(Solve_Out)[i], colnames(CEwi), sep="_", recycle0=FALSE)
+        colnames(CEwi) <- paste(names(ADFT_list)[i], colnames(CEwi), sep="_", recycle0=FALSE)
         CE_Weights <- CE_Weights %>%
           bind_cols(CEwi)
       }
@@ -480,13 +478,19 @@ simulate_SWT <- function(NumSims,
                           T1, T2, ProbT1,
                           sig_nu, sig_e, m,
                          ThetaType, ThetaDF,
-                         MVO_list, SO_list=NULL,
+                         MVO_list, ADFT_list=NULL,
                          Comparisons=NULL, corstr="exchangeable",
                          Permutations=0) {
   if (NumSims <= 1) {
     stop(simpleError(message="NumSims must be at least 2"))
   }
   Sim.Fr <- Sim_Frame(N, J, StartingPds)
+  if (is.null(ADFT_list)) {
+    ADFT_list <- list(Comp=gen_ADFT(Clusters=Sim.Fr %>% filter(Period==1) %>% pull(Cluster),
+                                    StartPeriods=Sim.Fr %>% filter(Period==1) %>% pull(Start),
+                                    OrderedPds=1:J,
+                                    Assumption=ThetaType))
+  }
   Sim.Dat <- replicate(n=NumSims,
                        as.matrix(Sim_Data(Sim.Fr, mu, Alpha1,
                                           T1, T2, ProbT1,
@@ -497,7 +501,7 @@ simulate_SWT <- function(NumSims,
     Sim.Wt <- NULL
   } else {
     Sim.Wt <- Sim_Weights(MV_Out=MVO_list,
-                          Solve_Out=SO_list,
+                          ADFT_list=ADFT_list,
                           Comparisons=Comparisons)
   }
   Sim.Res <- Sim_Analyze(Sim.Dat, Sim.Wt,
@@ -545,7 +549,7 @@ simulate_FromSet <- function(Param_Set,
                              StartingPds=NULL,
                              Alpha1,
                              T1, T2,
-                             MVO_list, SO_list=NULL,
+                             MVO_list, ADFT_list=NULL,
                              outdir=NULL,
                              outname=NULL) {
   for (i in 1:(dim(Param_Set)[1])) {
@@ -558,7 +562,7 @@ simulate_FromSet <- function(Param_Set,
                                 T1, T2, row$ProbT1,
                                 row$sig_nu, row$sig_e, row$m,
                                 Theta_Set[[i]]$Type, Theta_Set[[i]]$ThetaDF,
-                                MVO_list, SO_list,
+                                MVO_list, ADFT_list,
                                 Comparisons=Theta_Set[[i]]$Comps, Theta_Set[[i]]$corstr,
                                 Permutations=row$NumPerms))
       save(list=paste0("Res_Sim_",row$SimNo),
