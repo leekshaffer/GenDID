@@ -100,7 +100,7 @@ load("int/xpert-mv-a_5_Ind.Rda")
 
 ## Timing:
 ### 3 cores on home comp, 10 sims/scenario, 25 perms/sim: 15 mins
-### 3 cores on home comp, 10 sims/scenario, 50 perms/sim: 15 mins
+### 3 cores on home comp, 10 sims/scenario, 50 perms/sim: 30 mins
 pt <- proc.time()
 
 set.seed(73475)
@@ -148,6 +148,6 @@ for (i in Param_Set$SimNo) {
 }
 
 save(Full_Sim_Res,
-     file=paste0(folder,"/Full_Sim_Res.Rda"))
+     file=paste0("res","/Full_Sim_Res_New.Rda"))
 
 proc.time() - pt

@@ -12,7 +12,7 @@ Shapes <- c(15:18,8)
 outdir <- "figs/"
 
 ## Load simulation results:
-load(file="int/Full_Sim_Res.Rda")
+load(file="res/Full_Sim_Res.Rda")
 
 ## Select Desired Estimators:
 OverallSet <- tibble(Estimator=c("A5_Ind_","Comp_W_TW","Comp_CPI","Comp_W_CO.W_CO3",
