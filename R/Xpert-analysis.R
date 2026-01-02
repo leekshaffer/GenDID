@@ -1,5 +1,5 @@
 #######################################
-###### File: Xpert-analysis.R #############
+###### File: Xpert-analysis.R #########
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
@@ -13,12 +13,12 @@ source("R/CompEsts.R")
 ## Read in (simulated) data from data folder:
 load("data/Xpert-data-sim.Rda")
 
-## Get unique periods, clusters, start times, N, J:
+## Get unique periods, start times, J:
 Periods <- unique(xpert.dat$Period)
 OrderedPds <- Periods[order(Periods)]
 J <- length(OrderedPds)
 
-## Create StartTimes DF:
+## Create StartTimes DF and get N:
 StartTimes <- xpert.dat %>% dplyr::filter(Interv==1) %>%
   group_by(Cluster) %>% dplyr::summarize(StartPd=min(Period)) %>%
   dplyr::arrange(StartPd,Cluster)
@@ -168,7 +168,14 @@ for (SigName in SigmaNames) {
 #                              ))
 # }
 
-## Import Results:
+## Export/Import Results:
+
+for (j in SigmaNames) {
+  for (i in Assns) {
+    save(list=paste("MVOut",i,j, sep="_"),
+         file=paste0("int/xpert-mv-a_",i,"_",j,".Rda"))
+  }
+}
 
 # for (j in SigmaNames) {
 #   for (i in Assns) {
@@ -335,7 +342,7 @@ Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
 Comparisons=list(Estimates=Comp_ests, P_Values=Comp_pvals)
 
 ### Save comparisons:
-save(Comparisons, file="int/Xpert-Comp-Ests.Rda")
+save(Comparisons, file="int/xpert-Comp-Ests.Rda")
 
 
 ## Check against existing packages for staggered adoption methods:
