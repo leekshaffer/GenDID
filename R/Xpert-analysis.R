@@ -11,7 +11,7 @@ source("R/Full_Analysis.R")
 source("R/CompEsts.R")
 
 ## Read in (simulated) data from data folder:
-load("data/Xpert-data-sim.Rda")
+load("data/Xpert-Public-Data.Rda")
 
 ## Get unique periods, start times, J:
 Periods <- unique(xpert.dat$Period)
@@ -129,6 +129,10 @@ SO5 <- Solve_Assumption(StartTimes,
 ## Run variance minimizer for different settings:
 Assns <- 2:5
 SigmaNames <- c("Ind","CS_0_003","CS_0_333","AR1_0_012")
+CIs_Check <- list(Zero=tibble(Probability=0, `Log Odds`=0),
+                  NP=tibble(Probability=-0.048, `Log Odds`=log(0.78)),
+                  PWP=tibble(Probability=-0.042, `Log Odds`=log(0.85)),
+                  NPneg=tibble(Probability=0.048, `Log Odds`=log(1/0.78)))
 
 for (SigName in SigmaNames) {
   if (SigName=="Ind") {
@@ -150,7 +154,8 @@ for (SigName in SigmaNames) {
                                Sigma=Sig,
                                SigmaName=SigName,
                                Observations=Obs_Y,
-                               Permutations=1000))
+                               Permutations=1000,
+                               CI_list=CIs_Check))
   }
 }
 
@@ -215,6 +220,16 @@ for (i in Assns) {
   for (j in SigmaNames) {
     print(j)
     print((get(paste0("MVOut_",i,"_",j)))[["P_Values"]])
+  }
+  print(paste0("95% CI Includes NPWP estimate? Assumption: ",i))
+  for (j in SigmaNames) {
+    print(j)
+    print(get(paste0("MVOut_",i,"_",j))[["NP"]] >= 0.05)
+  }
+  print(paste0("95% CI Includes negative of NPWP estimate? Assumption: ",i))
+  for (j in SigmaNames) {
+    print(j)
+    print(get(paste0("MVOut_",i,"_",j))[["NPneg"]] >= 0.05)
   }
 }
 
@@ -326,7 +341,9 @@ set.seed(7446)
 SinglePerm <- function() {
   Perm_out <- Permute_obs(Observations=Obs_Y,
                           N=SO5$ADFT$N, J=SO5$ADFT$J,
-                          Obs.weights=Comp_wts$Obs.weights)
+                          Obs.weights=Comp_wts$Obs.weights,
+                          CI.Tx.List=NULL,
+                          Drop_Obs=FALSE)
   return(rbind(Perm_out$Ests,
                GetCLWPs(data=xpert.dat %>%
                           dplyr::select(Interv,Period,Cluster) %>%
@@ -342,7 +359,7 @@ Comp_pvals <- apply(Comp_perms2, c(1,2), mean)
 Comparisons=list(Estimates=Comp_ests, P_Values=Comp_pvals)
 
 ### Save comparisons:
-save(Comparisons, file="int/xpert-Comp-Ests.Rda")
+save(Comparisons, file="int/Xpert-Public-Comp-Ests.Rda")
 
 
 ## Check against existing packages for staggered adoption methods:
@@ -561,6 +578,6 @@ TblWA5 <- tibble(Method=rownames(Comparisons$Estimates),
 
 save(list=c("Tbl2","Vars","Rel_Effs","Tbl3",
             "TblWA3","TblWA4","TblWA5"),
-     file="res/xpert_results.Rda")
+     file="res/Xpert_Public_Results.Rda")
 
 

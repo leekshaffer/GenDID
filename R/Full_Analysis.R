@@ -84,7 +84,7 @@ MV_Assumption <- function(SolveOut,
         Outlist <- NULL
         for (i in 1:length(CI_Ests)) {
           PermsRow <- Perms[i,]
-          PermsRowRes <- simplify2array(lapply(PermR1, function(x) abs(x) >= abs(CI_Ests[[i]])))
+          PermsRowRes <- simplify2array(lapply(PermsRow, function(x) abs(x) >= abs(CI_Ests[[i]])))
           Outlist[[i]] <- apply(PermsRowRes, c(1,2), mean)
         }
         names(Outlist) <- names(CI_Ests)
