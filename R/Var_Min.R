@@ -57,7 +57,7 @@ min_var_single <- function(base.w,Add.Obs.w,ASigAT,method="CG", maxit=10000) {
 # min_var function
 
 ### Inputs:
-#### solve_obj:
+#### solve_obj: The Solve element from the Solve_Assumption output
 #### base.w: a single base observations weight that is a solution to the constraint
 #### Add.Obs.w: the additional observation weight bases that do not affect the expectation
 #### ASigAT: the matrix resulting from the quadratic form of A and Sigma

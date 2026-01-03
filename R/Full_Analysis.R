@@ -26,6 +26,8 @@ source("R/Permutation_Fns.R")
 ####  Ordered by unit and then period.
 #### Permutations: An integer specifying the number of permutations to compute p-values
 ####  for the observed estimates (optional).
+#### CI_list: a (preferably named) list of vector or matrix of column vectors of
+####  treatment effects to test for inclusion in CI (optional). Requires Permutations as well.
 ### Output: A list of the following:
 #### A_mat: The A matrix used in the computation.
 #### Estimates: A matrix of estimated treatment effects (if Observations is provided)
@@ -38,7 +40,8 @@ MV_Assumption <- function(SolveOut,
                           Sigma,
                           SigmaName=NULL,
                           Observations=NULL,
-                          Permutations=NULL #,
+                          Permutations=NULL,
+                          CI_list=NULL #,
                           # save_loc="",
                           # save_prefix="mv-a_"
                           ) {
@@ -46,16 +49,12 @@ MV_Assumption <- function(SolveOut,
                     A_mat=SolveOut$ADFT$A_mat,
                     Sigma=Sigma)
   if (is.null(Observations)) {
-    D_Full <- cbind(SolveOut$DFT$D_aug,
+    D_Full <- cbind(SolveOut$ADFT$D_aug,
                     MV_int$DID.weights)
     assign(x=paste0("MV_",Assumption,"_",SigmaName),
            value=list(Amat=SolveOut$ADFT$A_mat,
                       D_Full=D_Full,
                       MV=MV_int))
-    # TODO: Inform user that you are saving variable
-    # to a .Rda file using the specified save_loc and save_prefix.
-    save(list=paste0("MV_",Assumption,"_",SigmaName),
-         file=paste0(save_loc,save_prefix,Assumption,"_",SigmaName,".Rda"))
     return(get(paste0("MV_",Assumption,"_",SigmaName)))
   } else {
     Estimates <- t(MV_int$Obs.weights) %*% Observations
@@ -63,22 +62,46 @@ MV_Assumption <- function(SolveOut,
                     SolveOut$ADFT$A_mat %*% Observations,
                     MV_int$DID.weights)
     if(!is.null(Permutations)) {
-      Perms <- replicate(n=Permutations,
-                         expr=Permute_obs(Observations=Observations,
-                                          N=SolveOut$ADFT$N, J=SolveOut$ADFT$J,
-                                          Obs.weights=MV_int$Obs.weights)$Ests)
-      PermRes <- simplify2array(apply(Perms, 3,
-                                      FUN=function(x) abs(x) >= abs(Estimates), simplify=FALSE))
-      PVals <- apply(PermRes, c(1,2), mean)
+      if (is.null(CI_list)) {
+        Perms <- replicate(n=Permutations,
+                           expr=Permute_obs(Observations=Observations,
+                                            N=SolveOut$ADFT$N, J=SolveOut$ADFT$J,
+                                            Obs.weights=MV_int$Obs.weights)$Ests)
+        PermRes <- simplify2array(apply(Perms, 3,
+                                        FUN=function(x) abs(x) >= abs(Estimates), simplify=FALSE))
+        PVals <- apply(PermRes, c(1,2), mean)
+        CI_Checks <- NULL
+      } else {
+        CI_Tx_All <- CI_get_Tx_All(SolveOut$ADFT, CI_list)
+        CI_Ests <- c(list(Estimates=Estimates),
+                     lapply(CI_Tx_All, function(x) Estimates - t(MV_int$Obs.weights) %*% as.matrix(x)))
+        Perms <- replicate(n=Permutations,
+                           expr=Permute_obs(Observations=Observations,
+                                            N=SolveOut$ADFT$N, J=SolveOut$ADFT$J,
+                                            Obs.weights=MV_int$Obs.weights,
+                                            CI.Tx.List=CI_Tx_All,
+                                            Drop_Obs=TRUE))
+        Outlist <- NULL
+        for (i in 1:length(CI_Ests)) {
+          PermsRow <- Perms[i,]
+          PermsRowRes <- simplify2array(lapply(PermR1, function(x) abs(x) >= abs(CI_Ests[[i]])))
+          Outlist[[i]] <- apply(PermsRowRes, c(1,2), mean)
+        }
+        names(Outlist) <- names(CI_Ests)
+        PVals <- Outlist[["Estimates"]]
+        CI_Checks <- Outlist[names(CI_Tx_All)]
+      }
     } else {
       PVals <- NULL
+      CI_Checks <- NULL
     }
     assign(x=paste0("MVOut_",Assumption,"_",SigmaName),
-           value=list(A_mat=SolveOut$ADFT$A_mat,
+           value=c(list(A_mat=SolveOut$ADFT$A_mat,
                       Estimates=Estimates,
                       D_Full=D_Full,
                       MV=MV_int,
-                      P_Values=PVals))
+                      P_Values=PVals),
+                   CI_Checks))
     # TODO: Inform user that you are saving variable
     # to a .Rda file using the specified save_loc and save_prefix.
     # save(list=paste0("MVOut_",Assumption,"_",SigmaName),
