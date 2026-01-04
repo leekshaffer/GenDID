@@ -3,10 +3,10 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-require(dplyr)
-require(tibble)
-require(tidyr)
-require(stringr)
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(stringr)
 
 source("R/Mat_Const.R")
 source("R/Sigmas.R")
@@ -29,7 +29,8 @@ source("R/Permutation_Fns.R")
 #### CI_list: a (preferably named) list of vector or matrix of column vectors of
 ####  treatment effects to test for inclusion in CI (optional). Requires Permutations as well.
 ### Output: A list of the following:
-#### A_mat: The A matrix used in the computation.
+#### A_mat: The A matrix used in the computation (if Observations is provided)
+#### ADFT: The ADFT object from gen_ADFT (if Observations is not provided)
 #### Estimates: A matrix of estimated treatment effects (if Observations is provided)
 #### D_Full: A matrix combining augmented D values, optionally with observations and weights.
 #### MV: The output of the min_var function.
@@ -52,7 +53,7 @@ MV_Assumption <- function(SolveOut,
     D_Full <- cbind(SolveOut$ADFT$D_aug,
                     MV_int$DID.weights)
     assign(x=paste0("MV_",Assumption,"_",SigmaName),
-           value=list(Amat=SolveOut$ADFT$A_mat,
+           value=list(ADFT=SolveOut$ADFT,
                       D_Full=D_Full,
                       MV=MV_int))
     return(get(paste0("MV_",Assumption,"_",SigmaName)))

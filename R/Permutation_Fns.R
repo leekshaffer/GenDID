@@ -40,7 +40,7 @@ Permute_order <- function(N, J) {
 #### J: total number of observed periods
 #### Obs.weights: the Obs.weights element of the output of min_var function (or NULL)
 #### CI.Tx.List: the output of CI_get_Tx_All: a list of ordered, framed treatment effects to test in CIs (or NULL)
-#### Drop_Obs: logical; if TRUE, the set of observations will not be included in the output
+#### Drop_Obs: logical; if TRUE, the permuted set of observations will not be included in the output
 ####  (useful for saving memory when the function will be repeated)
 ### Output: if Obs.weights is NULL, observations using the randomly permuted unit order
 ###  Otherwise a list of the following:
@@ -132,8 +132,8 @@ CI_get_Tx <- function(Obs_Frame,
 CI_get_Tx_All <- function(ADFT_obj, CI_list) {
   Th_All <- ADFT_obj$Theta$All %>% dplyr::select(Theta)
   Th_len <- nrow(Th_All)
-  Obs_Frame <- tibble(Cl.Num=rep(1:N, each=J),
-                      Pd.Num=rep(1:J, times=N)) %>%
+  Obs_Frame <- tibble(Cl.Num=rep(1:ADFT_obj$N, each=ADFT_obj$J),
+                      Pd.Num=rep(1:ADFT_obj$J, times=ADFT_obj$N)) %>%
     left_join(ADFT_obj$Theta$Full %>% dplyr::select(Cl.Num,Pd.Num,Theta),
               by=join_by(Cl.Num,Pd.Num))
   return(lapply(X=CI_list,
