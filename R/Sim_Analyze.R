@@ -165,4 +165,4 @@ Full_Sim_CI_Res <-
 stopCluster(cl = par_clust)
 
 save(Full_Sim_CI_Res,
-     file=paste0("res","/Full_Sim_CI_Res"))
+     file=paste0("res","/Full_Sim_CI_Res.Rda"))
