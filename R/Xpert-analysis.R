@@ -340,7 +340,6 @@ Comp_ests <- rbind(Comp_ests,
                    GetCLWPs(data=xpert.dat, start_vals=start_vals))
 
 ### Get comparison perm. p-values:
-set.seed(7446)
 SinglePerm <- function() {
   Perm_out <- Permute_obs(Observations=Obs_Y,
                           N=SO5$ADFT$N, J=SO5$ADFT$J,
@@ -405,12 +404,16 @@ SA <- feols(Outcome~sunab(cohort=StartPd,
 summary(SA)
 
 ### de Chaisemartin and d'Haultfoeuille (2020):
-CH <- did_multiplegt(mode="old",
-                     df=xpert.dat,
-                     Y="Outcome",
-                     G="Cluster",
-                     T="Period",
-                     D="Interv")
+CH <- did_multiplegt(
+  mode="dyn",
+  df=xpert.dat,
+  outcome="Outcome",
+  group="Cluster",
+  time="Period",
+  treatment="Interv",
+  graph_off=TRUE
+)$results$Effects
+
 CH
 
 ## MS Results:
@@ -425,6 +428,30 @@ Tbl2 <- tibble(Assumption=5:2,
                       MVOut_4_CS_0_003$P_Values["AvgEx8","Log Odds"],
                       MVOut_3_CS_0_003$P_Values["Avg","Log Odds"],
                       MVOut_2_CS_0_003$P_Values["AvgExT8","Log Odds"]),
+               OR_CIL=exp(c(MVOut_5_CS_0_003$CI_Results %>%
+                              dplyr::filter(Estimator==1, Outcome=="Log Odds") %>%
+                              pull(CIL),
+                            MVOut_4_CS_0_003$CI_Results %>%
+                              dplyr::filter(Estimator=="AvgEx8", Outcome=="Log Odds") %>%
+                              pull(CIL),
+                            MVOut_3_CS_0_003$CI_Results %>%
+                              dplyr::filter(Estimator=="Avg", Outcome=="Log Odds") %>%
+                              pull(CIL),
+                            MVOut_2_CS_0_003$CI_Results %>%
+                              dplyr::filter(Estimator=="AvgExT8", Outcome=="Log Odds") %>%
+                              pull(CIL))),
+               OR_CIU=exp(c(MVOut_5_CS_0_003$CI_Results %>%
+                              dplyr::filter(Estimator==1, Outcome=="Log Odds") %>%
+                              pull(CIU),
+                            MVOut_4_CS_0_003$CI_Results %>%
+                              dplyr::filter(Estimator=="AvgEx8", Outcome=="Log Odds") %>%
+                              pull(CIU),
+                            MVOut_3_CS_0_003$CI_Results %>%
+                              dplyr::filter(Estimator=="Avg", Outcome=="Log Odds") %>%
+                              pull(CIU),
+                            MVOut_2_CS_0_003$CI_Results %>%
+                              dplyr::filter(Estimator=="AvgExT8", Outcome=="Log Odds") %>%
+                              pull(CIU))),
                RD_Est=100*c(MVOut_5_CS_0_003$Estimates[1,"Probability"],
                             MVOut_4_CS_0_003$Estimates["AvgEx8","Probability"],
                             MVOut_3_CS_0_003$Estimates["Avg","Probability"],
@@ -432,7 +459,31 @@ Tbl2 <- tibble(Assumption=5:2,
                RD_P=c(MVOut_5_CS_0_003$P_Values[1,"Probability"],
                       MVOut_4_CS_0_003$P_Values["AvgEx8","Probability"],
                       MVOut_3_CS_0_003$P_Values["Avg","Probability"],
-                      MVOut_2_CS_0_003$P_Values["AvgExT8","Probability"])
+                      MVOut_2_CS_0_003$P_Values["AvgExT8","Probability"]),
+              RD_CIL=100*c(MVOut_5_CS_0_003$CI_Results %>%
+                             dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                             pull(CIL),
+                           MVOut_4_CS_0_003$CI_Results %>%
+                             dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                             pull(CIL),
+                           MVOut_3_CS_0_003$CI_Results %>%
+                             dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                             pull(CIL),
+                           MVOut_2_CS_0_003$CI_Results %>%
+                             dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                             pull(CIL)),
+              RD_CIU=100*c(MVOut_5_CS_0_003$CI_Results %>%
+                             dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                             pull(CIU),
+                           MVOut_4_CS_0_003$CI_Results %>%
+                             dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                             pull(CIU),
+                           MVOut_3_CS_0_003$CI_Results %>%
+                             dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                             pull(CIU),
+                           MVOut_2_CS_0_003$CI_Results %>%
+                             dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                             pull(CIU))
 )
 
 Vars <- c(MVOut_5_CS_0_003$MV$Variance,
@@ -441,55 +492,41 @@ Vars <- c(MVOut_5_CS_0_003$MV$Variance,
           MVOut_2_CS_0_003$MV$Variance[1,"AvgExT8"])
 Rel_Effs <- c(Vars[2]/Vars[1], Vars[3]/Vars[1], Vars[4]/Vars[1])
 
+Ts <- paste0("T.",2:7)
+
 Tbl3 <- tibble(Month=2:7,
-               OR_S4_Est=exp(c(MVOut_4_CS_0_003$Estimates["T.2","Log Odds"],
-                               MVOut_4_CS_0_003$Estimates["T.3","Log Odds"],
-                               MVOut_4_CS_0_003$Estimates["T.4","Log Odds"],
-                               MVOut_4_CS_0_003$Estimates["T.5","Log Odds"],
-                               MVOut_4_CS_0_003$Estimates["T.6","Log Odds"],
-                               MVOut_4_CS_0_003$Estimates["T.7","Log Odds"])),
-               OR_S4_P=c(MVOut_4_CS_0_003$P_Values["T.2","Log Odds"],
-                         MVOut_4_CS_0_003$P_Values["T.3","Log Odds"],
-                         MVOut_4_CS_0_003$P_Values["T.4","Log Odds"],
-                         MVOut_4_CS_0_003$P_Values["T.5","Log Odds"],
-                         MVOut_4_CS_0_003$P_Values["T.6","Log Odds"],
-                         MVOut_4_CS_0_003$P_Values["T.7","Log Odds"]),
-               OR_S2_Est=exp(c(MVOut_2_CS_0_003$Estimates["T.2","Log Odds"],
-                               MVOut_2_CS_0_003$Estimates["T.3","Log Odds"],
-                               MVOut_2_CS_0_003$Estimates["T.4","Log Odds"],
-                               MVOut_2_CS_0_003$Estimates["T.5","Log Odds"],
-                               MVOut_2_CS_0_003$Estimates["T.6","Log Odds"],
-                               MVOut_2_CS_0_003$Estimates["T.7","Log Odds"])),
-               OR_S2_P=c(MVOut_2_CS_0_003$P_Values["T.2","Log Odds"],
-                         MVOut_2_CS_0_003$P_Values["T.3","Log Odds"],
-                         MVOut_2_CS_0_003$P_Values["T.4","Log Odds"],
-                         MVOut_2_CS_0_003$P_Values["T.5","Log Odds"],
-                         MVOut_2_CS_0_003$P_Values["T.6","Log Odds"],
-                         MVOut_2_CS_0_003$P_Values["T.7","Log Odds"]),
-               RD_S4_Est=100*c(MVOut_4_CS_0_003$Estimates["T.2","Probability"],
-                               MVOut_4_CS_0_003$Estimates["T.3","Probability"],
-                               MVOut_4_CS_0_003$Estimates["T.4","Probability"],
-                               MVOut_4_CS_0_003$Estimates["T.5","Probability"],
-                               MVOut_4_CS_0_003$Estimates["T.6","Probability"],
-                               MVOut_4_CS_0_003$Estimates["T.7","Probability"]),
-               RD_S4_P=c(MVOut_4_CS_0_003$P_Values["T.2","Probability"],
-                         MVOut_4_CS_0_003$P_Values["T.3","Probability"],
-                         MVOut_4_CS_0_003$P_Values["T.4","Probability"],
-                         MVOut_4_CS_0_003$P_Values["T.5","Probability"],
-                         MVOut_4_CS_0_003$P_Values["T.6","Probability"],
-                         MVOut_4_CS_0_003$P_Values["T.7","Probability"]),
-               RD_S2_Est=100*c(MVOut_2_CS_0_003$Estimates["T.2","Probability"],
-                               MVOut_2_CS_0_003$Estimates["T.3","Probability"],
-                               MVOut_2_CS_0_003$Estimates["T.4","Probability"],
-                               MVOut_2_CS_0_003$Estimates["T.5","Probability"],
-                               MVOut_2_CS_0_003$Estimates["T.6","Probability"],
-                               MVOut_2_CS_0_003$Estimates["T.7","Probability"]),
-               RD_S2_P=c(MVOut_2_CS_0_003$P_Values["T.2","Probability"],
-                         MVOut_2_CS_0_003$P_Values["T.3","Probability"],
-                         MVOut_2_CS_0_003$P_Values["T.4","Probability"],
-                         MVOut_2_CS_0_003$P_Values["T.5","Probability"],
-                         MVOut_2_CS_0_003$P_Values["T.6","Probability"],
-                         MVOut_2_CS_0_003$P_Values["T.7","Probability"])
+               OR_S4_Est=exp(unname(MVOut_4_CS_0_003$Estimates[Ts,"Log Odds"])),
+               OR_S4_P=unname(MVOut_4_CS_0_003$P_Values[Ts,"Log Odds"]),
+               OR_S4_CIL=exp(MVOut_4_CS_0_003$CI_Results %>%
+                               dplyr::filter(Estimator %in% Ts,Outcome=="Log Odds") %>%
+                               pull(CIL)),
+               OR_S4_CIU=exp(MVOut_4_CS_0_003$CI_Results %>%
+                               dplyr::filter(Estimator %in% Ts,Outcome=="Log Odds") %>%
+                               pull(CIU)),
+               OR_S2_Est=exp(unname(MVOut_2_CS_0_003$Estimates[Ts,"Log Odds"])),
+               OR_S2_P=unname(MVOut_2_CS_0_003$P_Values[Ts,"Log Odds"]),
+               OR_S2_CIL=exp(MVOut_2_CS_0_003$CI_Results %>%
+                               dplyr::filter(Estimator %in% Ts,Outcome=="Log Odds") %>%
+                               pull(CIL)),
+               OR_S2_CIU=exp(MVOut_2_CS_0_003$CI_Results %>%
+                               dplyr::filter(Estimator %in% Ts,Outcome=="Log Odds") %>%
+                               pull(CIU)),
+               RD_S4_Est=100*(unname(MVOut_4_CS_0_003$Estimates[Ts,"Probability"])),
+               RD_S4_P=unname(MVOut_4_CS_0_003$P_Values[Ts,"Probability"]),
+               RD_S4_CIL=100*(MVOut_4_CS_0_003$CI_Results %>%
+                               dplyr::filter(Estimator %in% Ts,Outcome=="Probability") %>%
+                               pull(CIL)),
+               RD_S4_CIU=100*(MVOut_4_CS_0_003$CI_Results %>%
+                               dplyr::filter(Estimator %in% Ts,Outcome=="Probability") %>%
+                               pull(CIU)),
+               RD_S2_Est=100*(unname(MVOut_2_CS_0_003$Estimates[Ts,"Probability"])),
+               RD_S2_P=unname(MVOut_2_CS_0_003$P_Values[Ts,"Probability"]),
+               RD_S2_CIL=100*(MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator %in% Ts,Outcome=="Probability") %>%
+                                pull(CIL)),
+               RD_S2_CIU=100*(MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator %in% Ts,Outcome=="Probability") %>%
+                                pull(CIU))
 )
 
 TblWA3 <- tibble(Assumption=5:2,
@@ -502,6 +539,30 @@ TblWA3 <- tibble(Assumption=5:2,
                          MVOut_4_Ind$P_Values["AvgEx8","Log Odds"],
                          MVOut_3_Ind$P_Values["Avg","Log Odds"],
                          MVOut_2_Ind$P_Values["AvgExT8","Log Odds"]),
+                 Ind_CIL=exp(c(MVOut_5_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator==1, Outcome=="Log Odds") %>%
+                                 pull(CIL),
+                               MVOut_4_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgEx8", Outcome=="Log Odds") %>%
+                                 pull(CIL),
+                               MVOut_3_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="Avg", Outcome=="Log Odds") %>%
+                                 pull(CIL),
+                               MVOut_2_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgExT8", Outcome=="Log Odds") %>%
+                                 pull(CIL))),
+                 Ind_CIU=exp(c(MVOut_5_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator==1, Outcome=="Log Odds") %>%
+                                 pull(CIU),
+                               MVOut_4_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgEx8", Outcome=="Log Odds") %>%
+                                 pull(CIU),
+                               MVOut_3_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="Avg", Outcome=="Log Odds") %>%
+                                 pull(CIU),
+                               MVOut_2_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgExT8", Outcome=="Log Odds") %>%
+                                 pull(CIU))),
                  CS_Est=exp(c(MVOut_5_CS_0_003$Estimates[1,"Log Odds"],
                               MVOut_4_CS_0_003$Estimates["AvgEx8","Log Odds"],
                               MVOut_3_CS_0_003$Estimates["Avg","Log Odds"],
@@ -510,6 +571,30 @@ TblWA3 <- tibble(Assumption=5:2,
                         MVOut_4_CS_0_003$P_Values["AvgEx8","Log Odds"],
                         MVOut_3_CS_0_003$P_Values["Avg","Log Odds"],
                         MVOut_2_CS_0_003$P_Values["AvgExT8","Log Odds"]),
+                 CS_CIL=exp(c(MVOut_5_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator==1, Outcome=="Log Odds") %>%
+                                 pull(CIL),
+                               MVOut_4_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgEx8", Outcome=="Log Odds") %>%
+                                 pull(CIL),
+                               MVOut_3_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="Avg", Outcome=="Log Odds") %>%
+                                 pull(CIL),
+                               MVOut_2_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgExT8", Outcome=="Log Odds") %>%
+                                 pull(CIL))),
+                 CS_CIU=exp(c(MVOut_5_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator==1, Outcome=="Log Odds") %>%
+                                pull(CIU),
+                              MVOut_4_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgEx8", Outcome=="Log Odds") %>%
+                                pull(CIU),
+                              MVOut_3_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="Avg", Outcome=="Log Odds") %>%
+                                pull(CIU),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgExT8", Outcome=="Log Odds") %>%
+                                pull(CIU))),
                  AR1_Est=exp(c(MVOut_5_AR1_0_012$Estimates[1,"Log Odds"],
                                MVOut_4_AR1_0_012$Estimates["AvgEx8","Log Odds"],
                                MVOut_3_AR1_0_012$Estimates["Avg","Log Odds"],
@@ -517,7 +602,31 @@ TblWA3 <- tibble(Assumption=5:2,
                  AR1_P=c(MVOut_5_AR1_0_012$P_Values[1,"Log Odds"],
                          MVOut_4_AR1_0_012$P_Values["AvgEx8","Log Odds"],
                          MVOut_3_AR1_0_012$P_Values["Avg","Log Odds"],
-                         MVOut_2_AR1_0_012$P_Values["AvgExT8","Log Odds"])
+                         MVOut_2_AR1_0_012$P_Values["AvgExT8","Log Odds"]),
+                 AR1_CIL=exp(c(MVOut_5_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator==1, Outcome=="Log Odds") %>%
+                                pull(CIL),
+                               MVOut_4_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgEx8", Outcome=="Log Odds") %>%
+                                pull(CIL),
+                               MVOut_3_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="Avg", Outcome=="Log Odds") %>%
+                                pull(CIL),
+                               MVOut_2_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgExT8", Outcome=="Log Odds") %>%
+                                pull(CIL))),
+                 AR1_CIU=exp(c(MVOut_5_AR1_0_012$CI_Results %>%
+                                 dplyr::filter(Estimator==1, Outcome=="Log Odds") %>%
+                                 pull(CIU),
+                               MVOut_4_AR1_0_012$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgEx8", Outcome=="Log Odds") %>%
+                                 pull(CIU),
+                               MVOut_3_AR1_0_012$CI_Results %>%
+                                 dplyr::filter(Estimator=="Avg", Outcome=="Log Odds") %>%
+                                 pull(CIU),
+                               MVOut_2_AR1_0_012$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgExT8", Outcome=="Log Odds") %>%
+                                 pull(CIU)))
 )
 
 TblWA4 <- tibble(Assumption=5:2,
@@ -530,6 +639,30 @@ TblWA4 <- tibble(Assumption=5:2,
                          MVOut_4_Ind$P_Values["AvgEx8","Probability"],
                          MVOut_3_Ind$P_Values["Avg","Probability"],
                          MVOut_2_Ind$P_Values["AvgExT8","Probability"]),
+                 Ind_CIL=100*c(MVOut_5_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                 pull(CIL),
+                               MVOut_4_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                                 pull(CIL),
+                               MVOut_3_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                                 pull(CIL),
+                               MVOut_2_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                 pull(CIL)),
+                 Ind_CIU=100*c(MVOut_5_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                 pull(CIU),
+                               MVOut_4_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                                 pull(CIU),
+                               MVOut_3_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                                 pull(CIU),
+                               MVOut_2_Ind$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                 pull(CIU)),
                  CS_Est=100*c(MVOut_5_CS_0_003$Estimates[1,"Probability"],
                               MVOut_4_CS_0_003$Estimates["AvgEx8","Probability"],
                               MVOut_3_CS_0_003$Estimates["Avg","Probability"],
@@ -538,6 +671,30 @@ TblWA4 <- tibble(Assumption=5:2,
                         MVOut_4_CS_0_003$P_Values["AvgEx8","Probability"],
                         MVOut_3_CS_0_003$P_Values["Avg","Probability"],
                         MVOut_2_CS_0_003$P_Values["AvgExT8","Probability"]),
+                 CS_CIL=100*c(MVOut_5_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                 pull(CIL),
+                               MVOut_4_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                                 pull(CIL),
+                               MVOut_3_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                                 pull(CIL),
+                               MVOut_2_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                 pull(CIL)),
+                 CS_CIU=100*c(MVOut_5_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                 pull(CIU),
+                               MVOut_4_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                                 pull(CIU),
+                               MVOut_3_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                                 pull(CIU),
+                               MVOut_2_CS_0_003$CI_Results %>%
+                                 dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                 pull(CIU)),
                  AR1_Est=100*c(MVOut_5_AR1_0_012$Estimates[1,"Probability"],
                                MVOut_4_AR1_0_012$Estimates["AvgEx8","Probability"],
                                MVOut_3_AR1_0_012$Estimates["Avg","Probability"],
@@ -545,12 +702,62 @@ TblWA4 <- tibble(Assumption=5:2,
                  AR1_P=c(MVOut_5_AR1_0_012$P_Values[1,"Probability"],
                          MVOut_4_AR1_0_012$P_Values["AvgEx8","Probability"],
                          MVOut_3_AR1_0_012$P_Values["Avg","Probability"],
-                         MVOut_2_AR1_0_012$P_Values["AvgExT8","Probability"])
+                         MVOut_2_AR1_0_012$P_Values["AvgExT8","Probability"]),
+                 AR1_CIL=100*c(MVOut_5_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                pull(CIL),
+                               MVOut_4_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_3_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_2_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                pull(CIL)),
+                 AR1_CIU=100*c(MVOut_5_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                pull(CIU),
+                               MVOut_4_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_3_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_2_AR1_0_012$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                pull(CIU)),
 )
 
 TblWA5 <- tibble(Method=rownames(Comparisons$Estimates),
                  Estimate=100*Comparisons$Estimates[,"Probability"],
                  P_Value=Comparisons$P_Values[,"Probability"],
+                 CIL=100*c(NA,
+                       aggte(CS_gt, type="simple")$overall.att+
+                         qnorm(0.025)*aggte(CS_gt, type="simple")$overall.se,
+                       aggte(CS_gt, type="dynamic")$overall.att+
+                         qnorm(0.025)*aggte(CS_gt, type="dynamic")$overall.se,
+                       aggte(CS_gt, type="group")$overall.att+
+                         qnorm(0.025)*aggte(CS_gt, type="group")$overall.se,
+                       aggte(CS_gt, type="calendar")$overall.att+
+                         qnorm(0.025)*aggte(CS_gt, type="calendar")$overall.se,
+                       SA$coeftable["ATT","Estimate"]+
+                         qnorm(0.025)*SA$coeftable["ATT","Std. Error"],
+                       CH[1,"LB CI"],
+                       rep(NA,8)),
+                 CIU=100*c(NA,
+                           aggte(CS_gt, type="simple")$overall.att+
+                             qnorm(0.975)*aggte(CS_gt, type="simple")$overall.se,
+                           aggte(CS_gt, type="dynamic")$overall.att+
+                             qnorm(0.975)*aggte(CS_gt, type="dynamic")$overall.se,
+                           aggte(CS_gt, type="group")$overall.att+
+                             qnorm(0.975)*aggte(CS_gt, type="group")$overall.se,
+                           aggte(CS_gt, type="calendar")$overall.att+
+                             qnorm(0.975)*aggte(CS_gt, type="calendar")$overall.se,
+                           SA$coeftable["ATT","Estimate"]+
+                             qnorm(0.975)*SA$coeftable["ATT","Std. Error"],
+                           CH[1,"UB CI"],
+                           rep(NA,8)),
                  Estimator_GD=c("S5","S2_AvgExT8","S3_Avg",
                                 "S2_Group","S4_AvgEx8",
                                 "S2_AvgExT8","S2_D.1","S2_D.1",
@@ -576,11 +783,73 @@ TblWA5 <- tibble(Method=rownames(Comparisons$Estimates),
                               MVOut_2_CS_0_003$P_Values["D.1","Probability"],
                               MVOut_3_CS_0_003$P_Values["D.1","Probability"],
                               MVOut_5_CS_0_003$P_Values[1,"Probability"],
+                              rep(NA_real_,5)),
+                 CIL_GD=100*c(MVOut_5_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_3_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="Group", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_4_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="D.1", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="D.1", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_3_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="D.1", Outcome=="Probability") %>%
+                                pull(CIL),
+                              MVOut_5_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                pull(CIL),
+                              rep(NA_real_,5)),
+                 CIU_GD=100*c(MVOut_5_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_3_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="Avg", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="Group", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_4_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgEx8", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="AvgExT8", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="D.1", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_2_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="D.1", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_3_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator=="D.1", Outcome=="Probability") %>%
+                                pull(CIU),
+                              MVOut_5_CS_0_003$CI_Results %>%
+                                dplyr::filter(Estimator==1, Outcome=="Probability") %>%
+                                pull(CIU),
                               rep(NA_real_,5))
 )
 
 save(list=c("Tbl2","Vars","Rel_Effs","Tbl3",
             "TblWA3","TblWA4","TblWA5"),
-     file="res/Xpert_Public_Results.Rda")
+     file="res/Xpert-Public-Results.Rda")
 
 
