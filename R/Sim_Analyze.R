@@ -99,8 +99,7 @@ Analyze_One <- function(Scen,
 Analyze_Scen <- function(Scen,
                          MVO_list) {
   Params <- Param_Set %>% dplyr::filter(Scenario==Scen)
-  # List <- sapply(1:(Params %>% pull(NumSims)),
-  List <- sapply(1:10,
+  List <- sapply(1:(Params %>% pull(NumSims)),
                  FUN=function(x) simplify2array(Analyze_One(Scen, Params,
                                              x, MVO_list)),
                  simplify="array")
@@ -137,13 +136,33 @@ Analyze_Scen <- function(Scen,
 
 ## Running Analysis:
 
-Full_Sim_CI_Res <- do.call("rbind",
-                           lapply(1:9,
-                                  FUN=function(x) Analyze_Scen(Scen=x,
-                                                               MVO_list=MVO_list_full)))
+### Non-Parallelized Version:
+
+# Full_Sim_CI_Res <- do.call("rbind",
+#                            lapply(1:9,
+#                                   FUN=function(x) Analyze_Scen(Scen=x,
+#                                                                MVO_list=MVO_list_full)))
+
+### Parallelized Version:
+
+library(foreach)
+library(doParallel)
+
+par_clust <- makeCluster(5)
+registerDoParallel(par_clust)
+Full_Sim_CI_Res <-
+  foreach (x=Param_Set$Scenario,
+           .combine=rbind,
+           .inorder=TRUE) %dopar% {
+    source("R/Full_Analysis.R")
+    load("int/sim-setup.Rda")
+    load("int/sim-mvo-list.Rda")
+    load("int/sim-CI-objects.Rda")
+    load(paste0("int/sim-data-",x,".Rda"))
+    Analyze_Scen(Scen=x,
+                 MVO_list=MVO_list_full)
+  }
+stopCluster(cl = par_clust)
 
 save(Full_Sim_CI_Res,
      file=paste0("res","/Full_Sim_CI_Res"))
-
-
-

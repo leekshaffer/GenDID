@@ -121,6 +121,7 @@ SigmaNames <- c("CS_0_003","CS_0_333","Ind")
 
 save(list=c("Param_Set",
             "Theta_Set",
+            "mu_use",
             "Alpha1",
             "T1",
             "T2",
@@ -253,11 +254,22 @@ save(MVO_list_full,
 
 ## CI Treatment Effects to Check
 
+Ctrl_prob_overall <- mu_use + mean(Alpha1) + sum(T1*2*(0:7))/sum(2*(0:7))
+
+Single_Vals <- tibble(ValNum=1:25,
+                      Name=paste0("SV_",ValNum),
+                      Probability=seq(-0.15, 0.09, by=0.01),
+                      `Log Odds`=log((Probability+Ctrl_prob_overall)/(1-Probability-Ctrl_prob_overall)) -
+                        log(Ctrl_prob_overall/(1-Ctrl_prob_overall)))
+SV_list <- split(Single_Vals %>% dplyr::select(Probability,`Log Odds`),
+                 seq(nrow(Single_Vals)))
+names(SV_list) <- Single_Vals$Name
+
 for (Scen in 1:(dim(Param_Set)[1])) {
   RDs <- Theta_Set[[Scen]]$ThetaDF$Theta
-  CIL <- list(Zero=tibble(Probability=0, `Log Odds`=0))
+  # CIL <- list(Zero=tibble(Probability=0, `Log Odds`=0))
   if (Theta_Set[[Scen]]$Type == 5) {
-    Ctrl_prob <- mu_use + mean(Alpha1) + sum(T1*2*(0:7))/sum(2*(0:7))
+    Ctrl_prob <- Ctrl_prob_overall
   } else if (Theta_Set[[Scen]]$Type == 4) {
     Ctrl_prob <- mu_use + mean(Alpha1) + T1[2:8]
   } else if (Theta_Set[[Scen]]$Type == 3) {
@@ -265,16 +277,18 @@ for (Scen in 1:(dim(Param_Set)[1])) {
       c(mean(T1[2:8]), mean(T1[3:8]), mean(T1[4:8]), mean(T1[5:8]),
         mean(T1[6:8]), mean(T1[7:8]), mean(T1[8:8]))
   }
-  CIL <- c(CIL,
-           list(True=tibble(Probability=RDs,
-                            `Log Odds`=log((Ctrl_prob+RDs)/Ctrl_prob))))
+  CIL <- list(True=tibble(Probability=RDs,
+                          `Log Odds`=log((Ctrl_prob+RDs)/(1-Ctrl_prob-RDs)) -
+                            log(Ctrl_prob/(1-Ctrl_prob))))
+  CIL <- c(CIL, SV_list)
+
   assign(x=paste0("CI.Tx.Obj_",Scen),
          value=CI_get_Tx_All(ADFT_obj=get(paste0("MVOut_",Theta_Set[[Scen]]$Type,"_Ind"))$ADFT,
                         CI_list=CIL))
 
 }
 
-save(list=paste0("CI.Tx.Obj_",(1:(dim(Param_Set)[1]))),
+save(list=c("Single_Vals",paste0("CI.Tx.Obj_",(1:(dim(Param_Set)[1])))),
      file="int/sim-CI-objects.Rda")
 
 
