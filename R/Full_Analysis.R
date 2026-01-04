@@ -28,6 +28,8 @@ source("R/Permutation_Fns.R")
 ####  for the observed estimates (optional).
 #### CI_list: a (preferably named) list of vector or matrix of column vectors of
 ####  treatment effects to test for inclusion in CI (optional). Requires Permutations as well.
+#### CI_SV: a vector (if single column in Observations) or matrix (if multiple columns in Observations)
+####  of single-value treatment effects from which to derive a CI. Requires Permutations as well.
 ### Output: A list of the following:
 #### A_mat: The A matrix used in the computation (if Observations is provided)
 #### ADFT: The ADFT object from gen_ADFT (if Observations is not provided)
@@ -42,7 +44,8 @@ MV_Assumption <- function(SolveOut,
                           SigmaName=NULL,
                           Observations=NULL,
                           Permutations=NULL,
-                          CI_list=NULL #,
+                          CI_list=NULL,
+                          CI_SV=NULL#,
                           # save_loc="",
                           # save_prefix="mv-a_"
                           ) {
@@ -63,7 +66,7 @@ MV_Assumption <- function(SolveOut,
                     SolveOut$ADFT$A_mat %*% Observations,
                     MV_int$DID.weights)
     if(!is.null(Permutations)) {
-      if (is.null(CI_list)) {
+      if (is.null(CI_list) & is.null(CI_SV)) {
         Perms <- replicate(n=Permutations,
                            expr=Permute_obs(Observations=Observations,
                                             N=SolveOut$ADFT$N, J=SolveOut$ADFT$J,
@@ -73,7 +76,14 @@ MV_Assumption <- function(SolveOut,
         PVals <- apply(PermRes, c(1,2), mean)
         CI_Checks <- NULL
       } else {
-        CI_Tx_All <- CI_get_Tx_All(SolveOut$ADFT, CI_list)
+        if (!is.null(CI_SV)) {
+          CI_SV_list <- setNames(split(CI_SV, seq(nrow(CI_SV))),
+                                 paste0("CI_SV_",1:nrow(CI_SV)))
+          CI_list_full <- c(CI_list, CI_SV_list)
+        } else {
+          CI_list_full <- CI_list
+        }
+        CI_Tx_All <- CI_get_Tx_All(SolveOut$ADFT, CI_list_full)
         CI_Ests <- c(list(Estimates=Estimates),
                      lapply(CI_Tx_All, function(x) Estimates - t(MV_int$Obs.weights) %*% as.matrix(x)))
         Perms <- replicate(n=Permutations,
@@ -90,18 +100,56 @@ MV_Assumption <- function(SolveOut,
         }
         names(Outlist) <- names(CI_Ests)
         PVals <- Outlist[["Estimates"]]
-        CI_Checks <- Outlist[names(CI_Tx_All)]
+        if (!is.null(CI_list)) {
+          CI_Checks <- Outlist[names(CI_list)]
+        } else {
+          CI_Checks <- NULL
+        }
+        if (!is.null(CI_SV)) {
+
+          CI_Results <- do.call("rbind",
+                           lapply(1:length(CI_SV_list),
+                          FUN=function(x) as_tibble((Outlist[names(CI_SV_list)])[[x]], rownames="Estimator") %>%
+                            dplyr::mutate(CI_Number=x))) %>%
+            pivot_longer(cols=-c("Estimator","CI_Number"),
+                         names_to="Outcome",
+                         values_to="PVal") %>%
+            left_join(CI_SV %>% dplyr::mutate(CI_Number=row_number()) %>%
+                        pivot_longer(cols=-c("CI_Number"),
+                                     names_to="Outcome",
+                                     values_to="Effect"),
+                      by=join_by(CI_Number,Outcome)) %>%
+            dplyr::filter(PVal >= 0.05) %>%
+            dplyr::group_by(Estimator,Outcome) %>%
+            dplyr::summarize(CIL=min(Effect), CIU=max(Effect),
+                             .groups="drop")
+
+          # CIL <- CI_Ps %>% dplyr::select(Estimator,Outcome,CIL) %>%
+          #   pivot_wider(id_cols=c(Estimator),
+          #               names_from=Outcome,
+          #               values_from=CIL)
+
+          # CI_Ps <- as_tibble(do.call("rbind", Outlist[names(CI_SV_list)]))
+          # CIL <- unlist(sapply(1:2,
+          #                      FUN=function(x) CI_SV[min(which(CI_Ps[,x] > 0.05))-1,x]))
+          # CIU <- unlist(sapply(1:2,
+          #                      FUN=function(x) CI_SV[max(which(CI_Ps[,x] > 0.05))-1,x]))
+        } else {
+          CI_Results <- NULL
+        }
       }
     } else {
       PVals <- NULL
       CI_Checks <- NULL
+      CI_Results <- NULL
     }
     assign(x=paste0("MVOut_",Assumption,"_",SigmaName),
            value=c(list(A_mat=SolveOut$ADFT$A_mat,
                       Estimates=Estimates,
                       D_Full=D_Full,
                       MV=MV_int,
-                      P_Values=PVals),
+                      P_Values=PVals,
+                      CI_Results=CI_Results),
                    CI_Checks))
     # TODO: Inform user that you are saving variable
     # to a .Rda file using the specified save_loc and save_prefix.

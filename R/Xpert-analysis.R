@@ -3,8 +3,8 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-require(tidyverse)
-require(lme4)
+library(tidyverse)
+library(lme4)
 set.seed(413354)
 
 source("R/Full_Analysis.R")
@@ -133,6 +133,8 @@ CIs_Check <- list(Zero=tibble(Probability=0, `Log Odds`=0),
                   NP=tibble(Probability=-0.048, `Log Odds`=log(0.78)),
                   PWP=tibble(Probability=-0.042, `Log Odds`=log(0.85)),
                   NPneg=tibble(Probability=0.048, `Log Odds`=log(1/0.78)))
+CI_SV_mesh <- tibble(Probability=seq(-0.25, 0.15, by=0.001),
+                     `Log Odds`=log((0.5+Probability)/(0.5-Probability)))
 
 for (SigName in SigmaNames) {
   if (SigName=="Ind") {
@@ -155,7 +157,8 @@ for (SigName in SigmaNames) {
                                SigmaName=SigName,
                                Observations=Obs_Y,
                                Permutations=1000,
-                               CI_list=CIs_Check))
+                               CI_list=CIs_Check,
+                               CI_SV=CI_SV_mesh))
   }
 }
 
