@@ -4,7 +4,7 @@
 #######################################
 
 ## Load packages
-require(bbmle)
+library(bbmle)
 
 # Comp_Ests function
 
