@@ -3,11 +3,80 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-source("R/Simulations.R") ## Functions used: Sim_Frame, Sim_Data
 source("R/Full_Analysis.R")
 
+### Helper Functions for Simulation:
 
-set.seed(73475)
+#### Create frame of design:
+Sim_Frame <- function(N, J, StartingPds=NULL) {
+  if (is.null(StartingPds)) {
+    if (J==N+1) {
+      warning(simpleWarning(message="Assuming one switch per period starting in period 2"))
+      StartingPds <- 2:J
+    } else if (J==N) {
+      warning(simpleWarning(message="Assuming one switch per period starting in period 1"))
+      StartingPds <- 1:J
+    } else if (N %% (J-1) == 0) {
+      warning(simpleWarning(message=paste0("Assuming ",N/(J-1), " switches per period starting in period 2.")))
+      StartingPds <- rep(2:J, each=N/(J-1))
+    } else if (N %% J == 0) {
+      warning(simpleWarning(message=paste0("Assuming ",N/J, " switches per period starting in period 1.")))
+      StartingPds <- rep(1:J, each=N/J)
+    } else {
+      stop(simpleError(message="N and J must both be numeric. Either N is a multiple of J or J-1, or specify StartingPds."))
+    }
+  }
+  return(tibble(Cluster=rep(1:N, each=J),
+                Period=rep(1:J, times=N),
+                Start=rep(StartingPds, each=J)) %>%
+           dplyr::mutate(Interv=if_else(Period >= Start, 1, 0)))
+}
+
+#### Simulate Data:
+Sim_Data <- function(Sim.Fr, mu, Alpha1,
+                     T1, T2, ProbT1,
+                     sig_nu, sig_e, m,
+                     ThetaType, ThetaDF) {
+  N <- length(unique(Sim.Fr$Cluster))
+  J <- length(unique(Sim.Fr$Period))
+  Sim.Dat <- Sim.Fr %>%
+    dplyr::mutate(FE.g = rep(sample(Alpha1, N, replace=FALSE), each=J),
+                  FE.t.Type = rep(sample(c(1,2), size=N, replace=TRUE, prob=c(ProbT1,1-ProbT1)),
+                                  each=J),
+                  RE.CPI = rnorm(N*J, mean=0, sd=sig_nu),
+                  FE.t=if_else(FE.t.Type==1, T1[Period], T2[Period]))
+  if (ThetaType==5) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) x["Interv"]*ThetaDF$Theta[1])
+  } else if (ThetaType==4) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) ifelse(x["Interv"]==0, 0,
+                                             ThetaDF[ThetaDF$j==x["Period"],]$Theta))
+  } else if (ThetaType==3) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) ifelse(x["Interv"]==0, 0,
+                                             ThetaDF[ThetaDF$a==x["Period"]-x["Start"]+1,]$Theta))
+  } else if (ThetaType==2) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) ifelse(x["Interv"]==0, 0,
+                                             ThetaDF[ThetaDF$j==x["Period"] & ThetaDF$a==x["Period"]-x["Start"]+1,]$Theta))
+  } else if (ThetaType==1) {
+    Theta.ij <- apply(Sim.Dat, 1,
+                      FUN=function(x) ifelse(x["Interv"]==0, 0,
+                                             ThetaDF[ThetaDF$j==x["Period"] & ThetaDF$a==x["Period"]-x["Start"]+1 & ThetaDF$i==x["Cluster"],]$Theta))
+  } else {
+    stop(simpleError(message="ThetaType must be an integer from 1 to 5 corresponding to the effect heterogeneity assumption."))
+  }
+  Sim.Dat <- Sim.Dat %>% dplyr::mutate(Theta.ij=Theta.ij,
+                                       mu.ij=mu+FE.g+FE.t+RE.CPI+Theta.ij)
+  YVals <- matrix(rnorm(n=N*J*m, mean=rep(Sim.Dat$mu.ij, each=m), sd=sig_e),
+                  nrow=N*J, ncol=m, byrow=TRUE)
+  colnames(YVals) <- paste("Y.ij", as.character(1:m), sep=".")
+  YVals_Out <- as_tibble(YVals) %>%
+    mutate(Y.ij.bar=apply(YVals, 1, FUN=mean),
+           Y.ij.sd=apply(YVals, 1, FUN=sd))
+  return(Sim.Dat %>% bind_cols(YVals_Out))
+}
 
 ### Simulation Scenarios
 
@@ -45,14 +114,23 @@ Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012,
 T1 <- c(0,0.08,0.18,0.29,0.30,0.27,0.20,0.13)
 T2 <- c(0,0.02,0.03,0.07,0.13,0.19,0.27,0.30)
 
+## Analysis Scenarios
+
+Assns <- 2:5
+SigmaNames <- c("CS_0_003","CS_0_333","Ind")
+
 save(list=c("Param_Set",
             "Theta_Set",
             "Alpha1",
             "T1",
-            "T2"),
+            "T2",
+            "Assns",
+            "SigmaNames"),
      file="int/sim-setup.Rda")
 
 ## Create and Save Simulation Data
+
+set.seed(73475)
 
 for (i in 1:(dim(Param_Set)[1])) {
   sim_data <- replicate(n=Param_Set$NumSims[i],
@@ -61,7 +139,9 @@ for (i in 1:(dim(Param_Set)[1])) {
                                     sig_nu=Param_Set$sig_nu[i], sig_e=Param_Set$sig_e[i], m=Param_Set$m[i],
                                     ThetaType=Theta_Set[[i]]$Type, ThetaDF=Theta_Set[[i]]$ThetaDF),
                       simplify=FALSE)
-  save(sim_data,
+  assign(x=paste0("sim_data_",i),
+         value=sim_data)
+  save(list=paste0("sim_data_",i),
        file=paste0("int/sim-data-",i,".Rda"))
 }
 
@@ -142,10 +222,6 @@ SO5 <- Solve_Assumption(StartTimes,
                         OrderedPds=1:J_use,
                         Assumption=5,
                         v.Mat=1)
-
-Assns <- 2:5
-SigmaNames <- c("CS_0_003","CS_0_333","Ind")
-SigmaShorts <- c("003","333","Ind")
 
 MVO_list_full <- NULL
 
