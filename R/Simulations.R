@@ -6,9 +6,9 @@
 ## Note: some details of the mixed effects model fitting is specific to the setting used in Sim_Runs.R
 ### Please check and alter these or do not use those models if using a different setup.
 
-require(tidyverse)
-require(lme4)
-require(geepack)
+library(tidyverse)
+library(lme4)
+library(geepack)
 
 source("R/Full_Analysis.R")
 source("R/CompEsts.R")
