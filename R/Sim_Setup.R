@@ -4,6 +4,7 @@
 #######################################
 
 source("R/Full_Analysis.R")
+source("R/CompEsts.R")
 
 ### Helper Functions for Simulation:
 
@@ -249,16 +250,22 @@ for (SigName in SigmaNames) {
 names(MVO_list_full) <- paste0("A", rep(Assns, length(SigmaNames)),
                                "_", rep(SigmaNames, each=length(Assns)))
 
-save(MVO_list_full,
+## Nested Comparison Approaches Weights
+
+Comp_wts <- Comp_Ests_Weights(ADFT_obj=SO5$ADFT,
+                              estimator=c("TW","CS","SA","CH","CO","NP"))$Obs.weights
+
+save(list=c("MVO_list_full","Comp_wts"),
      file="int/sim-mvo-list.Rda")
+
 
 ## CI Treatment Effects to Check
 
 Ctrl_prob_overall <- mu_use + mean(Alpha1) + sum(T1*2*(0:7))/sum(2*(0:7))
 
-Single_Vals <- tibble(ValNum=1:25,
+Single_Vals <- tibble(ValNum=1:501,
                       Name=paste0("SV_",ValNum),
-                      Probability=seq(-0.15, 0.09, by=0.01),
+                      Probability=seq(-0.3, 0.2, length.out=501),
                       `Log Odds`=log((Probability+Ctrl_prob_overall)/(1-Probability-Ctrl_prob_overall)) -
                         log(Ctrl_prob_overall/(1-Ctrl_prob_overall)))
 SV_list <- split(Single_Vals %>% dplyr::select(Probability,`Log Odds`),

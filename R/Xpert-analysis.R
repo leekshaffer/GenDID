@@ -366,9 +366,9 @@ save(Comparisons, file="int/Xpert-Public-Comp-Ests.Rda")
 
 ## Check against existing packages for staggered adoption methods:
 ### Packages:
-require(did) ## For CS
-require(fixest) ## For SA
-require(DIDmultiplegt) ## For CH
+library(did) ## For CS
+library(fixest) ## For SA
+library(DIDmultiplegt) ## For CH
 
 ### Data Prep:
 xpert.dat.2 <- xpert.dat %>% left_join(StartTimes, by="Cluster") %>%
