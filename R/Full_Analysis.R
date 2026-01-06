@@ -45,21 +45,11 @@ MV_Assumption <- function(SolveOut,
                           Observations=NULL,
                           Permutations=NULL,
                           CI_list=NULL,
-                          CI_SV=NULL#,
-                          # save_loc="",
-                          # save_prefix="mv-a_"
-                          ) {
-  MV_int <- min_var(solve_obj=SolveOut$Solve,
-                    A_mat=SolveOut$ADFT$A_mat,
+                          CI_SV=NULL) {
+  MV_int <- min_var(SolveOut=SolveOut,
                     Sigma=Sigma)
   if (is.null(Observations)) {
-    D_Full <- cbind(SolveOut$ADFT$D_aug,
-                    MV_int$DID.weights)
-    assign(x=paste0("MV_",Assumption,"_",SigmaName),
-           value=list(ADFT=SolveOut$ADFT,
-                      D_Full=D_Full,
-                      MV=MV_int))
-    return(get(paste0("MV_",Assumption,"_",SigmaName)))
+    return(MV_int)
   } else {
     Estimates <- t(MV_int$Obs.weights) %*% Observations
     D_Full <- cbind(SolveOut$ADFT$D_aug,
@@ -143,18 +133,13 @@ MV_Assumption <- function(SolveOut,
       CI_Checks <- NULL
       CI_Results <- NULL
     }
-    assign(x=paste0("MVOut_",Assumption,"_",SigmaName),
-           value=c(list(A_mat=SolveOut$ADFT$A_mat,
-                      Estimates=Estimates,
-                      D_Full=D_Full,
-                      MV=MV_int,
-                      P_Values=PVals,
-                      CI_Results=CI_Results),
-                   CI_Checks))
-    # TODO: Inform user that you are saving variable
-    # to a .Rda file using the specified save_loc and save_prefix.
-    # save(list=paste0("MVOut_",Assumption,"_",SigmaName),
-    #      file=paste0(save_loc,save_prefix,Assumption,"_",SigmaName,".Rda"))
-    return(get(paste0("MVOut_",Assumption,"_",SigmaName)))
+
+    return(c(list(A_mat=SolveOut$ADFT$A_mat,
+                  Estimates=Estimates,
+                  D_Full=D_Full,
+                  MV=MV_int,
+                  P_Values=PVals,
+                  CI_Results=CI_Results),
+             CI_Checks))
   }
 }
