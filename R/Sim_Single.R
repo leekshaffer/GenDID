@@ -331,10 +331,13 @@ Analyze_One <- function(Scen,
   }
 
   if ("SA" %in% Comps) {
-    ## Data without the max period to create a never-treated group:
+    ## Ensure there is a never-treated group:
     Max_Pd <- max(Data$Period)
-    Data.SA <- Data %>% filter(Period != Max_Pd) %>%
-      mutate(Start=if_else(Start==Max_Pd, 0, Start))
+    Max_ST <- max(Data$Start)
+    if (Max_ST <= Max_Pd) {
+      Data.SA <- Data %>% filter(Period < Max_ST) %>%
+        mutate(Start=if_else(Start==Max_ST, 0, Start))
+    }
     SA <- feols(Y.ij.bar~sunab(cohort=Start,
                               period=Period,
                               ref.c=NULL,
