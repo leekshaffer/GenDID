@@ -223,13 +223,17 @@ Solve_Assumption <- function(StartTimes,
                         v=v.Mat,
                         rank_obj=rank_int,
                         DID_full=TRUE)
-  assign(x=paste0("SolveOut_",Assumption),
-         value=list(ADFT=ADFT_int,
-                    Solve=solve_int))
+
+  return(list(ADFT=ADFT_int,
+              Solve=solve_int))
+
+  # assign(x=paste0("SolveOut_",Assumption),
+         # value=list(ADFT=ADFT_int,
+         #            Solve=solve_int))
 
   # TODO: Inform user that you are saving variable
   # to a .Rda file using the specified save_loc and save_prefix.
   # save(list=paste0("SolveOut_",Assumption),
   #      file=paste0(save_loc,save_prefix,Assumption,".Rda"))
-  return(get(paste0("SolveOut_",Assumption)))
+  # return(get(paste0("SolveOut_",Assumption)))
 }
