@@ -94,9 +94,18 @@ min_var <- function(SolveOut,
                 Obs.weights=solve_obj$Obs.weights %>% dplyr::select(starts_with("ATw.base")))
   } else {
     if (ncol(base.w)==1) { ## A single target estimand
-      res <- min_var_single(base.w,Add.Obs.w,ASigAT,
+      res1 <- min_var_single(base.w,Add.Obs.w,ASigAT,
                             method=method,maxit=maxit)
-      res$Obs.weights <- t(A_mat) %*% matrix(res$DID.weights,ncol=1)
+      Cvec <- as.matrix(res1$Cvec, ncol=1)
+      colnames(Cvec) <- colnames(base.w)
+      Var <- as.matrix(res1$Variance, ncol=1)
+      colnames(Var) <- colnames(base.w)
+      DID.weights <- as.matrix(res1$DID.weights, ncol=1)
+      colnames(DID.weights) <- colnames(base.w)
+      res <- list(Cvec=Cvec,
+                  Variance=Var,
+                  DID.weights=DID.weights,
+                  Obs.weights=t(A_mat) %*% DID.weights)
     } else { ## Multiple target estimands
       res1 <- apply(base.w, MARGIN=2,
                    FUN=function(col) min_var_single(col,Add.Obs.w,ASigAT,

@@ -74,8 +74,8 @@ Sim_Data <- function(Sim.Fr, mu, Alpha1,
                   nrow=N*J, ncol=m, byrow=TRUE)
   colnames(YVals) <- paste("Y.ij", as.character(1:m), sep=".")
   YVals_Out <- as_tibble(YVals) %>%
-    mutate(Y.ij.bar=apply(YVals, 1, FUN=mean),
-           Y.ij.sd=apply(YVals, 1, FUN=sd))
+    mutate(Summ=apply(YVals, 1, FUN=mean),
+           Summ_SD=apply(YVals, 1, FUN=sd))
   return(Sim.Dat %>% bind_cols(YVals_Out))
 }
 
@@ -89,8 +89,8 @@ Sim.Fr <- Sim_Frame(N=N_use, J=J_use, StartingPds=StartTimes$StartPd)
 
 Param_Set <- tibble(
   Scenario=1:9,
-  NumSims=rep(500, 9),
-  NumPerms=rep(250, 9),
+  NumSims=rep(1000, 9),
+  NumPerms=rep(500, 9),
   mu=rep(mu_use, 9),
   ProbT1=rep(1, 9),
   sig_nu=rep(0.01, 9),

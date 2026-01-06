@@ -211,7 +211,7 @@ Comp_Ests <- function(ADFT_obj,
 #### Obs.weights: A matrix containing computed observation weights for the specified estimators.
 
 Comp_Ests_Weights <- function(ADFT_obj,
-                              estimator=c("TW","CS","SA","CH","CO","NP","CLWP","CLWPA")) {
+                              estimator=c("TW","CS","SA","CH","CO","NP")) {
   DID.weights <- NULL
   Obs.weights <- NULL
   if (sum(c("TW","CS","SA","CH","CO") %in% estimator) > 0) {

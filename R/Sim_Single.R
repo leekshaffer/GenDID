@@ -70,9 +70,6 @@ Analyze_One <- function(Scen,
                        dplyr::mutate(`Log Odds`=if_else(Probability==0,
                                                         log((0.5/101)/(1-0.5/101)),
                                                         log(Probability/(1-Probability)))))
-  Data.Wide <- Data %>%
-    dplyr::rename(Summ=Y.ij.bar,
-                  Summ_SD=Y.ij.sd)
 
   ### GenDID Results from An_From_Obj:
 
@@ -88,8 +85,15 @@ Analyze_One <- function(Scen,
 
   ### Comparisons from Comp_Outs:
 
-  Comp_Outs <- Ext_Comps(Data.Wide,
-                         Indiv_Outcome_Prefix="Y.ij.",
+  Data.Long <- Data %>%
+    dplyr::rename(Summ=Y.ij.bar) %>%
+    dplyr::select(-Y.ij.sd) %>%
+    tidyr::pivot_longer(cols=starts_with("Y.ij."),
+                        names_to="Indiv", names_prefix="Y.ij.",
+                        values_to="Outcome")
+
+  Comp_Outs <- Ext_Comps(Data.Long=Data.Long,
+                         SummOutName="Summ",
                          Comps=Comps,
                          Comps_PermPs=Comps_PermPs,
                          P.Orders=P.Orders,
@@ -109,7 +113,7 @@ st <- proc.time()
 CompFull <- c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA")
 A1 <- Analyze_One(Scen=1,
                   SimNo=1,
-                  NumPerms=250,
+                  NumPerms=100,
                   MVO_list=MVO_list_full,
                   Comps.Nest=Comp_wts,
                   CI.GDID=CI.Tx.Obj_1,

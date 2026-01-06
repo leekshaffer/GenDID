@@ -6,19 +6,19 @@
 library(dplyr)
 library(tidyr)
 library(tibble)
-library(did) ## For CS
-library(fixest) ## For SA
-library(DIDmultiplegt) ## For CH
 library(lme4) ## For mixed effects models and CLWP
 library(bbmle) ## For CLWP
 
 source("R/CLWP_Fns.R")
 source("R/Analysis.R") ## For permutation function
 
-## Note: Summ must be the name of the summary outcome column
+## Need long data with Outcome as the individual-level outcome column
+## Note: SummOutName specifies an existing cluster-period summary column to use;
+## Otherwise the average of the Outcome column is used as a summary
+## Also need Cluster, Period, Start, Interv columns
 
-Ext_Comps <- function(Data.Wide,
-                      Indiv_Outcome_Prefix,
+Ext_Comps <- function(Data.Long,
+                      SummOutName=NULL,
                       Comps=c("TW","CS","SA","CH","MEM",
                               "CPI","CPI.T","CPI.D","CPI.DT",
                               "CLWP","CLWPA"),
@@ -30,32 +30,45 @@ Ext_Comps <- function(Data.Wide,
                       Results=NULL,
                       CI.Perc=0.95) {
 
-  Data <- Data.Wide %>%
-    dplyr::select(Cluster,Period,Start,Interv,Summ)
-
-  N <- length(unique(Data$Cluster))
-  J <- length(unique(Data$Period))
-
-  Data.ForLME <- Data.Wide %>%
-    dplyr::select(Cluster,Period,Start,Interv,
-                  all_of(starts_with(Indiv_Outcome_Prefix))) %>%
+  Data.LME <- Data.Long %>%
     dplyr::mutate(PeriodF=factor(Period),
                   ClusterF=factor(Cluster),
                   CPI=factor(paste(Cluster,Period,sep="_")),
                   Diff=if_else(Period-Start < 0, 0, Period-Start+1),
                   DiffF=factor(Diff))
 
-  Data.Long <- Data.ForLME %>%
-    tidyr::pivot_longer(cols=starts_with(Indiv_Outcome_Prefix),
-                        names_to="Indiv", names_prefix=Indiv_Outcome_Prefix,
-                        values_to="Outcome")
+  if (!is.null(SummOutName)) {
+    Data <- Data.LME %>%
+      dplyr::group_by(Cluster,Period,Start,Interv,
+                      PeriodF,ClusterF,CPI,Diff,DiffF) %>%
+      dplyr::summarize(Summ=mean(.data[[SummOutName]], na.rm=TRUE),
+                       .groups="drop") %>%
+      dplyr::mutate(CPN=row_number())
+  } else {
+    Data <- Data.LME %>%
+      dplyr::group_by(Cluster,Period,Start,Interv,
+                      PeriodF,ClusterF,CPI,Diff,DiffF) %>%
+      dplyr::summarize(Summ=mean(Outcome, na.rm=TRUE),
+                       .groups="drop") %>%
+      dplyr::mutate(CPN=row_number())
+  }
 
+  N <- length(unique(Data$Cluster))
+  J <- length(unique(Data$Period))
 
-  Data.Yijs <- Data.ForLME %>% dplyr::select(all_of(starts_with(Indiv_Outcome_Prefix)))
+  Data.LME <- Data.LME %>%
+    left_join(Data %>%
+                dplyr::select(Cluster,Period,CPN),
+              by=join_by(Cluster,Period))
 
-  Data.Fr <- Data.ForLME %>%
-    dplyr::select(Cluster,Period,Start,Interv,PeriodF,ClusterF,CPI,Diff,DiffF)
+  Data.Fr <- Data %>%
+    dplyr::select(-Summ)
 
+  Data.Summ <- Data %>%
+    dplyr::select(CPN,Summ)
+
+  Data.Outcome <- Data.LME %>%
+    dplyr::select(CPN,Outcome)
 
   if (!is.null(Comps_PermPs)) {
     if (is.null(P.Orders)) {
@@ -68,17 +81,31 @@ Ext_Comps <- function(Data.Wide,
       }
     }
     Data.Perms <- lapply(P.Orders,
-                         FUN=function(x) Data.Fr %>% bind_cols(Data.Yijs[x,]) %>%
-                           tidyr::pivot_longer(cols=starts_with(Indiv_Outcome_Prefix),
-                                               names_to="Indiv", names_prefix=Indiv_Outcome_Prefix,
-                                               values_to="Outcome"))
+                         FUN=function(x) {
+                           Data.Outcome %>%
+                             dplyr::left_join(tibble(CPN=x) %>% dplyr::mutate(NewCPN=row_number()),
+                                              by=join_by(CPN)) %>%
+                             dplyr::select(-CPN) %>%
+                             dplyr::rename(CPN=NewCPN) %>%
+                             dplyr::left_join(Data.Fr, by=join_by(CPN)) %>%
+                             dplyr::arrange(CPN)
+                         })
     Data.Perms.Short <- lapply(P.Orders,
-                               FUN=function(x) Data.Fr %>% bind_cols(Data[x,"Summ"]))
+                               FUN=function(x) {
+                                 Data.Summ %>%
+                                   dplyr::left_join(tibble(CPN=x) %>% dplyr::mutate(NewCPN=row_number()),
+                                                    by=join_by(CPN)) %>%
+                                   dplyr::select(-CPN) %>%
+                                   dplyr::rename(CPN=NewCPN) %>%
+                                   dplyr::left_join(Data.Fr, by=join_by(CPN)) %>%
+                                   dplyr::arrange(CPN)
+                               })
   }
 
   Comp_Outs <- NULL
 
   if ("TW" %in% Comps) {
+    require(fixest)
     TW <- summary(feols(Summ~Interv | Cluster + Period,
                         data=Data),
                   vcov=~Cluster)
@@ -106,6 +133,7 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if ("CS" %in% Comps) {
+    require(did)
     CS_gt <- att_gt(yname="Summ",
                     tname="Period",
                     idname="Cluster",
@@ -199,6 +227,7 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if ("SA" %in% Comps) {
+    require(fixest)
     ## Ensure there is a never-treated group:
     Max_Pd <- max(Data$Period)
     Max_ST <- max(Data$Start)
@@ -240,6 +269,7 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if ("CH" %in% Comps) {
+    require(DIDmultiplegt)
     CH <- did_multiplegt(
       mode="dyn",
       df=Data,
@@ -283,7 +313,7 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if ("MEM" %in% Comps) {
-    MEM <- lmer(Outcome~Interv+PeriodF+(1|ClusterF), data=Data.Long)
+    MEM <- lmer(Outcome~Interv+PeriodF+(1|ClusterF), data=Data.LME)
     MEM.ci <- confint(MEM, parm="Interv", level=CI.Perc, quiet=TRUE)
     MEM.row <- tibble_row(Method="MEM",
                           Estimate=coeftable(MEM)["Interv","Estimate"],
@@ -300,7 +330,7 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if ("CPI" %in% Comps) {
-    CPI <- lmer(Outcome~Interv+PeriodF+(1|ClusterF)+(1|CPI), data=Data.Long,
+    CPI <- lmer(Outcome~Interv+PeriodF+(1|ClusterF)+(1|CPI), data=Data.LME,
                 control=lmerControl(check.rankX="silent.drop.cols",
                                     check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
     CPI.ci <- confint(CPI, parm="Interv", level=CI.Perc, quiet=TRUE)
@@ -321,7 +351,7 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if ("CPI.T" %in% Comps) {
-    CPI.T <- lmer(Outcome~Interv+Interv:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.Long,
+    CPI.T <- lmer(Outcome~Interv+Interv:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.LME,
                   control=lmerControl(check.rankX="silent.drop.cols",
                                       check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
     IntVec <- grepl("Interv:",rownames(coeftable(CPI.T)))
@@ -343,7 +373,7 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if ("CPI.D" %in% Comps) {
-    CPI.D <- lmer(Outcome~Interv+Interv:DiffF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.Long,
+    CPI.D <- lmer(Outcome~Interv+Interv:DiffF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.LME,
                   control=lmerControl(check.rankX="silent.drop.cols",
                                       check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
     IntVec <- grepl("Interv:",rownames(coeftable(CPI.D)))
@@ -365,7 +395,7 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if ("CPI.DT" %in% Comps) {
-    CPI.DT <- lmer(Outcome~Interv+Interv:DiffF:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.Long,
+    CPI.DT <- lmer(Outcome~Interv+Interv:DiffF:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.LME,
                    control=lmerControl(check.rankX="silent.drop.cols",
                                        check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
     IntVec <- grepl("Interv:",rownames(coeftable(CPI.DT)))
@@ -387,14 +417,14 @@ Ext_Comps <- function(Data.Wide,
   }
 
   if (("CLWP" %in% Comps) | ("CLWPA" %in% Comps)) {
-    if ("CPI" %in% Comps) {
-      start_theta <- CPI.row$Estimate
-      start_sigma <- sqrt(as.data.frame(VarCorr(CPI))[2,"vcov"]*2)
-    } else if ("MEM" %in% Comps) {
+    if ("MEM" %in% Comps) {
       start_theta <- MEM.row$Estimate
       start_sigma <- sqrt(as.data.frame(VarCorr(MEM))[2,"vcov"]*2)
+    } else if ("CPI" %in% Comps) {
+      start_theta <- CPI.row$Estimate
+      start_sigma <- sqrt(as.data.frame(VarCorr(CPI))[2,"vcov"]*2)
     } else {
-      MEM <- lmer(Outcome~Interv+PeriodF+(1|ClusterF), data=Data.Long)
+      MEM <- lmer(Outcome~Interv+PeriodF+(1|ClusterF), data=Data.LME)
       start_theta <- coeftable(MEM)["Interv","Estimate"]
       start_sigma <- sqrt(as.data.frame(VarCorr(MEM))[2,"vcov"]*2)
     }

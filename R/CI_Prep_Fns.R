@@ -1,78 +1,11 @@
 #######################################
-###### File: Permutation_Fns.R ########
+###### File: CI_Prep_Fns.R ############
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-# Permute_data function
-
-### Inputs:
-#### StartTimes: a DF with columns Cluster and StartPd, giving the unique clusters and start periods
-#### J: total number of observed periods
-#### data: DF with the outcomes, ordered by unit and then period
-#### Obs.weights: output of min_var function
-### Output: value of the observation weights applied to the data
-
-# Permute_data <- function(StartTimes, J, data, Obs.weights) {
-#   ST_P <- tibble(StartPd=rep(sample(StartTimes$StartPd, size=nrow(StartTimes), replace=FALSE), each=J),
-#                  Cluster=rep(sample(StartTimes$Cluster, size=nrow(StartTimes), replace=FALSE), each=J))
-#   return(t(Obs.weights) %*% as.matrix(cbind(ST_P, data) %>% dplyr::arrange(StartPd,Cluster) %>%
-#                                         dplyr::select(-c(Cluster,StartPd))))
-# }
-
-# Permute_obs function
-
-## Permute_order helper function
-
-### Inputs:
-#### N: total number of units
-#### J: total number of observed periods
-### Output: randomly permuted unit order
-
-Permute_order <- function(N, J) {
-  return((rep(sample.int(N, size=N, replace=FALSE), each=J)-1)*J+rep(1:J, times=N))
-}
-
-## Permute_obs main function
-
-### Inputs:
-#### Observations: vector of the observed outcomes, ordered by unit then period
-#### N: total number of units
-#### J: total number of observed periods
-#### Obs.weights: the Obs.weights element of the output of min_var function (or NULL)
-#### CI.Tx.List: the output of CI_get_Tx_All: a list of ordered, framed treatment effects to test in CIs (or NULL)
-#### Drop_Obs: logical; if TRUE, the permuted set of observations will not be included in the output
-####  (useful for saving memory when the function will be repeated)
-### Output: if Obs.weights is NULL, observations using the randomly permuted unit order
-###  Otherwise a list of the following:
-#### Obs: observations using the randomly permuted unit order (unless Drop_Obs=TRUE)
-#### Ests: the estimate from applying the Obs.weights to the permuted order
-#### Additional elements named according to CI.Tx.List if that input is given
-
-Permute_obs <- function(Observations, N, J,
-                        Obs.weights=NULL,
-                        CI.Tx.List=NULL,
-                        Drop_Obs=FALSE) {
-
-  Order <- Permute_order(N, J)
-  if (is.null(Obs.weights)) {
-    return(Observations[Order,])
-  } else {
-    Obs <- Observations[Order,]
-    Est <- t(Obs.weights) %*% as.matrix(Observations)[Order,,drop=FALSE]
-    if (Drop_Obs) {
-      out <- list(Ests=Est)
-    } else {
-      out <- list(Obs=Obs,
-                  Ests=Est)
-    }
-    if (!is.null(CI.Tx.List)) {
-      CI.ests <- lapply(X=CI.Tx.List,
-             FUN=function(x) Est - t(Obs.weights) %*% as.matrix(x)[Order,,drop=FALSE])
-      out <- c(out, CI.ests)
-    }
-    return(out)
-  }
-}
+require(dplyr)
+require(tidyr)
+require(tibble)
 
 # CI helper functions
 
@@ -97,7 +30,9 @@ CI_get_Tx <- function(Obs_Frame,
     }
     ## Fixing length of CI_mat if necessary and giving it theta numbering
     if (nrow(CI_mat) == 1) {
-      warning(simpleWarning(paste("CI_mat contains only one value. It will be repeated to", Th_len, "values.")))
+      if (Th_len > 1) {
+        warning(simpleWarning(paste("CI_mat contains only one value. It will be repeated to", Th_len, "values.")))
+      }
       Th_All <- Th_All %>% cbind(CI_mat)
     } else if (nrow(CI_mat) == Th_len) {
       Th_All <- Th_All %>% cbind(CI_mat)
