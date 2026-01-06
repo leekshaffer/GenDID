@@ -6,7 +6,6 @@
 source("R/Mat_Const.R")
 source("R/Solver.R")
 source("R/Var_Min.R")
-source("R/CompEsts.R")
 source("R/CI_Prep_Fns.R")
 
 require(tibble)
