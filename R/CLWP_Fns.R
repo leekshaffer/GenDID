@@ -11,7 +11,7 @@
 ## Voldal et al. 2024 ##
 
 ## Load packages
-library(bbmle)
+require(bbmle)
 
 ## Helper function: loglik_vertical_CML
 
@@ -26,8 +26,8 @@ loglik_vertical_CML <- function(theta, sigma, my.data.full){
   #every vertical contrast between treatment and control cluster-periods.
   my.data.combos <- data.frame(treated=double(),control=double())
   for(j in unique(my.data.full$Period)){
-    treated_list.j <- my.data.full$Y.ij.bar[my.data.full$Period == j & my.data.full$Interv == 1]
-    control_list.j <- my.data.full$Y.ij.bar[my.data.full$Period == j & my.data.full$Interv == 0]
+    treated_list.j <- my.data.full$Summ[my.data.full$Period == j & my.data.full$Interv == 1]
+    control_list.j <- my.data.full$Summ[my.data.full$Period == j & my.data.full$Interv == 0]
     combos.j <- expand.grid(treated=treated_list.j,control=control_list.j)
     my.data.combos <- rbind(my.data.combos,combos.j)
   }
@@ -96,16 +96,16 @@ loglik_vertical_CML_adj <- function(theta, sigma, betabase, my.data.full){
   my.data.combos <- data.frame(treated=double(),control=double())
   my.data.base.combos <- data.frame(treated=double(),control=double())
   for(j in unique(my.data.full$Period)){
-    treated_list.j <- my.data.full$Y.ij.bar[my.data.full$Period == j & my.data.full$Interv == 1]
-    control_list.j <- my.data.full$Y.ij.bar[my.data.full$Period == j & my.data.full$Interv == 0]
+    treated_list.j <- my.data.full$Summ[my.data.full$Period == j & my.data.full$Interv == 1]
+    control_list.j <- my.data.full$Summ[my.data.full$Period == j & my.data.full$Interv == 0]
     combos.j <- expand.grid(treated=treated_list.j,control=control_list.j)
     my.data.combos <- rbind(my.data.combos,combos.j)
     #Now do the same thing in the same order, but get the baseline measurements
     #Note: assuming here that the first period is all-control
     #(so won't be contributing to vertical contrasts, and don't need to account for differing trt status)
-    treated_list_base.j <- my.data.full$Y.ij.bar[my.data.full$Period == 1 &
+    treated_list_base.j <- my.data.full$Summ[my.data.full$Period == 1 &
                                                    my.data.full$Cluster %in% my.data.full$Cluster[my.data.full$Period == j & my.data.full$Interv == 1]]
-    control_list_base.j <- my.data.full$Y.ij.bar[my.data.full$Period == 1 &
+    control_list_base.j <- my.data.full$Summ[my.data.full$Period == 1 &
                                                    my.data.full$Cluster %in% my.data.full$Cluster[my.data.full$Period == j & my.data.full$Interv == 0]]
     combos.base.j <- expand.grid(treated=treated_list_base.j,control=control_list_base.j)
     my.data.base.combos <- rbind(my.data.base.combos,combos.base.j)
@@ -198,8 +198,8 @@ CLWP_fit <- function(my.data, start_theta, start_sigma, N) {
   #Recreate data frame of all the differences
   my.data.combos <- data.frame(treated=double(),control=double(),cluster_trt=double(),cluster_ctrl=double())
   for(j in unique(my.data$Period)){
-    treated_list.j <- my.data$Y.ij.bar[my.data$Period == j & my.data$Interv == 1]
-    control_list.j <- my.data$Y.ij.bar[my.data$Period == j & my.data$Interv == 0]
+    treated_list.j <- my.data$Summ[my.data$Period == j & my.data$Interv == 1]
+    control_list.j <- my.data$Summ[my.data$Period == j & my.data$Interv == 0]
     combos.j <- expand.grid(treated=treated_list.j,control=control_list.j)
     #get cluster ID's for each contrast to pull later
     cluster_treated_list.j <- my.data$Cluster[my.data$Period == j & my.data$Interv == 1]
@@ -270,8 +270,8 @@ CLWPA_fit <- function(my.data, start_theta, start_sigma, N) {
   #####
   my.data.combos <- data.frame(treated=double(),control=double(),cluster_trt=double(),cluster_ctrl=double())
   for(j in unique(my.data$Period)){
-    treated_list.j <- my.data$Y.ij.bar[my.data$Period == j & my.data$Interv == 1]
-    control_list.j <- my.data$Y.ij.bar[my.data$Period == j & my.data$Interv == 0]
+    treated_list.j <- my.data$Summ[my.data$Period == j & my.data$Interv == 1]
+    control_list.j <- my.data$Summ[my.data$Period == j & my.data$Interv == 0]
     combos.j <- expand.grid(treated=treated_list.j,control=control_list.j)
     cluster_treated_list.j <- my.data$Cluster[my.data$Period == j & my.data$Interv == 1]
     cluster_control_list.j <- my.data$Cluster[my.data$Period == j & my.data$Interv == 0]
@@ -283,11 +283,11 @@ CLWPA_fit <- function(my.data, start_theta, start_sigma, N) {
   #use cluster ID's in cluster_trt and cluster_ctrl to fill in baseline response values
   #note: merge re-organizes order; that's fine for the CL function
   my.data.combos <- merge(my.data.combos,my.data[my.data$Period == 1,
-                                                 c("Cluster","Y.ij.bar")],by.x="cluster_trt",by.y="Cluster",all.x=TRUE)
-  my.data.combos$treated_base <- my.data.combos$Y.ij.bar
+                                                 c("Cluster","Summ")],by.x="cluster_trt",by.y="Cluster",all.x=TRUE)
+  my.data.combos$treated_base <- my.data.combos$Summ
   my.data.combos <- merge(my.data.combos,my.data[my.data$Period == 1,
-                                                 c("Cluster","Y.ij.bar")],by.x="cluster_ctrl",by.y="Cluster",all.x=TRUE)
-  my.data.combos$control_base <- my.data.combos$Y.ij.bar.y
+                                                 c("Cluster","Summ")],by.x="cluster_ctrl",by.y="Cluster",all.x=TRUE)
+  my.data.combos$control_base <- my.data.combos$Summ.y
 
   #difference in baseline
   my.data.combos$difference_base <- my.data.combos$treated_base-my.data.combos$control_base
