@@ -3,8 +3,8 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-source("R/Full_Analysis.R")
-source("R/CompEsts.R")
+source("R/Analysis.R")
+source("R/CLWP_Fns.R")
 
 library(dplyr)
 library(tidyr)
@@ -71,84 +71,109 @@ Analyze_One <- function(Scen,
                                                         log((0.5/101)/(1-0.5/101)),
                                                         log(Probability/(1-Probability)))))
 
-  ### Permuted Orders:
-  P.Orders <- NULL
-  if (NumPerms > 0) {
-    P.Orders <- replicate(n=NumPerms,
-                          expr=Permute_order(N, J),
-                          simplify=FALSE)
-  }
+  ### Run An_From_Obj:
 
-  ## Get GenDID and Nested Method Estimates and Inference
-
-  ### Full list of observation weights for assumption settings
-  Obs.W <- do.call("cbind",
-          lapply(1:length(MVO_list),
-                 function(x) as_tibble(MVO_list[[x]]$MV$Obs.weights) %>%
-                   dplyr::rename_with(~paste(names(MVO_list)[x],
-                                             colnames(MVO_list[[x]]$MV$Obs.weights),
-                                             sep="_",recycle0=FALSE))))
-  if (!is.null(Comps.Nest)) {
-    Obs.W <- cbind(Obs.W, Comp_wts)
-  }
-
-  ### Estimates calculation:
-  Estimates <- t(Obs.W) %*% Obs_Y
-
-  ### P Values calculation:
-  if (!is.null(P.Orders)) {
-    Perm_Ests <- lapply(P.Orders, FUN=function(x) t(Obs.W) %*% Obs_Y[x,])
-    PVals <- apply(simplify2array(
-      lapply(Perm_Ests,
-             FUN=function(x) abs(x) >= abs(Estimates))),
-      MARGIN=c(1,2), mean)
-  }
-
-  ### CIs calculation:
-  if (!is.null(P.Orders) & !is.null(CI.GDID)) {
-    CI_Ps <- lapply(names(CI.GDID),
-                    FUN=function(CI.name) {
-                      CI.FX <- as.matrix(CI.GDID[[CI.name]])
-                      CI.Estimates <- Estimates - t(Obs.W) %*% CI.FX
-                      CI_Perm_Ests <- lapply(P.Orders,
-                                             FUN=function(x) t(Obs.W) %*% (Obs_Y - CI.FX)[x,])
-                      CI_Ps <- apply(simplify2array(
-                        lapply(CI_Perm_Ests,
-                               FUN=function(x) abs(x) >= abs(CI.Estimates))),
-                        MARGIN=c(1,2), mean)
-                    })
-    names(CI_Ps) <- names(CI.GDID)
-    if (is.null(CI.SV.Mesh)) {
-      CI_List <- lapply(CI_Ps, FUN=function(x) x >= 1-CI.Perc)
-      CI_Mesh <- NULL
-    } else {
-      CI_List <- lapply(CI_Ps[names(CI_Ps)[!(names(CI_Ps) %in% CI.SV.Mesh$Name)]],
-                        FUN=function(x) x >= 1-CI.Perc)
-      CI_Results <- do.call("rbind",
-                            lapply(CI.SV.Mesh$Name,
-                                   FUN=function(x) as_tibble(CI_Ps[[x]], rownames="Estimator") %>%
-                                     dplyr::mutate(Name=x, EstNum=row_number()))) %>%
-        pivot_longer(cols=-c(EstNum,Estimator,Name), names_to="Outcome", values_to="CI_P") %>%
-        left_join(CI.SV.Mesh %>% pivot_longer(cols=-c(ValNum, Name), names_to="Outcome", values_to="Effect"),
-                  by=join_by(Name,Outcome)) %>%
-        dplyr::group_by(EstNum,Estimator,Outcome) %>%
-        dplyr::filter(CI_P >= 1-CI.Perc) %>%
-        dplyr::summarize(CIL=min(Effect),
-                         CIU=max(Effect),
-                         .groups="drop") %>%
-        dplyr::mutate(CIW=CIU-CIL)
-      CI_Mesh <- list(CIL=CI_Results %>% dplyr::select(Estimator,Outcome,CIL) %>%
-                        pivot_wider(id_cols=Estimator, names_from=Outcome, values_from=CIL) %>%
-                        dplyr::select(all_of(c("Estimator",colnames(PVals)))),
-                      CIU=CI_Results %>% dplyr::select(Estimator,Outcome,CIU) %>%
-                        pivot_wider(id_cols=Estimator, names_from=Outcome, values_from=CIU) %>%
-                        dplyr::select(all_of(c("Estimator",colnames(PVals)))),
-                      CIW=CI_Results %>% dplyr::select(Estimator,Outcome,CIW) %>%
-                        pivot_wider(id_cols=Estimator, names_from=Outcome, values_from=CIW) %>%
-                        dplyr::select(all_of(c("Estimator",colnames(PVals)))))
-
-    }
-  }
+  An.Out <- An_From_Obj(Obs_Y=Obs_Y,
+                        MVO_list=MVO_list,
+                        NumPerms=NumPerms,
+                        Comps.Nest=Comps.Nest,
+                        CI.GDID=CI.GDID,
+                        CI.SV.Mesh=CI.SV.Mesh,
+                        CI.Perc=CI.Perc)
+  Results <- An.Out$Results
+  P.Orders <- An.Out$Permutation.Orders
+#
+#   ### Permuted Orders:
+#   P.Orders <- NULL
+#   if (NumPerms > 0) {
+#     P.Orders <- replicate(n=NumPerms,
+#                           expr=Permute_order(N, J),
+#                           simplify=FALSE)
+#   }
+#
+#   ## Get GenDID and Nested Method Estimates and Inference
+#
+#   ### Full list of observation weights for assumption settings
+#   Obs.W <- do.call("cbind",
+#           lapply(1:length(MVO_list),
+#                  function(x) as_tibble(MVO_list[[x]]$MV$Obs.weights) %>%
+#                    dplyr::rename_with(~paste(names(MVO_list)[x],
+#                                              colnames(MVO_list[[x]]$MV$Obs.weights),
+#                                              sep="_",recycle0=FALSE))))
+#   if (!is.null(Comps.Nest)) {
+#     Obs.W <- cbind(Obs.W, Comp_wts)
+#   }
+#
+#   ### Estimates calculation:
+#   Estimates <- t(Obs.W) %*% Obs_Y
+#   Results <- as_tibble(Estimates, rownames="Estimator") %>%
+#     tidyr::pivot_longer(cols=all_of(colnames(Obs_Y)),
+#                         names_to="Outcome",
+#                         values_to="Estimate")
+#
+#   ### P Values calculation:
+#   if (!is.null(P.Orders)) {
+#     Perm_Ests <- lapply(P.Orders, FUN=function(x) t(Obs.W) %*% Obs_Y[x,])
+#     PVals <- apply(simplify2array(
+#       lapply(Perm_Ests,
+#              FUN=function(x) abs(x) >= abs(Estimates))),
+#       MARGIN=c(1,2), mean)
+#     Results <- Results %>%
+#       left_join(as_tibble(PVals, rownames="Estimator") %>%
+#                   tidyr::pivot_longer(cols=all_of(colnames(Obs_Y)),
+#                                       names_to="Outcome",
+#                                       values_to="P"),
+#                 by=join_by(Estimator,Outcome))
+#   }
+#
+#
+#
+#   ### CIs calculation:
+#   if (!is.null(P.Orders) & !is.null(CI.GDID)) {
+#     CI_Ps <- lapply(names(CI.GDID),
+#                     FUN=function(CI.name) {
+#                       CI.FX <- as.matrix(CI.GDID[[CI.name]])
+#                       CI.Estimates <- Estimates - t(Obs.W) %*% CI.FX
+#                       CI_Perm_Ests <- lapply(P.Orders,
+#                                              FUN=function(x) t(Obs.W) %*% (Obs_Y - CI.FX)[x,])
+#                       CI_Ps <- apply(simplify2array(
+#                         lapply(CI_Perm_Ests,
+#                                FUN=function(x) abs(x) >= abs(CI.Estimates))),
+#                         MARGIN=c(1,2), mean)
+#                     })
+#     names(CI_Ps) <- names(CI.GDID)
+#     if (is.null(CI.SV.Mesh)) {
+#       CI_List <- lapply(CI_Ps, FUN=function(x) x >= 1-CI.Perc)
+#     } else {
+#       CI_List <- lapply(CI_Ps[names(CI_Ps)[!(names(CI_Ps) %in% CI.SV.Mesh$Name)]],
+#                         FUN=function(x) x >= 1-CI.Perc)
+#       Results <- Results %>%
+#         left_join(do.call("rbind",
+#                           lapply(CI.SV.Mesh$Name,
+#                                    FUN=function(x) as_tibble(CI_Ps[[x]], rownames="Estimator") %>%
+#                                      dplyr::mutate(Name=x))) %>%
+#         pivot_longer(cols=colnames(Obs_Y),
+#                      names_to="Outcome", values_to="CI_P") %>%
+#         left_join(CI.SV.Mesh %>% pivot_longer(cols=colnames(Obs_Y),
+#                                               names_to="Outcome", values_to="Effect"),
+#                   by=join_by(Name,Outcome)) %>%
+#         dplyr::group_by(Estimator,Outcome) %>%
+#         dplyr::filter(CI_P >= 1-CI.Perc) %>%
+#         dplyr::summarize(CIL=min(Effect),
+#                          CIU=max(Effect),
+#                          .groups="drop"),
+#         by=join_by(Estimator,Outcome)) %>%
+#         dplyr::mutate(CIW=CIU-CIL)
+#     }
+#     for (x in names(CI_List)) {
+#       Results <- Results %>%
+#         left_join(as_tibble(CI_List[[x]], rownames="Estimator") %>%
+#                     tidyr::pivot_longer(cols=colnames(Obs_Y),
+#                                         names_to="Outcome",
+#                                         values_to=paste0("CI_",x)),
+#                   by=join_by(Estimator, Outcome))
+#     }
+#   }
 
   ### Comparisons
 
@@ -196,8 +221,10 @@ Analyze_One <- function(Scen,
                          CIL=confint(TW, level=CI.Perc)["Interv",1],
                          CIU=confint(TW, level=CI.Perc)["Interv",2])
     if ("TW" %in% Comps_PermPs) {
-      if ("W_TW" %in% rownames(PVals)) {
-        TW.row <- TW.row %>% dplyr::mutate(P.Perm=PVals["W_TW",1])
+      if ("W_TW" %in% Results$Estimator) {
+        TW.row <- TW.row %>% dplyr::mutate(P.Perm=Results %>%
+                                             dplyr::filter(Estimator=="W_TW",Outcome=="Probability") %>%
+                                             pull(P))
       } else {
         TW.Perms <- simplify2array(lapply(Data.Perms.Short,
                                           FUN=function(x) summary(feols(Y.ij.bar~Interv | Cluster + Period,
@@ -237,10 +264,25 @@ Analyze_One <- function(Scen,
                     CIU=Estimate+qnorm((1+CI.Perc)/2)*SE)
 
     if ("CS" %in% Comps_PermPs) {
-      P.Perms <- NULL
-      if ("W_CS.W_simple" %in% rownames(PVals)) {
-        P.Perms <- c(P.Perms, PVals["W_CS.W_simple",1])
+      if (sum(c("W_CS.W_simple","W_CS.W_dynamic","W_CS.W_group","W_CS.W_calendar") %in% Results$Estimator)==4) {
+        P.Perms <- c(Results %>%
+                       dplyr::filter(Estimator=="W_CS.W_simple",
+                                     Outcome=="Probability") %>%
+                       pull(P),
+                     Results %>%
+                       dplyr::filter(Estimator=="W_CS.W_dynamic",
+                                     Outcome=="Probability") %>%
+                       pull(P),
+                     Results %>%
+                       dplyr::filter(Estimator=="W_CS.W_group",
+                                     Outcome=="Probability") %>%
+                       pull(P),
+                     Results %>%
+                       dplyr::filter(Estimator=="W_CS.W_calendar",
+                                     Outcome=="Probability") %>%
+                       pull(P))
       } else {
+        P.Perms <- NULL
         CS.Perms <- simplify2array(lapply(Data.Perms.Short,
                                           FUN=function(x) aggte(att_gt(yname="Y.ij.bar",
                                                                           tname="Period",
@@ -251,11 +293,6 @@ Analyze_One <- function(Scen,
                                                                           control_group="notyettreated"),
                                                                 type="simple")$overall.att))
         P.Perms <- c(P.Perms, mean(abs(CS.Perms) >= abs(CS.rows %>% dplyr::filter(Method=="CS_Simple") %>% pull(Estimate))))
-      }
-
-      if ("W_CS.W_dynamic" %in% rownames(PVals)) {
-        P.Perms <- c(P.Perms, PVals["W_CS.W_dynamic",1])
-      } else {
         CS.Perms <- simplify2array(lapply(Data.Perms.Short,
                                           FUN=function(x) aggte(att_gt(yname="Y.ij.bar",
                                                                        tname="Period",
@@ -266,12 +303,6 @@ Analyze_One <- function(Scen,
                                                                        control_group="notyettreated"),
                                                                 type="dynamic")$overall.att))
         P.Perms <- c(P.Perms, mean(abs(CS.Perms) >= abs(CS.rows %>% dplyr::filter(Method=="CS_Dynamic") %>% pull(Estimate))))
-      }
-    }
-
-    if ("W_CS.W_group" %in% rownames(PVals)) {
-      P.Perms <- c(P.Perms, PVals["W_CS.W_group",1])
-    } else {
       CS.Perms <- simplify2array(lapply(Data.Perms.Short,
                                         FUN=function(x) aggte(att_gt(yname="Y.ij.bar",
                                                                      tname="Period",
@@ -282,11 +313,6 @@ Analyze_One <- function(Scen,
                                                                      control_group="notyettreated"),
                                                               type="group")$overall.att))
       P.Perms <- c(P.Perms, mean(abs(CS.Perms) >= abs(CS.rows %>% dplyr::filter(Method=="CS_Group") %>% pull(Estimate))))
-    }
-
-    if ("W_CS.W_calendar" %in% rownames(PVals)) {
-      P.Perms <- c(P.Perms, PVals["W_CS.W_calendar",1])
-    } else {
       CS.Perms <- simplify2array(lapply(Data.Perms.Short,
                                         FUN=function(x) aggte(att_gt(yname="Y.ij.bar",
                                                                      tname="Period",
@@ -297,6 +323,7 @@ Analyze_One <- function(Scen,
                                                                      control_group="notyettreated"),
                                                               type="calendar")$overall.att))
       P.Perms <- c(P.Perms, mean(abs(CS.Perms) >= abs(CS.rows %>% dplyr::filter(Method=="CS_Calendar") %>% pull(Estimate))))
+      }
     }
 
     Comp_Outs <- Comp_Outs %>%
@@ -322,8 +349,10 @@ Analyze_One <- function(Scen,
                          CIU=SA.CI["ATT",2])
 
     if ("SA" %in% Comps_PermPs) {
-      if ("W_SA.W_ATT" %in% rownames(PVals)) {
-        SA.row <- SA.row %>% dplyr::mutate(P.Perm=PVals["W_SA.W_ATT",1])
+      if ("W_SA.W_ATT" %in% Results$Estimator) {
+        SA.row <- SA.row %>% dplyr::mutate(P.Perm=Results %>%
+                                             dplyr::filter(Estimator=="W_SA.W_ATT",Outcome=="Probability") %>%
+                                             pull(P))
       } else {
         SA.Perms <- simplify2array(lapply(Data.Perms.Short,
                                           FUN=function(x) feols(Y.ij.bar~sunab(cohort=Start,
@@ -359,8 +388,10 @@ Analyze_One <- function(Scen,
       dplyr::mutate(P=2*pnorm(abs(Estimate/SE), lower.tail=FALSE))
 
     if ("CH" %in% Comps_PermPs) {
-      if ("W_CH.W_M" %in% rownames(PVals)) {
-        CH.row <- CH.row %>% dplyr::mutate(P.Perm=PVals["W_CH.W_M",1])
+      if ("W_CH.W_M" %in% Results$Estimator) {
+        CH.row <- CH.row %>% dplyr::mutate(P.Perm=Results %>%
+                                             dplyr::filter(Estimator=="W_SA.W_ATT",Outcome=="Probability") %>%
+                                             pull(P))
       } else {
         CH.Perms <- simplify2array(lapply(Data.Perms.Short,
                                           FUN=function(x) (did_multiplegt(
@@ -541,18 +572,14 @@ Analyze_One <- function(Scen,
     }
   }
 
-  return(c(list(Estimates=Estimates,
-                P_Values=PVals),
-           CI_List=CI_List,
-           CI_Mesh=CI_Mesh,
-           list(Comparisons=Comp_Outs)))
+  return(list(Results=Results,
+              Comparisons=Comp_Outs))
 }
 
 # Speed Testing:
 
-## From test on Work Comp: 23 seconds for 20 permutations w/ mesh of 25
-## From test on Work Comp: 28 seconds for 20 permutations w/ mesh of 501
-## From test on Work Comp: 175 seconds for 100 permutations w/ mesh of 501
+## From test on Work Comp: 200 seconds for 100 permutations w/ mesh of 501
+## From test on Work Comp: 8 minutes for 250 permutations w/ mesh of 501
 st <- proc.time()
 CompFull <- c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA")
 A1 <- Analyze_One(Scen=1,
