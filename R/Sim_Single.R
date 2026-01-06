@@ -16,11 +16,11 @@ library(lme4) ## For mixed effects models and CLWP
 
 ## Load Setup Settings and Simulated Data
 
-load("int/sim-setup.Rda")
-load("int/sim-mvo-list.Rda")
-load("int/sim-CI-objects.Rda")
+load("sim_data/sim-setup.Rda")
+load("sim_data/sim-mvo-list.Rda")
+load("sim_data/sim-CI-objects.Rda")
 
-# Analyze_One function (similar to Sim_Analyze.R version)
+# Analyze_One function
 
 ### Inputs:
 #### Scen: simulation scenario number
@@ -52,7 +52,7 @@ Analyze_One <- function(Scen,
                         Comps=c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
                         Comps_PermPs=c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA")) {
   ## Load Data
-  load(paste0("int/sim-data-",Scen,".Rda"))
+  load(paste0("sim_data/sim_data_",Scen,".Rda"))
   # if (is.null(Params)) {
   #   Params <- Param_Set %>% dplyr::filter(Scenario==Scen)
   #   if (SimNo > (Params %>% pull(NumSims))) {
@@ -65,8 +65,8 @@ Analyze_One <- function(Scen,
   Data <- get(paste0("sim_data_",Scen))[[SimNo]]
   N <- length(unique(Data$Cluster))
   J <- length(unique(Data$Period))
-  Obs_Y <- as.matrix(Data %>% dplyr::select(Y.ij.bar) %>%
-                       dplyr::rename(Probability=Y.ij.bar) %>%
+  Obs_Y <- as.matrix(Data %>% dplyr::select(Summ) %>%
+                       dplyr::rename(Probability=Summ) %>%
                        dplyr::mutate(`Log Odds`=if_else(Probability==0,
                                                         log((0.5/101)/(1-0.5/101)),
                                                         log(Probability/(1-Probability)))))
@@ -80,14 +80,11 @@ Analyze_One <- function(Scen,
                         CI.GDID=CI.GDID,
                         CI.SV.Mesh=CI.SV.Mesh,
                         CI.Perc=CI.Perc)
-  Results <- An.Out$Results
-  P.Orders <- An.Out$Permutation.Orders
 
   ### Comparisons from Comp_Outs:
 
   Data.Long <- Data %>%
-    dplyr::rename(Summ=Y.ij.bar) %>%
-    dplyr::select(-Y.ij.sd) %>%
+    dplyr::select(Cluster,Period,Start,Interv,Summ,starts_with("Y.ij.")) %>%
     tidyr::pivot_longer(cols=starts_with("Y.ij."),
                         names_to="Indiv", names_prefix="Y.ij.",
                         values_to="Outcome")
@@ -96,29 +93,36 @@ Analyze_One <- function(Scen,
                          SummOutName="Summ",
                          Comps=Comps,
                          Comps_PermPs=Comps_PermPs,
-                         P.Orders=P.Orders,
-                         NumPerms=0,
-                         Results=Results,
+                         P.Orders=An.Out$Permutation.Orders,
+                         NumPerms=NumPerms,
+                         Results=An.Out$Results,
                          CI.Perc=CI.Perc)
 
-  return(list(Results=Results,
-              Comparisons=Comp_Outs))
+  return(bind_rows(An.Out$Results,
+                   Comp_Outs %>% dplyr::mutate(Outcome="Probability") %>%
+                     dplyr::rename(Estimator=Method,
+                                   P.Asy=P,
+                                   P=P.Perm)))
 }
 
 # Speed Testing:
 
-## From test on Work Comp: 200 seconds for 100 permutations w/ mesh of 501
-## From test on Work Comp: 8 minutes for 250 permutations w/ mesh of 501
+## From test on Work Comp: 3 minutes for 100 permutations w/ mesh of 701
+## From test on Work Comp: 7 minutes for 20 permutations on all 9 scens w/ mesh of 701
+## From test on Work Comp: 9 minutes for 250 permutations w/ mesh of 701
 st <- proc.time()
 CompFull <- c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA")
-A1 <- Analyze_One(Scen=1,
-                  SimNo=1,
-                  NumPerms=100,
-                  MVO_list=MVO_list_full,
-                  Comps.Nest=Comp_wts,
-                  CI.GDID=CI.Tx.Obj_1,
-                  CI.SV.Mesh=Single_Vals,
-                  CI.Perc=0.95,
-                  Comps=CompFull,
-                  Comps_PermPs=CompFull)
+for (m in Param_Set$Scenario) {
+  assign(x=paste0("A",m),
+         value=Analyze_One(Scen=m,
+                    SimNo=1,
+                    NumPerms=20,
+                    MVO_list=MVO_list_full,
+                    Comps.Nest=Comp_wts,
+                    CI.GDID=get(paste0("CI.Tx.Obj_",1)),
+                    CI.SV.Mesh=Single_Vals,
+                    CI.Perc=0.95,
+                    Comps=CompFull,
+                    Comps_PermPs=CompFull))
+}
 proc.time() - st
