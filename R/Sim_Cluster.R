@@ -3,7 +3,6 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-setwd("home/lk296/CRT_Comp/")
 source("R/Analysis.R")
 source("R/Ext_Comps.R")
 
