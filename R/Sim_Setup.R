@@ -139,7 +139,8 @@ for (i in 1:(dim(Param_Set)[1])) {
                       expr=Sim_Data(Sim.Fr, mu=Param_Set$mu[i], Alpha1=Alpha1,
                                     T1=T1, T2=T2, ProbT1=Param_Set$ProbT1[i],
                                     sig_nu=Param_Set$sig_nu[i], sig_e=Param_Set$sig_e[i], m=Param_Set$m[i],
-                                    ThetaType=Theta_Set[[i]]$Type, ThetaDF=Theta_Set[[i]]$ThetaDF),
+                                    ThetaType=Theta_Set[[i]]$Type, ThetaDF=Theta_Set[[i]]$ThetaDF) %>%
+                        dplyr::select(Cluster,Period,Start,Interv,Summ,starts_with("Y.ij.")),
                       simplify=FALSE)
   assign(x=paste0("sim_data_",i),
          value=sim_data)
