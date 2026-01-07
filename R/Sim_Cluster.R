@@ -56,14 +56,9 @@ Analyze_One <- function(Scen,
                         CI.SV.Mesh=NULL,
                         CI.Perc=0.95,
                         Comps=c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
-                        Comps_PermPs=c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
-                        Seed=NULL) {
+                        Comps_PermPs=c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA")) {
   ## Load Data
   load(paste0("sim_data/sim_data_",Scen,".Rda"))
-
-  if (!is.null(Seed)) {
-    set.seed(Seed)
-  }
 
   ### Simulation-Specific Data:
 
@@ -116,19 +111,18 @@ Perms_Use <- Param_Set$NumPerms[Param_Set$Scenario==m]
 
 Output <- NULL
 for (SimVal in Sims) {
-  Seed_Use <- (Seed_Set[[m]])[SimVal]
+  set.seed((Seed_Set[[m]])[SimVal])
   Output <- c(Output,
               setNames(list(Analyze_One(Scen=m,
                                  SimNo=SimVal,
                                  NumPerms=Perms_Use,
                                  MVO_list=MVO_list_full,
                                  Comps.Nest=Comp_wts,
-                                 CI.GDID=get(paste0("CI.Tx.Obj_",1)),
+                                 CI.GDID=get(paste0("CI.Tx.Obj_",m)),
                                  CI.SV.Mesh=Single_Vals,
                                  CI.Perc=0.95,
                                  Comps=c("TW","CS","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
-                                 Comps_PermPs=c("TW","CS","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
-                                 Seed=Seed_Use)),
-                       as.character(SimVal)))
+                                 Comps_PermPs=c("TW","CS","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"))),
+                       paste0("Sim_",SimVal)))
 }
 save(Output, file=paste0("sim_res/Scen","_",m,"_ArrNo_",ArrNo,".Rda"))
