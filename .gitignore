@@ -4,6 +4,4 @@
 .Ruserdata
 .DS_Store
 .Rapp.history
-sim_res_old/*
-int/Full_Sim_Res_Old.Rda
 Sim_CL_*
