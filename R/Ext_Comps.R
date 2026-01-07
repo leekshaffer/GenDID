@@ -3,11 +3,11 @@
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
-library(dplyr)
-library(tidyr)
-library(tibble)
-library(lme4) ## For mixed effects models and CLWP
-library(bbmle) ## For CLWP
+require(dplyr)
+require(tidyr)
+require(tibble)
+require(lme4) ## For mixed effects models and CLWP
+require(bbmle) ## For CLWP
 
 source("R/CLWP_Fns.R")
 source("R/Analysis.R") ## For permutation function

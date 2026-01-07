@@ -5,11 +5,13 @@
 
 library(tidyverse)
 library(lme4)
-set.seed(413354)
 
 source("R/Analysis.R")
 source("R/Sigmas.R")
 source("R/Ext_Comps.R")
+
+## Set seed for reproducibility:
+set.seed(20260107)
 
 ## Read in (simulated) data from data folder:
 load("data/Xpert-Public-Data.Rda")
