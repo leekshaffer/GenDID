@@ -1,17 +1,23 @@
 #######################################
-###### File: Sim_Single.R #############
+###### File: Sim_Cluster.R #############
 ###### Lee Kennedy-Shaffer ############
 #######################################
 
+setwd("home/lk296/CRT_Comp/")
 source("R/Analysis.R")
 source("R/Ext_Comps.R")
+
+ArrNo <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
+JobName <- Sys.getenv('SLURM_JOB_NAME')
+
+NumPerArr <- 10
 
 library(dplyr)
 library(tidyr)
 library(tibble)
 library(did) ## For CS
 library(fixest) ## For SA
-library(DIDmultiplegt) ## For CH
+# library(DIDmultiplegt) ## For CH
 library(lme4) ## For mixed effects models and CLWP
 library(bbmle) ## For CLWP
 
@@ -84,6 +90,7 @@ Analyze_One <- function(Scen,
   ### Comparisons from Comp_Outs:
 
   Data.Long <- Data %>%
+    dplyr::select(Cluster,Period,Start,Interv,Summ,starts_with("Y.ij.")) %>%
     tidyr::pivot_longer(cols=starts_with("Y.ij."),
                         names_to="Indiv", names_prefix="Y.ij.",
                         values_to="Outcome")
@@ -104,47 +111,25 @@ Analyze_One <- function(Scen,
                                    P=P.Perm)))
 }
 
-## Example Run (Takes ~10 minutes to run in full as configured):
-m <- 3 ## Scenario that will be run
-SimVal <- 5 ## Simulation Number that will be run within that scenario
+m <- as.integer(substr(JobName, nchar(JobName), nchar(JobName)))
+Sims <- ((ArrNo-1)*NumPerArr+1):(ArrNo*NumPerArr)
 Perms_Use <- Param_Set$NumPerms[Param_Set$Scenario==m]
-Seed_Use <- (Seed_Set[[m]])[SimVal]
 
-Sim_Res <- Analyze_One(Scen=m,
-                       SimNo=SimVal,
-                       NumPerms=Perms_Use,
-                       MVO_list=MVO_list_full,
-                       Comps.Nest=Comp_wts,
-                       CI.GDID=get(paste0("CI.Tx.Obj_",m)),
-                       CI.SV.Mesh=Single_Vals,
-                       CI.Perc=0.95,
-                       Comps=c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
-                       Comps_PermPs=c("TW","CS","SA","CH","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
-                       Seed=Seed_Use)
-Sim_Res
-
-## To run all (caution! takes days to run in full as currently configured)
-
-# for (m in Param_Set$Scenario) {
-#   Perms_Use <- Param_Set$NumPerms[Param_Set$Scenario==m]
-#   TotalSims <- Param_Set$NumSims[Param_Set$Scenario==m]
-#   Output <- NULL
-#   for (SimVal in TotalSims) {
-#     Output <- c(Output,
-#                 setNames(list(Analyze_One(Scen=m,
-#                                           SimNo=SimVal,
-#                                           NumPerms=Perms_Use,
-#                                           MVO_list=MVO_list_full,
-#                                           Comps.Nest=Comp_wts,
-#                                           CI.GDID=get(paste0("CI.Tx.Obj_",1)),
-#                                           CI.SV.Mesh=Single_Vals,
-#                                           CI.Perc=0.95,
-#                                           Comps=c("TW","CS","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
-#                                           Comps_PermPs=c("TW","CS","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
-#                                           Seed=Seed_Use)),
-#                          as.character(SimVal)))
-#   }
-#   save(Output, file=paste0("sim_res/Scen","_",m,"_ArrNo_",ArrNo,".Rda"))
-# }
-
-
+Output <- NULL
+for (SimVal in Sims) {
+  Seed_Use <- (Seed_Set[[m]])[SimVal]
+  Output <- c(Output,
+              setNames(list(Analyze_One(Scen=m,
+                                 SimNo=SimVal,
+                                 NumPerms=Perms_Use,
+                                 MVO_list=MVO_list_full,
+                                 Comps.Nest=Comp_wts,
+                                 CI.GDID=get(paste0("CI.Tx.Obj_",1)),
+                                 CI.SV.Mesh=Single_Vals,
+                                 CI.Perc=0.95,
+                                 Comps=c("TW","CS","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
+                                 Comps_PermPs=c("TW","CS","MEM","CPI","CPI.T","CPI.D","CPI.DT","CLWP","CLWPA"),
+                                 Seed=Seed_Use)),
+                       as.character(SimVal)))
+}
+save(Output, file=paste0("sim_res/Scen","_",m,"_ArrNo_",ArrNo,".Rda"))

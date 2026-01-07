@@ -90,7 +90,7 @@ Sim.Fr <- Sim_Frame(N=N_use, J=J_use, StartingPds=StartTimes$StartPd)
 Param_Set <- tibble(
   Scenario=1:9,
   NumSims=rep(1000, 9),
-  NumPerms=rep(500, 9),
+  NumPerms=rep(250, 9),
   mu=rep(mu_use, 9),
   ProbT1=rep(1, 9),
   sig_nu=rep(0.01, 9),
@@ -110,6 +110,17 @@ Theta_Set <- list(list(Type=5, ThetaDF=tibble(Theta=0), Comps=c("TW","CS","SA","
                   list(Type=3, ThetaDF=tibble(a=1:7, Theta=c(rep(0,2),rep(-0.03,5))), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT","CLWP","CLWPA"), corstr=NULL),
                   list(Type=3, ThetaDF=tibble(a=1:7, Theta=seq(from=-0.07,to=0.05,by=0.02)), Comps=c("TW","CS","SA","CH","CO","NP","CPI","CPI.D","CPI.DT","CLWP","CLWPA"), corstr=NULL))
 
+set.seed(661349)
+Seed_Set <- list(sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[1]),
+                 sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[2]),
+                 sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[3]),
+                 sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[4]),
+                 sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[5]),
+                 sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[6]),
+                 sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[7]),
+                 sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[8]),
+                 sample.int(n=.Machine$integer.max, size=Param_Set$NumSims[9]))
+
 Alpha1 <- c(-0.007, 0.003, 0.008, -0.016, -0.003, -0.005, -0.012,
             0.002, 0.005, -0.001, 0.020, 0, 0.017, -0.011)
 T1 <- c(0,0.08,0.18,0.29,0.30,0.27,0.20,0.13)
@@ -122,6 +133,7 @@ SigmaNames <- c("CS_0_003","CS_0_333","Ind")
 
 save(list=c("Param_Set",
             "Theta_Set",
+            "Seed_Set",
             "mu_use",
             "Alpha1",
             "T1",
