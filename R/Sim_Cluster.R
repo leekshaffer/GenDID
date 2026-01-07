@@ -109,12 +109,15 @@ m <- as.integer(substr(JobName, nchar(JobName), nchar(JobName)))
 Sims <- ((ArrNo-1)*NumPerArr+1):(ArrNo*NumPerArr)
 Perms_Use <- Param_Set$NumPerms[Param_Set$Scenario==m]
 
-print(m)
+print(paste0("Scenario: ",m))
 print(Sims)
 
 Output <- NULL
 for (SimVal in Sims) {
-  set.seed((Seed_Set[[m]])[SimVal])
+  print(paste0("SimVal: ",SimVal))
+  Seed_Use <- (Seed_Set[[m]])[SimVal]
+  print(paste0("Seed: ",Seed_Use))
+  set.seed(Seed_Use)
   Output <- c(Output,
               setNames(list(Analyze_One(Scen=m,
                                  SimNo=SimVal,
