@@ -2,6 +2,11 @@
 ###### File: Xpert-analysis.R #########
 #######################################
 
+## Note: if you are getting errors from some external packages,
+## you may wish to leave out "SA" and "CH" from the
+## Comps and Comps_PermPs arguments of the Ext_Comps function
+## (or omit the Ext_Comps call altogether).
+
 library(tidyverse)
 library(lme4)
 
@@ -235,12 +240,14 @@ xpert.dat.long <- xpert.dat.long %>%
 
 Comp_Results <- Ext_Comps(Data.Long=xpert.dat.long,
                       SummOutName=NULL,
-                      Comps=c("TW","CS","SA","CH","MEM",
-                              "CPI","CPI.T","CPI.D","CPI.DT",
-                              "CLWP","CLWPA"),
-                      Comps_PermPs=c("TW","CS","SA","CH","MEM",
-                                     "CPI","CPI.T","CPI.D","CPI.DT",
-                                     "CLWP","CLWPA"),
+                      Comps=c("TW", "CS", "SA", "CH",
+                              "MEM",
+                              "CPI", "CPI.T", "CPI.D", "CPI.DT",
+                              "CLWP", "CLWPA"),
+                      Comps_PermPs=c("TW", "CS", "SA", "CH",
+                                     "MEM",
+                                     "CPI", "CPI.T", "CPI.D", "CPI.DT",
+                                     "CLWP", "CLWPA"),
                       P.Orders=Analysis.5$Permutation.Orders,
                       NumPerms=Perms_Use,
                       Results=Analysis.5$Results,

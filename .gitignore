@@ -4,4 +4,4 @@
 .Ruserdata
 .DS_Store
 .Rapp.history
-Sim_CL_*
+*.sh
