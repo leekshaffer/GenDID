@@ -1,6 +1,5 @@
 #######################################
 ###### File: CLWP_Fns.R ###############
-###### Lee Kennedy-Shaffer ############
 #######################################
 
 ## Functions to conduct a CLWP Analysis

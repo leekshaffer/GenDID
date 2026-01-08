@@ -1,6 +1,5 @@
 #######################################
-###### File: Sim_Single.R #############
-###### Lee Kennedy-Shaffer ############
+###### File: Sim_Analysis.R ###########
 #######################################
 
 source("R/Analysis.R")
@@ -142,32 +141,33 @@ save(Output, file=paste0("sim_res/Scen_",m,"_SimNo_",SimVal,".Rda"))
 #   save(Output, file=paste0("sim_res/Scen","_",m,".Rda"))
 # }
 
-## To compile results:
-Sim_Results <- NULL
-for (m in Param_Set$Scenario) {
-  load(file=paste0("sim_res/Scen_",m,".Rda"))
-  Frame <- Output[[1]] %>% dplyr::select(Estimator,Outcome) %>%
-    dplyr::mutate(Scenario=m)
-  Vals <- sapply(Output,
-                 FUN=function(x) as.matrix(x %>% dplyr::select(-c(Estimator,Outcome))),
-                 simplify="array")
-  save(list=c("Frame","Vals"),
-       file=paste0("sim_res/Sim_Res_Scen_",m,".Rda"))
-  Means <- apply(Vals[,c("Estimate","CIW","CI_True","SE"),,drop=FALSE],
-                 MARGIN=c(1,2), FUN=mean)
-  colnames(Means) <- c("Mean Estimate","Mean CI Width","CI Coverage","Mean SE")
-  Medians <- apply(Vals[,"Estimate",,drop=FALSE],
-                   MARGIN=c(1,2), FUN=mean)
-  colnames(Medians) <- "Median Estimate"
-  SDs <- apply(Vals[,"Estimate",,drop=FALSE],
-               MARGIN=c(1,2), FUN=mean)
-  colnames(SDs) <- "SD of Estimate"
-  Powers <- apply(Vals[,c("P","P.Asy"),,drop=FALSE],
-                  MARGIN=c(1,2), FUN=function(x) mean(x < 0.05))
-  colnames(Powers) <- c("Power","Power (Asymptotic)")
-  Sim_Results <- Sim_Results %>%
-    bind_rows(Frame %>%
-                bind_cols(Means,Medians,SDs,Powers))
-}
-save(Sim_Results,
-     file="sim_res/Simulation_Results.Rda")
+## To compile results from all simulation output:
+
+# Sim_Results <- NULL
+# for (m in Param_Set$Scenario) {
+#   load(file=paste0("sim_res/Scen_",m,".Rda"))
+#   Frame <- Output[[1]] %>% dplyr::select(Estimator,Outcome) %>%
+#     dplyr::mutate(Scenario=m)
+#   Vals <- sapply(Output,
+#                  FUN=function(x) as.matrix(x %>% dplyr::select(-c(Estimator,Outcome))),
+#                  simplify="array")
+#   save(list=c("Frame","Vals"),
+#        file=paste0("sim_res/Sim_Res_Scen_",m,".Rda"))
+#   Means <- apply(Vals[,c("Estimate","CIW","CI_True","SE"),,drop=FALSE],
+#                  MARGIN=c(1,2), FUN=mean)
+#   colnames(Means) <- c("Mean Estimate","Mean CI Width","CI Coverage","Mean SE")
+#   Medians <- apply(Vals[,"Estimate",,drop=FALSE],
+#                    MARGIN=c(1,2), FUN=mean)
+#   colnames(Medians) <- "Median Estimate"
+#   SDs <- apply(Vals[,"Estimate",,drop=FALSE],
+#                MARGIN=c(1,2), FUN=mean)
+#   colnames(SDs) <- "SD of Estimate"
+#   Powers <- apply(Vals[,c("P","P.Asy"),,drop=FALSE],
+#                   MARGIN=c(1,2), FUN=function(x) mean(x < 0.05))
+#   colnames(Powers) <- c("Power","Power (Asymptotic)")
+#   Sim_Results <- Sim_Results %>%
+#     bind_rows(Frame %>%
+#                 bind_cols(Means,Medians,SDs,Powers))
+# }
+# save(Sim_Results,
+#      file="sim_res/Simulation_Results.Rda")
