@@ -12,6 +12,7 @@ library(tidyr)
 library(tibble)
 
 Sim_Results <- NULL
+Errors <- NULL
 for (m in Param_Set$Scenario) {
   NumberArrays <- ceiling(Param_Set$NumSims[Param_Set$Scenario==m]/NumPerArr)
   Scen_Full <- NULL
@@ -22,6 +23,8 @@ for (m in Param_Set$Scenario) {
       rm(Output)
     } else {
       print(paste0("File does not exist for scenario ",m,", array number ",ArrNo))
+      ## To keep list of errors:
+      Errors <- Errors %>% bind_rows(tibble(Scenario=m, Array=ArrNo))
     }
   }
   Frame <- Scen_Full[[1]] %>% dplyr::select(Estimator,Outcome) %>%
@@ -35,10 +38,10 @@ for (m in Param_Set$Scenario) {
                  MARGIN=c(1,2), FUN=mean)
   colnames(Means) <- c("Mean Estimate","Mean CI Width","CI Coverage","Mean SE")
   Medians <- apply(Vals[,"Estimate",,drop=FALSE],
-                   MARGIN=c(1,2), FUN=mean)
+                   MARGIN=c(1,2), FUN=median)
   colnames(Medians) <- "Median Estimate"
   SDs <- apply(Vals[,"Estimate",,drop=FALSE],
-               MARGIN=c(1,2), FUN=mean)
+               MARGIN=c(1,2), FUN=sd)
   colnames(SDs) <- "SD of Estimate"
   Powers <- apply(Vals[,c("P","P.Asy"),,drop=FALSE],
                   MARGIN=c(1,2), FUN=function(x) mean(x < 0.05))
@@ -46,7 +49,11 @@ for (m in Param_Set$Scenario) {
   Sim_Results <- Sim_Results %>%
     bind_rows(Frame %>%
                 bind_cols(Means,Medians,SDs,Powers))
+  ## To check number of simulations:
+  print(paste0("Number of Simulations Compiled for Scenario ",m,": ",(dim(Vals)[3])))
   rm(list=c("Scen_Full","Frame","Vals","NumberArrays"))
 }
 save(Sim_Results,
      file="sim_res/Simulation_Results.Rda")
+save(Errors,
+     file="sim_res/Missing_Jobs.Rda")
