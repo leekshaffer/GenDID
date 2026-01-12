@@ -334,16 +334,16 @@ Ext_Comps <- function(Data.Long,
                                     check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
     CPI.ci <- confint(CPI, parm="Interv", level=CI.Perc, quiet=TRUE)
     CPI.row <- tibble_row(Method="CPI",
-                          Estimate=coeftable(CPI)["Interv","Estimate"],
-                          SE=coeftable(CPI)["Interv","Std. Error"],
+                          Estimate=summary(CPI)$coefficients["Interv","Estimate"],
+                          SE=summary(CPI)$coefficients["Interv","Std. Error"],
                           CIL=CPI.ci["Interv",1],
                           CIU=CPI.ci["Interv",2]) %>%
       dplyr::mutate(P=2*pnorm(abs(Estimate/SE), lower.tail=FALSE))
     if ("CPI" %in% Comps_PermPs) {
       CPI.Perms <- simplify2array(lapply(Data.Perms,
-                                         FUN=function(x) coeftable(lmer(Outcome~Interv+PeriodF+(1|ClusterF)+(1|CPI), data=x,
+                                         FUN=function(x) summary(lmer(Outcome~Interv+PeriodF+(1|ClusterF)+(1|CPI), data=x,
                                                                         control=lmerControl(check.rankX="silent.drop.cols",
-                                                                                            check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))["Interv","Estimate"]))
+                                                                                            check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))$coefficients["Interv","Estimate"]))
       CPI.row <- CPI.row %>% dplyr::mutate(P.Perm=mean(abs(CPI.Perms) >= abs(CPI.row$Estimate)))
     }
     Comp_Outs <- Comp_Outs %>% bind_rows(CPI.row)
@@ -353,20 +353,31 @@ Ext_Comps <- function(Data.Long,
     CPI.T <- lmer(Outcome~Interv+Interv:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.LME,
                   control=lmerControl(check.rankX="silent.drop.cols",
                                       check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
-    IntVec <- grepl("Interv:",rownames(coeftable(CPI.T)))
-    IVec <- (rownames(coeftable(CPI.T))=="Interv")+IntVec/(sum(IntVec)+1)
-    CPI.T.row <- tibble_row(Method="CPI.T",
-                            Estimate=(IVec %*% coeftable(CPI.T)[,"Estimate"])[1,1],
-                            SE=sqrt(IVec %*% vcov(CPI.T) %*% IVec)[1,1]) %>%
+    IntVec <- grepl("Interv:",rownames(summary(CPI.T)$coefficients))
+    Names <- c("CPI.T.TAvg","CPI.T.Interv:Baseline")
+    IVec <- matrix(c((rownames(summary(CPI.T)$coefficients)=="Interv")+IntVec/(sum(IntVec)+1),
+                     as.numeric(rownames(summary(CPI.T)$coefficients)=="Interv")),
+                   nrow=2, byrow=TRUE)
+    for (i in 1:length(IntVec)) {
+      if (IntVec[i]) {
+        IVec <- rbind(IVec, as.numeric(rownames(summary(CPI.T)$coefficients)=="Interv") + c(rep(0,i-1),1,rep(0,length(IntVec)-i)))
+        Names <- c(Names,paste0("CPI.T.",rownames(summary(CPI.T)$coefficients)[i]))
+      }
+    }
+
+    CPI.T.row <- tibble(Method=Names,
+                            Estimate=(IVec %*% summary(CPI.T)$coefficients[,"Estimate"])[,1],
+                            SE=diag(sqrt(IVec %*% vcov(CPI.T) %*% t(IVec)))) %>%
       dplyr::mutate(P=2*pnorm(abs(Estimate/SE), lower.tail=FALSE),
                     CIL=Estimate+qnorm((1-CI.Perc)/2)*SE,
                     CIU=Estimate+qnorm((1+CI.Perc)/2)*SE)
     if ("CPI.T" %in% Comps_PermPs) {
-      CPI.T.Perms <- simplify2array(lapply(Data.Perms,
-                                           FUN=function(x) (IVec %*% coeftable(lmer(Outcome~Interv+Interv:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=x,
+      CPI.T.Perms <- do.call("cbind",
+                             lapply(Data.Perms,
+                                           FUN=function(x) abs(IVec %*% summary(lmer(Outcome~Interv+Interv:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=x,
                                                                                     control=lmerControl(check.rankX="silent.drop.cols",
-                                                                                                        check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))[,"Estimate"])[1,1]))
-      CPI.T.row <- CPI.T.row %>% dplyr::mutate(P.Perm=mean(abs(CPI.T.Perms) >= abs(CPI.T.row$Estimate)))
+                                                                                                        check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))$coefficients[,"Estimate"]) >= abs(CPI.T.row$Estimate)))
+      CPI.T.row <- CPI.T.row %>% dplyr::mutate(P.Perm=apply(CPI.T.Perms, 1, mean))
     }
     Comp_Outs <- Comp_Outs %>% bind_rows(CPI.T.row)
   }
@@ -375,20 +386,30 @@ Ext_Comps <- function(Data.Long,
     CPI.D <- lmer(Outcome~Interv+Interv:DiffF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.LME,
                   control=lmerControl(check.rankX="silent.drop.cols",
                                       check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
-    IntVec <- grepl("Interv:",rownames(coeftable(CPI.D)))
-    IVec <- (rownames(coeftable(CPI.D))=="Interv")+IntVec/(sum(IntVec)+1)
-    CPI.D.row <- tibble_row(Method="CPI.D",
-                            Estimate=(IVec %*% coeftable(CPI.D)[,"Estimate"])[1,1],
-                            SE=sqrt(IVec %*% vcov(CPI.D) %*% IVec)[1,1]) %>%
+    IntVec <- grepl("Interv:",rownames(summary(CPI.D)$coefficients))
+    Names <- c("CPI.D.DAvg","CPI.D.Interv:Baseline")
+    IVec <- matrix(c((rownames(summary(CPI.D)$coefficients)=="Interv")+IntVec/(sum(IntVec)+1),
+                     as.numeric(rownames(summary(CPI.D)$coefficients)=="Interv")),
+                   nrow=2, byrow=TRUE)
+    for (i in 1:length(IntVec)) {
+      if (IntVec[i]) {
+        IVec <- rbind(IVec, as.numeric(rownames(summary(CPI.D)$coefficients)=="Interv") + c(rep(0,i-1),1,rep(0,length(IntVec)-i)))
+        Names <- c(Names,paste0("CPI.D.",rownames(summary(CPI.D)$coefficients)[i]))
+      }
+    }
+    CPI.D.row <- tibble(Method=Names,
+                        Estimate=(IVec %*% summary(CPI.D)$coefficients[,"Estimate"])[,1],
+                        SE=diag(sqrt(IVec %*% vcov(CPI.D) %*% t(IVec)))) %>%
       dplyr::mutate(P=2*pnorm(abs(Estimate/SE), lower.tail=FALSE),
                     CIL=Estimate+qnorm((1-CI.Perc)/2)*SE,
                     CIU=Estimate+qnorm((1+CI.Perc)/2)*SE)
     if ("CPI.D" %in% Comps_PermPs) {
-      CPI.D.Perms <- simplify2array(lapply(Data.Perms,
-                                           FUN=function(x) (IVec %*% coeftable(lmer(Outcome~Interv+Interv:DiffF+PeriodF+(1|ClusterF)+(1|CPI), data=x,
-                                                                                    control=lmerControl(check.rankX="silent.drop.cols",
-                                                                                                        check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))[,"Estimate"])[1,1]))
-      CPI.D.row <- CPI.D.row %>% dplyr::mutate(P.Perm=mean(abs(CPI.D.Perms) >= abs(CPI.D.row$Estimate)))
+      CPI.D.Perms <- do.call("cbind",
+                             lapply(Data.Perms,
+                                    FUN=function(x) abs(IVec %*% summary(lmer(Outcome~Interv+Interv:DiffF+PeriodF+(1|ClusterF)+(1|CPI), data=x,
+                                                                              control=lmerControl(check.rankX="silent.drop.cols",
+                                                                                                  check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))$coefficients[,"Estimate"]) >= abs(CPI.D.row$Estimate)))
+      CPI.D.row <- CPI.D.row %>% dplyr::mutate(P.Perm=apply(CPI.D.Perms, 1, mean))
     }
     Comp_Outs <- Comp_Outs %>% bind_rows(CPI.D.row)
   }
@@ -397,20 +418,54 @@ Ext_Comps <- function(Data.Long,
     CPI.DT <- lmer(Outcome~Interv+Interv:DiffF:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=Data.LME,
                    control=lmerControl(check.rankX="silent.drop.cols",
                                        check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4)))
-    IntVec <- grepl("Interv:",rownames(coeftable(CPI.DT)))
-    IVec <- (rownames(coeftable(CPI.DT))=="Interv")+IntVec/(sum(IntVec)+1)
-    CPI.DT.row <- tibble_row(Method="CPI.DT",
-                             Estimate=(IVec %*% coeftable(CPI.DT)[,"Estimate"])[1,1],
-                             SE=sqrt(IVec %*% vcov(CPI.DT) %*% IVec)[1,1]) %>%
+    RN <- rownames(summary(CPI.DT)$coefficients)
+
+    IntVec <- grepl("Interv:",RN)
+    BaseVec <- as.numeric(RN=="Interv")
+    IVec <- matrix(BaseVec+IntVec/(sum(IntVec)+1),
+                   nrow=1, byrow=TRUE)
+    Names <- c("CPI.DT.DTAvg")
+
+    Diffs <- Data.LME %>% dplyr::filter(Interv==1) %>%
+      dplyr::group_by(DiffF) %>%
+      dplyr::summarize(NP = length(unique(PeriodF)))
+    for (a in Diffs$DiffF) {
+      if (sum(grepl(paste0("Interv:DiffF",a),RN)) > 0) {
+        IVec <- rbind(IVec, BaseVec+grepl(paste0("Interv:DiffF",a),RN)/Diffs$NP[Diffs$DiffF==a])
+        Names <- c(Names,paste0("CPI.DT.Diff",a))
+      }
+    }
+
+    Pds <- Data.LME %>% dplyr::filter(Interv==1) %>%
+      dplyr::group_by(PeriodF) %>%
+      dplyr::summarize(ND = length(unique(DiffF)))
+    for (j in Pds$PeriodF) {
+      if (sum(grepl("Interv:",RN)*grepl(paste0(":PeriodF",j),RN)) > 0) {
+        IVec <- rbind(IVec, BaseVec+grepl("Interv:",RN)*grepl(paste0(":PeriodF",j),RN)/Pds$ND[Pds$PeriodF==j])
+        Names <- c(Names,paste0("CPI.DT.Pd",j))
+      }
+    }
+
+    IVec <- rbind(IVec,
+                  apply(IVec[grepl("CPI.DT.Diff",Names),], MARGIN=2, mean),
+                  apply(IVec[grepl("CPI.DT.Pd",Names),], MARGIN=2, mean),
+                  apply(IVec[grepl("CPI.DT.Pd",Names) & (!grepl(paste0("CPI.DT.Pd",Pds$PeriodF[dim(Pds)[1]]),Names)),],
+                        MARGIN=2, mean))
+    Names <- c(Names, "CPI.DT.DAvg", "CPI.DT.TAvg", "CPI.DT.TAvgExLast")
+
+    CPI.DT.row <- tibble(Method=Names,
+                             Estimate=(IVec %*% summary(CPI.DT)$coefficients[,"Estimate"])[,1],
+                             SE=diag(sqrt(IVec %*% vcov(CPI.DT) %*% t(IVec)))) %>%
       dplyr::mutate(P=2*pnorm(abs(Estimate/SE), lower.tail=FALSE),
                     CIL=Estimate+qnorm((1-CI.Perc)/2)*SE,
                     CIU=Estimate+qnorm((1+CI.Perc)/2)*SE)
     if ("CPI.DT" %in% Comps_PermPs) {
-      CPI.DT.Perms <- simplify2array(lapply(Data.Perms,
-                                            FUN=function(x) (IVec %*% coeftable(lmer(Outcome~Interv+Interv:DiffF:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=x,
-                                                                                     control=lmerControl(check.rankX="silent.drop.cols",
-                                                                                                         check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))[,"Estimate"])[1,1]))
-      CPI.DT.row <- CPI.DT.row %>% dplyr::mutate(P.Perm=mean(abs(CPI.DT.Perms) >= abs(CPI.DT.row$Estimate)))
+      CPI.DT.Perms <- do.call("cbind",
+                             lapply(Data.Perms,
+                                    FUN=function(x) abs(IVec %*% summary(lmer(Outcome~Interv+Interv:DiffF:PeriodF+PeriodF+(1|ClusterF)+(1|CPI), data=x,
+                                                                              control=lmerControl(check.rankX="silent.drop.cols",
+                                                                                                  check.conv.singular = .makeCC(action = "ignore",  tol = 1e-4))))$coefficients[,"Estimate"]) >= abs(CPI.DT.row$Estimate)))
+      CPI.DT.row <- CPI.DT.row %>% dplyr::mutate(P.Perm=apply(CPI.DT.Perms, 1, mean))
     }
     Comp_Outs <- Comp_Outs %>% bind_rows(CPI.DT.row)
   }
@@ -472,5 +527,5 @@ Ext_Comps <- function(Data.Long,
     }
   }
 
-  return(Comp_Outs)
+  return(Comp_Outs %>% dplyr::mutate(CIW=CIU-CIL))
 }

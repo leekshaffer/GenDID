@@ -63,7 +63,7 @@ N.B.: All workflows are designed to be run with the overarching folder as the wo
 
     -   *Sim_Plots.R* generates the output figures and results from the simulation study.
 
--   *sim_res.R*: Results and figures from the simulation study.
+-   *sim_res*: Results and figures from the simulation study.
 
 ## Packages Used
 
