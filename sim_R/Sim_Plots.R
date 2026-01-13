@@ -22,7 +22,7 @@ OverallSet <- tibble(Estimator=c("A5_Ind_Single","W_TW","CPI","W_CO.W_CO3",
                                  "A4_Ind_AvgEx8","CPI.T.TAvg","W_CS.W_calendar","A2_Ind_T.Avg","CPI.DT.TAvgExLast",
                                  "A3_Ind_Avg","CPI.D.DAvg","A3_Ind_AvgEx7","W_CS.W_dynamic","A2_Ind_D.Avg","CPI.DT.DAvg",
                                  "A2_Ind_Group","W_CS.W_group","CLWP","CLWPA",
-                                 "A2_Ind_AvgExT8","W_CS.W_simple","W_SA.W_ATT","CPI.DT.DTAvg")) %>% ## May change last to CPI.DT.DTAvgExLastT
+                                 "A2_Ind_AvgExT8","W_CS.W_simple","W_SA.W_ATT","CPI.DT.DTAvgExLastT")) %>%
   mutate(`Estimator Number`=row_number(),
          Type=c("GD","SA","ME","SA",
                 "GD","ME","SA","GD","ME",
@@ -48,7 +48,7 @@ OverallSet_CS_0_333 <- tibble(Estimator=c("A5_CS_0_333_Single","W_TW","CPI","W_C
                                  "A4_CS_0_333_AvgEx8","CPI.T.TAvg","W_CS.W_calendar","A2_CS_0_333_T.Avg","CPI.DT.TAvgExLast",
                                  "A3_CS_0_333_Avg","CPI.D.DAvg","A3_CS_0_333_AvgEx7","W_CS.W_dynamic","A2_CS_0_333_D.Avg","CPI.DT.DAvg",
                                  "A2_CS_0_333_Group","W_CS.W_group","CLWP","CLWPA",
-                                 "A2_CS_0_333_AvgExT8","W_CS.W_simple","W_SA.W_ATT","CPI.DT.DTAvg")) %>%
+                                 "A2_CS_0_333_AvgExT8","W_CS.W_simple","W_SA.W_ATT","CPI.DT.DTAvgExLastT")) %>%
   mutate(`Estimator Number`=row_number(),
          Type=c("GD","SA","ME","SA",
                 "GD","ME","SA","GD","ME",
