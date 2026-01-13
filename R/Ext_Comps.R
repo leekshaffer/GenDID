@@ -450,8 +450,9 @@ Ext_Comps <- function(Data.Long,
                   apply(IVec[grepl("CPI.DT.Diff",Names),], MARGIN=2, mean),
                   apply(IVec[grepl("CPI.DT.Pd",Names),], MARGIN=2, mean),
                   apply(IVec[grepl("CPI.DT.Pd",Names) & (!grepl(paste0("CPI.DT.Pd",Pds$PeriodF[dim(Pds)[1]]),Names)),],
-                        MARGIN=2, mean))
-    Names <- c(Names, "CPI.DT.DAvg", "CPI.DT.TAvg", "CPI.DT.TAvgExLast")
+                        MARGIN=2, mean),
+                  as.numeric(RN=="Interv") + as.numeric(grepl("Interv:",RN) & !(grepl(paste0("PeriodF",Pds$PeriodF[dim(Pds)[1]]),RN)))/sum(Pds$ND[Pds$PeriodF != Pds$PeriodF[dim(Pds)[1]]]))
+    Names <- c(Names, "CPI.DT.DAvg", "CPI.DT.TAvg", "CPI.DT.TAvgExLast", "CPI.DT.DTAvgExLastT")
 
     CPI.DT.row <- tibble(Method=Names,
                              Estimate=(IVec %*% summary(CPI.DT)$coefficients[,"Estimate"])[,1],
