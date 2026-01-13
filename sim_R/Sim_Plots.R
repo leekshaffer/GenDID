@@ -462,6 +462,132 @@ Est9 <-
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
+CI1 <-
+  ggplot(res_df  %>% filter(Scenario==1),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+CI2 <-
+  ggplot(res_df  %>% filter(Scenario==2),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+CI3 <-
+  ggplot(res_df  %>% filter(Scenario==3),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+CI4 <-
+  ggplot(res_df  %>% filter(Scenario==4),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+CI5 <-
+  ggplot(res_df  %>% filter(Scenario==5),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+CI6 <-
+  ggplot(res_df  %>% filter(Scenario==6),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+CI7 <-
+  ggplot(res_df  %>% filter(Scenario==7),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+CI8 <-
+  ggplot(res_df  %>% filter(Scenario==8),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+CI9 <-
+  ggplot(res_df  %>% filter(Scenario==9),
+         mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                     color=Type, shape=Assumption)) +
+  geom_point(show.legend=TRUE, size=2) + theme_bw() +
+  labs(x="Estimator",y="Mean 95% CI Width") +
+  scale_x_continuous(limits=c(0,24), expand=expansion(0,0),
+                     breaks=BreakVec, minor_breaks=MinorVec) +
+  scale_y_continuous(limits=c(0,0.1),
+                     breaks=seq(0,0.1,by=0.02),
+                     expand=c(0,0)) +
+  scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+  scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
 ### Export Plots
 ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".eps")),
        plot=Power1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
@@ -485,6 +611,18 @@ ggsave(filename=paste0(outdir,paste0("Sim_Ests_",outname,".eps")),
          Est7 + guides(color="none", shape="none") + labs(title="G) Scenario 7") +
          Est8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
          Est9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
+         plot_layout(nrow=3, ncol=3, byrow=TRUE),
+       width=8, height=7, units="in")
+ggsave(filename=paste0(outdir,paste0("Sim_CIs_",outname,".eps")),
+       plot=CI1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
+         CI2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
+         CI3 + guides(shape="none") + labs(x=NULL, y=NULL, title="C) Scenario 3") +
+         CI4 + guides(color="none", shape="none") + labs(x=NULL, title="D) Scenario 4") +
+         CI5 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="E) Scenario 5") +
+         CI6 + guides(color="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
+         CI7 + guides(color="none", shape="none") + labs(title="G) Scenario 7") +
+         CI8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
+         CI9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
          plot_layout(nrow=3, ncol=3, byrow=TRUE),
        width=8, height=7, units="in")
 }
@@ -796,6 +934,132 @@ Target_Plots <- function(res_df, outname,
     scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
     scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
+  CI1 <-
+    ggplot(res_df  %>% filter(Scenario==1),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+  CI2 <-
+    ggplot(res_df  %>% filter(Scenario==2),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+  CI3 <-
+    ggplot(res_df  %>% filter(Scenario==3),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+  CI4 <-
+    ggplot(res_df  %>% filter(Scenario==4),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+  CI5 <-
+    ggplot(res_df  %>% filter(Scenario==5),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+  CI6 <-
+    ggplot(res_df  %>% filter(Scenario==6),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+  CI7 <-
+    ggplot(res_df  %>% filter(Scenario==7),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+  CI8 <-
+    ggplot(res_df  %>% filter(Scenario==8),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
+  CI9 <-
+    ggplot(res_df  %>% filter(Scenario==9),
+           mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
+                       color=Type, shape=Assumption)) +
+    geom_point(show.legend=TRUE, size=2) + theme_bw() +
+    labs(x="Estimator",y="Mean 95% CI Width") +
+    scale_x_continuous(limits=c(0,16), expand=expansion(0,0), breaks=BreakVec,
+                       minor_breaks=MinorVec) +
+    scale_y_continuous(limits=c(0,0.1),
+                       breaks=seq(0,0.1,by=0.02),
+                       expand=c(0,0)) +
+    scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
+    scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
+
   ggsave(filename=paste0(outdir,paste0("Sim_Power_",outname,".eps")),
          plot=Power1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
            Power2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
@@ -818,6 +1082,18 @@ Target_Plots <- function(res_df, outname,
            Est7 + guides(color="none", shape="none") + labs(title="G) Scenario 7") +
            Est8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
            Est9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
+           plot_layout(nrow=3, ncol=3, byrow=TRUE),
+         width=8, height=7, units="in")
+  ggsave(filename=paste0(outdir,paste0("Sim_CIs_",outname,".eps")),
+         plot=CI1 + guides(color="none", shape="none") + labs(x=NULL, title="A) Scenario 1") +
+           CI2 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="B) Scenario 2") +
+           CI3 + guides(shape="none") + labs(x=NULL, y=NULL, title="C) Scenario 3") +
+           CI4 + guides(color="none", shape="none") + labs(x=NULL, title="D) Scenario 4") +
+           CI5 + guides(color="none", shape="none") + labs(x=NULL, y=NULL, title="E) Scenario 5") +
+           CI6 + guides(color="none") + labs(x=NULL, y=NULL, title="F) Scenario 6") +
+           CI7 + guides(color="none", shape="none") + labs(title="G) Scenario 7") +
+           CI8 + guides(color="none", shape="none") + labs(y=NULL, title="H) Scenario 8") +
+           CI9 + guides(color="none", shape="none") + labs(y=NULL, title="I) Scenario 9") +
            plot_layout(nrow=3, ncol=3, byrow=TRUE),
          width=8, height=7, units="in")
 }
