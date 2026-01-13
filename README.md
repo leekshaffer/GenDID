@@ -89,7 +89,7 @@ as the working directory, not the folder in which the script is found.
   - *Sim_Plots.R* generates the output figures and results from the
     simulation study.
 
-- *sim_res.R*: Results and figures from the simulation study.
+- *sim_res*: Results and figures from the simulation study.
 
 ## Packages Used
 
