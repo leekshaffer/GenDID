@@ -293,7 +293,29 @@ for (Scen in 1:(dim(Param_Set)[1])) {
 
 }
 
-save(list=c("Single_Vals",paste0("CI.Tx.Obj_",(1:(dim(Param_Set)[1])))),
+## Target Estimands to test manually in CIs for estimators with asymptotic inference:
+Direct_CI_Vals <- tibble(Estimator=c("CPI",
+                         "CPI.T.TAvg","CPI.DT.TAvgExLast",
+                         "CPI.D.DAvg","CPI.DT.DAvg",
+                         "CLWP","CLWPA",
+                         "CPI.DT.DTAvgExLastT",
+                         "CPI.T.Interv:PeriodF3","CPI.DT.Pd3",
+                         "CPI.D.Interv:DiffF2","CPI.DT.Diff2",
+                         "CPI.D.Interv:DiffF1",
+                         "CPI.DT.Diff1"),
+                         Scenario=rep(1:9, each=14),
+                         Estimand=c(rep(0, 14),
+                                    rep(-.02, 14),
+                                    rep(-.04, 14),
+                                    c(rep(-.02,7),-0.0033333, rep(-0.05,2), rep(NA, 4)),
+                                    c(rep(-.02,7),-0.001904762, rep(-0.06,2), rep(NA, 4)),
+                                    c(rep(-.02,7),0.01428571, rep(-0.03,2), rep(NA, 4)),
+                                    c(rep(NA,3),-0.025,-0.0225,rep(-.01625,2),-0.01833333, rep(NA,2), rep(-0.015, 2), rep(-0.01, 2)),
+                                    c(rep(NA,3),-0.0214,-0.02,rep(-0.0105,2),-0.01428571, rep(NA,2), rep(0, 2), rep(0, 2)),
+                                    c(rep(NA,3),-0.01,-0.02,rep(-0.045,2),-0.036666667, rep(NA,2), rep(-0.05, 2), rep(-0.07, 2))))
+
+
+save(list=c("Single_Vals","Direct_CI_Vals",paste0("CI.Tx.Obj_",(1:(dim(Param_Set)[1])))),
      file="sim_data/sim-CI-objects.Rda")
 
 

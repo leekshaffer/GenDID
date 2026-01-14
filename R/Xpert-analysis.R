@@ -8,6 +8,7 @@
 ## (or omit the Ext_Comps call altogether).
 
 library(tidyverse)
+library(patchwork)
 library(lme4)
 
 source("R/Analysis.R")
@@ -57,17 +58,18 @@ Schem_Dat <- as_tibble(A5_Schem) %>%
                                  levels=c(0,1),
                                  labels=c("Control","Intervention")),
                 Period=as.numeric(Period))
+Schem_Plot <- ggplot(data=Schem_Dat,
+                     mapping=aes(x=Period, y=Cluster, fill=Treatment)) +
+  geom_tile(color="grey80", lty=1) + theme_bw() +
+  coord_cartesian(xlim=c(0.5,dim(A5_Schem)[2]+0.5), ylim=c(dim(A5_Schem)[1]+0.5,0.5),
+                  clip="off", expand=FALSE) +
+  scale_y_reverse(breaks=1:(dim(A5_Schem)[1]), minor_breaks=NULL) +
+  scale_x_continuous(breaks=1:(dim(A5_Schem)[2]), minor_breaks=NULL) +
+  scale_fill_manual(values=c("white","grey20")) +
+  labs(x="Period (Month of Study)", y="Cluster", fill="Treatment",
+       title="Trial Schematic for Example SWT")
 ggsave(filename="figs/Xpert_Schematic.eps",
-       plot=ggplot(data=Schem_Dat,
-                   mapping=aes(x=Period, y=Cluster, fill=Treatment)) +
-         geom_tile(color="grey80", lty=1) + theme_bw() +
-         coord_cartesian(xlim=c(0.5,dim(A5_Schem)[2]+0.5), ylim=c(dim(A5_Schem)[1]+0.5,0.5),
-                         clip="off", expand=FALSE) +
-         scale_y_reverse(breaks=1:(dim(A5_Schem)[1]), minor_breaks=NULL) +
-         scale_x_continuous(breaks=1:(dim(A5_Schem)[2]), minor_breaks=NULL) +
-         scale_fill_manual(values=c("white","grey20")) +
-         labs(x="Period (Month of Study)", y="Cluster", fill="Treatment",
-              title="Trial Schematic for Example SWT"),
+       plot=Schem_Plot,
        width=6, height=4, units="in")
 
 ## Prep for Full Analyses:
@@ -300,21 +302,31 @@ for (row in 1:(dim(Map_Settings)[1])) {
   }
   Obs.weight.dat <- tibble(x=rep(1:J, times=N), y=rep(1:N, each=J),
                            Value=Weights[,Map_Settings$Estimator[row]])
+  plot <- ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
+    geom_tile(color="grey80", lty=1) + theme_bw() +
+    geom_text(aes(label=format(round(Value, digits=3), nsmall=3))) +
+    coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
+    scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
+    scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
+    scale_fill_gradient2(low="#7938C6",high="#DE6D07") +
+    labs(x="Period (Month of Study)", y="Cluster", fill="Weight",
+         title=paste0("Observation Weights: ",
+                      Map_Settings$Est_labs[row]))
+  if (row==1) {
+    overall_heat <- plot
+  }
   ggsave(filename=paste0("figs/Xpert-Weights_Heatmap_",Map_Settings[row,"i"],"_",
                          Map_Settings$j[row],"_",
                          Map_Settings$Estimator[row],".eps"),
-         plot=ggplot(data=Obs.weight.dat, mapping=aes(x=x, y=y, fill=Value)) +
-           geom_tile(color="grey80", lty=1) + theme_bw() +
-           geom_text(aes(label=format(round(Value, digits=3), nsmall=3))) +
-           coord_cartesian(xlim=c(0.5,J+0.5), ylim=c(N+0.5,0.5), clip="off", expand=FALSE) +
-           scale_y_reverse(breaks=1:N, minor_breaks=NULL) +
-           scale_x_continuous(breaks=1:J, minor_breaks=NULL) +
-           scale_fill_gradient2(low="#7938C6",high="#DE6D07") +
-           labs(x="Period (Month of Study)", y="Cluster", fill="Weight",
-                title=paste0("Observation Weights: ",
-                             Map_Settings$Est_labs[row])),
+         plot=plot,
          width=6, height=4, units="in")
 }
+
+ggsave(filename="figs/Xpert_Schematic_Wts.eps",
+       plot=Schem_Plot + labs(title="A) Trial Schematic for Example SWT") +
+         overall_heat + labs("B) Observation Weights Under Assumption S5") +
+         plot_layout(nrow=1, ncol=2),
+       width=12, height=4, units="in")
 
 ## MS Results:
 
