@@ -586,7 +586,8 @@ CI_Plots <- function(res_df, outname,
 
 CI1 <-
   ggplot(res_df  %>% filter(Scenario==1,
-                            Estimand %in% EstsR1),
+                            Estimand %in% EstsR1,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -605,7 +606,8 @@ CI1 <-
 
 CI2 <-
   ggplot(res_df  %>% filter(Scenario==2,
-                            Estimand %in% EstsR1),
+                            Estimand %in% EstsR1,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -624,7 +626,8 @@ CI2 <-
 
 CI3 <-
   ggplot(res_df  %>% filter(Scenario==3,
-                            Estimand %in% EstsR1),
+                            Estimand %in% EstsR1,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -643,7 +646,8 @@ CI3 <-
 
 CI4 <-
   ggplot(res_df  %>% filter(Scenario==4,
-                            Estimand %in% EstsR2),
+                            Estimand %in% EstsR2,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -662,7 +666,8 @@ CI4 <-
 
 CI5 <-
   ggplot(res_df  %>% filter(Scenario==5,
-                            Estimand %in% EstsR2),
+                            Estimand %in% EstsR2,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -681,7 +686,8 @@ CI5 <-
 
 CI6 <-
   ggplot(res_df  %>% filter(Scenario==6,
-                            Estimand %in% EstsR2),
+                            Estimand %in% EstsR2,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -700,7 +706,8 @@ CI6 <-
 
 CI7 <-
   ggplot(res_df  %>% filter(Scenario==7,
-                            Estimand %in% EstsR3),
+                            Estimand %in% EstsR3,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -719,7 +726,8 @@ CI7 <-
 
 CI8 <-
   ggplot(res_df  %>% filter(Scenario==8,
-                            Estimand %in% EstsR3),
+                            Estimand %in% EstsR3,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -738,7 +746,8 @@ CI8 <-
 
 CI9 <-
   ggplot(res_df  %>% filter(Scenario==9,
-                            Estimand %in% EstsR3),
+                            Estimand %in% EstsR3,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=`Mean CI Width`,
                      color=Type, shape=Assumption)) +
   geom_point(show.legend=TRUE, size=3) + theme_bw() +
@@ -775,7 +784,8 @@ Coverage_Plots <- function(res_df, outname,
                            EstsR1, EstsR2, EstsR3) {
 Cov1 <-
   ggplot(res_df  %>% filter(Scenario==1,
-                            Estimand %in% EstsR1),
+                            Estimand %in% EstsR1,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -790,15 +800,16 @@ Cov1 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Cov2 <-
   ggplot(res_df  %>% filter(Scenario==2,
-                            Estimand %in% EstsR1),
+                            Estimand %in% EstsR1,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -813,15 +824,16 @@ Cov2 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Cov3 <-
   ggplot(res_df  %>% filter(Scenario==3,
-                            Estimand %in% EstsR1),
+                            Estimand %in% EstsR1,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -836,15 +848,16 @@ Cov3 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Cov4 <-
   ggplot(res_df  %>% filter(Scenario==4,
-                            Estimand %in% EstsR2),
+                            Estimand %in% EstsR2,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -859,15 +872,16 @@ Cov4 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Cov5 <-
   ggplot(res_df  %>% filter(Scenario==5,
-                            Estimand %in% EstsR2),
+                            Estimand %in% EstsR2,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -882,15 +896,16 @@ Cov5 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Cov6 <-
   ggplot(res_df  %>% filter(Scenario==6,
-                            Estimand %in% EstsR2),
+                            Estimand %in% EstsR2,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -905,15 +920,16 @@ Cov6 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Cov7 <-
   ggplot(res_df  %>% filter(Scenario==7,
-                            Estimand %in% EstsR3),
+                            Estimand %in% EstsR3,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -928,15 +944,16 @@ Cov7 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Cov8 <-
   ggplot(res_df  %>% filter(Scenario==8,
-                            Estimand %in% EstsR3),
+                            Estimand %in% EstsR3,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -951,15 +968,16 @@ Cov8 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))
 
 Cov9 <-
   ggplot(res_df  %>% filter(Scenario==9,
-                            Estimand %in% EstsR3),
+                            Estimand %in% EstsR3,
+                            Type != "CL"),
          mapping=aes(x=`Estimator Number`, y=100*`CI Coverage`,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=c(95-3*100*sqrt(.95*.05/1000),
@@ -974,8 +992,8 @@ Cov9 <-
                      labels=Labels$Name,
                      minor_breaks=Breaks) +
   geom_vline(xintercept=Breaks) +
-  scale_y_continuous(limits=c(90,100),
-                     breaks=seq(90,100,by=2.5),
+  scale_y_continuous(limits=c(85,100),
+                     breaks=seq(85,100,by=2.5),
                      expand=c(0,0)) +
   scale_color_manual(drop=FALSE, limits=c("GD","ME","SA","CL"), values=Colors, breaks=c("GD","ME","SA","CL")) +
   scale_shape_manual(drop=FALSE, limits=c("S5","S4","S3","S2"), values=Shapes, breaks=c("S5","S4","S3","S2"))

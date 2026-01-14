@@ -1,9 +1,6 @@
 #######################################
-#### File: Sim_Cluster_Compile.R ######
+#### File: Sim_Compile.R ######
 #######################################
-
-## Make sure this value is set to the same as in Sim_Cluster.R:
-NumPerArr <- 10
 
 load("sim_data/sim-setup.Rda")
 load("sim_data/sim-CI-objects.Rda")
@@ -13,19 +10,18 @@ library(tidyr)
 library(tibble)
 
 Sim_Results <- NULL
-# Errors <- NULL
+# Missing <- NULL
 for (m in Param_Set$Scenario) {
-  NumberArrays <- ceiling(Param_Set$NumSims[Param_Set$Scenario==m]/NumPerArr)
   Scen_Full <- NULL
-  for (ArrNo in 1:NumberArrays) {
-    if (file.exists(paste0("sim_res/Scen","_",m,"_ArrNo_",ArrNo,".Rda"))) {
-      load(paste0("sim_res/Scen","_",m,"_ArrNo_",ArrNo,".Rda"))
-      Scen_Full <- c(Scen_Full, Output)
+  for (SimNo in 1:Param_Set$NumSims) {
+    if (file.exists(paste0("sim_res/Scen","_",m,"_SimNo_",SimNo,".Rda"))) {
+      load(paste0("sim_res/Scen","_",m,"_SimNo_",SimNo,".Rda"))
+      Scen_Full <- c(Scen_Full, list(Output))
       rm(Output)
     } else {
-      print(paste0("File does not exist for scenario ",m,", array number ",ArrNo))
-      ## To keep list of errors:
-      # Errors <- Errors %>% bind_rows(tibble(Scenario=m, Array=ArrNo))
+      print(paste0("File does not exist for scenario ",m,", simulation number ",SimNo))
+      ## To keep list of missing files:
+      # Missing <- Missing %>% bind_rows(tibble(Scenario=m, Simulation=SimNo))
     }
   }
   Frame <- Scen_Full[[1]] %>% dplyr::select(Estimator,Outcome) %>%
@@ -65,9 +61,8 @@ for (m in Param_Set$Scenario) {
   print(paste0("Number of Simulations Compiled for Scenario ",m,": ",(dim(Vals)[3])))
   rm(list=c("Scen_Full","Frame","Vals","NumberArrays"))
 }
-# Errors
-# save(Errors,
-#      file="sim_res/Missing_Jobs.Rda")
+# save(Missing,
+#      file="sim_res/Missing_Simulations.Rda")
 save(Sim_Results,
      file="sim_res/Simulation_Results.Rda")
 
