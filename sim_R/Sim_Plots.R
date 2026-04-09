@@ -6,7 +6,7 @@ library(tidyverse)
 library(patchwork)
 
 Colors <- c("#1b9e77","#d95f02","#7570b3","#e7298a")
-Shapes <- c(15:18,8)
+Shapes <- c(15,16,17,4,18)
 
 outdir <- "sim_res/figs/"
 
@@ -343,7 +343,7 @@ Est1 <-
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=0, linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -363,7 +363,7 @@ Est2 <-
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=-0.02, linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -383,7 +383,7 @@ Est3 <-
                      ymin=Lower, ymax=Upper,
                      color=Type, shape=Assumption)) +
   geom_hline(yintercept=-0.04, linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -411,7 +411,7 @@ Est4 <-
                linetype="solid", color="gray25") +
   geom_segment(y=-0.0033333, x=Breaks[5], xend=Breaks[6],
                linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -439,7 +439,7 @@ Est5 <-
                linetype="solid", color="gray25") +
   geom_segment(y=-0.001904762, x=Breaks[5], xend=Breaks[6],
                linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -467,7 +467,7 @@ Est6 <-
                linetype="solid", color="gray25") +
   geom_segment(y=-0.01428571, x=Breaks[5], xend=Breaks[6],
                linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -489,13 +489,13 @@ Est7 <-
                      color=Type, shape=Assumption)) +
   geom_segment(y=-0.025, x=Breaks[3], xend=Breaks[3]+2.5,
                linetype="solid", color="gray25") +
-  geom_segment(y=-0.0225, x=Breaks[3]+2.5, xend=Breaks[4],
+  geom_segment(y=-0.0225, x=Breaks[3]+2.5, xend=Breaks[4]-1.5,
                linetype="solid", color="gray25") +
   geom_segment(y=-.01625, x=Breaks[4], xend=Breaks[5],
                linetype="solid", color="gray25") +
   geom_segment(y=-0.01833333, x=Breaks[5], xend=Breaks[6],
                linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -517,13 +517,13 @@ Est8 <-
                      color=Type, shape=Assumption)) +
   geom_segment(y=-0.0214, x=Breaks[3], xend=Breaks[3]+2.5,
                linetype="solid", color="gray25") +
-  geom_segment(y=-0.02, x=Breaks[3]+2.5, xend=Breaks[4],
+  geom_segment(y=-0.02, x=Breaks[3]+2.5, xend=Breaks[4]-1.5,
                linetype="solid", color="gray25") +
   geom_segment(y=-0.0105, x=Breaks[4], xend=Breaks[5],
                linetype="solid", color="gray25") +
   geom_segment(y=-0.01428571, x=Breaks[5], xend=Breaks[6],
                linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -545,13 +545,13 @@ Est9 <-
                      color=Type, shape=Assumption)) +
   geom_segment(y=-0.01, x=Breaks[3], xend=Breaks[3]+2.5,
                linetype="solid", color="gray25") +
-  geom_segment(y=-0.02, x=Breaks[3]+2.5, xend=Breaks[4],
+  geom_segment(y=-0.02, x=Breaks[3]+2.5, xend=Breaks[4]-1.5,
                linetype="solid", color="gray25") +
   geom_segment(y=-0.045, x=Breaks[4], xend=Breaks[5],
                linetype="solid", color="gray25") +
   geom_segment(y=-0.036666667, x=Breaks[5], xend=Breaks[6],
                linetype="solid", color="gray25") +
-  geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+  geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
   theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
   scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                      expand=expansion(0,0),
@@ -1023,7 +1023,7 @@ Target_Est_Plots <- function(res_df, outname,
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) +
     geom_hline(yintercept=0, linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
@@ -1043,7 +1043,7 @@ Target_Est_Plots <- function(res_df, outname,
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) +
     geom_hline(yintercept=-0.02, linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
@@ -1063,7 +1063,7 @@ Target_Est_Plots <- function(res_df, outname,
                        ymin=Lower, ymax=Upper,
                        color=Type, shape=Assumption)) +
     geom_hline(yintercept=-0.04, linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
@@ -1085,7 +1085,7 @@ Target_Est_Plots <- function(res_df, outname,
                        color=Type, shape=Assumption)) +
     geom_segment(y=-0.05, x=Breaks[1], xend=Breaks[2],
                  linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
@@ -1107,7 +1107,7 @@ Target_Est_Plots <- function(res_df, outname,
                        color=Type, shape=Assumption)) +
     geom_segment(y=-0.06, x=Breaks[1], xend=Breaks[2],
                  linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
@@ -1129,7 +1129,7 @@ Target_Est_Plots <- function(res_df, outname,
                        color=Type, shape=Assumption)) +
     geom_segment(y=-0.03, x=Breaks[1], xend=Breaks[2],
                  linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
@@ -1153,7 +1153,7 @@ Target_Est_Plots <- function(res_df, outname,
                  linetype="solid", color="gray25") +
     geom_segment(y=-0.010, x=Breaks[3], xend=Breaks[4],
                  linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
@@ -1177,7 +1177,7 @@ Target_Est_Plots <- function(res_df, outname,
                  linetype="solid", color="gray25") +
     geom_segment(y=0, x=Breaks[3], xend=Breaks[4],
                  linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
@@ -1201,7 +1201,7 @@ Target_Est_Plots <- function(res_df, outname,
                  linetype="solid", color="gray25") +
     geom_segment(y=-0.07, x=Breaks[3], xend=Breaks[4],
                  linetype="solid", color="gray25") +
-    geom_point(show.legend=TRUE, size=3) + geom_errorbar(linewidth=1.2) +
+    geom_point(show.legend=TRUE, size=3) + geom_errorbar() +
     theme_bw() + labs(x="Estimand", y="Estimate (Mean \U00B1 SD)") +
     scale_x_continuous(limits=c(Breaks[1], Breaks[length(Breaks)]),
                        expand=expansion(0,0),
