@@ -324,7 +324,7 @@ for (row in 1:(dim(Map_Settings)[1])) {
 
 ggsave(filename="figs/Xpert_Schematic_Wts.eps",
        plot=Schem_Plot + labs(title="A) Trial Schematic for Example SWT") +
-         overall_heat + labs("B) Observation Weights Under Assumption S5") +
+         overall_heat + labs(title="B) Observation Weights Under Assumption S5") +
          plot_layout(nrow=1, ncol=2),
        width=12, height=4, units="in")
 
