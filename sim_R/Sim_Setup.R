@@ -295,10 +295,10 @@ for (Scen in 1:(dim(Param_Set)[1])) {
 
 ## Target Estimands to test manually in CIs for estimators with asymptotic inference:
 Direct_CI_Vals <- tibble(Estimator=rep(c("CPI",
-                         "CPI.T.TAvg","CPI.DT.TAvgExLast",
+                         "CPI.T.TAvg","CPI.DT.TAvg",
                          "CPI.D.DAvg","CPI.DT.DAvg",
                          "CLWP","CLWPA",
-                         "CPI.DT.DTAvgExLastT",
+                         "CPI.DT.DTAvg",
                          "CPI.T.Interv:PeriodF3","CPI.DT.Pd3",
                          "CPI.D.Interv:DiffF2","CPI.DT.Diff2",
                          "CPI.D.Interv:DiffF1",
