@@ -19,10 +19,10 @@ SRP <- Sim_Results %>% dplyr::filter(Outcome=="Probability") %>%
 
 ## Select Desired Estimators:
 OverallSet <- tibble(Estimator=c("A5_Ind_Single","W_TW","CPI","W_CO.W_CO3",
-                                 "A4_Ind_AvgEx8","CPI.T.TAvg","W_CS.W_calendar","A2_Ind_T.Avg","CPI.DT.TAvgExLast",
+                                 "A4_Ind_AvgEx8","CPI.T.TAvg","W_CS.W_calendar","A2_Ind_T.Avg","CPI.DT.TAvg",
                                  "A3_Ind_Avg","CPI.D.DAvg","A3_Ind_AvgEx7","W_CS.W_dynamic","A2_Ind_D.Avg","CPI.DT.DAvg",
                                  "A2_Ind_Group","W_CS.W_group","CLWP","CLWPA",
-                                 "A2_Ind_AvgExT8","W_CS.W_simple","W_SA.W_ATT","CPI.DT.DTAvgExLastT")) %>%
+                                 "A2_Ind_AvgExT8","W_CS.W_simple","W_SA.W_ATT","CPI.DT.DTAvg")) %>%
   mutate(`Estimator Number`=c(1:4,6:10,12:17,19:22,24:27),
          Type=c("GD","SA","ME","SA",
                 "GD","ME","SA","GD","ME",
@@ -45,10 +45,10 @@ OverallSet <- tibble(Estimator=c("A5_Ind_Single","W_TW","CPI","W_CO.W_CO3",
                     rep("Group Avg.",4),
                     rep("ATT",4)))
 OverallSet_CS_0_333 <- tibble(Estimator=c("A5_CS_0_333_Single","W_TW","CPI","W_CO.W_CO3",
-                                 "A4_CS_0_333_AvgEx8","CPI.T.TAvg","W_CS.W_calendar","A2_CS_0_333_T.Avg","CPI.DT.TAvgExLast",
+                                 "A4_CS_0_333_AvgEx8","CPI.T.TAvg","W_CS.W_calendar","A2_CS_0_333_T.Avg","CPI.DT.TAvg",
                                  "A3_CS_0_333_Avg","CPI.D.DAvg","A3_CS_0_333_AvgEx7","W_CS.W_dynamic","A2_CS_0_333_D.Avg","CPI.DT.DAvg",
                                  "A2_CS_0_333_Group","W_CS.W_group","CLWP","CLWPA",
-                                 "A2_CS_0_333_AvgExT8","W_CS.W_simple","W_SA.W_ATT","CPI.DT.DTAvgExLastT")) %>%
+                                 "A2_CS_0_333_AvgExT8","W_CS.W_simple","W_SA.W_ATT","CPI.DT.DTAvg")) %>%
   mutate(`Estimator Number`=c(1:4,6:10,12:17,19:22,24:27),,
          Type=c("GD","SA","ME","SA",
                 "GD","ME","SA","GD","ME",
@@ -489,7 +489,7 @@ Est7 <-
                      color=Type, shape=Assumption)) +
   geom_segment(y=-0.025, x=Breaks[3], xend=Breaks[3]+2.5,
                linetype="solid", color="gray25") +
-  geom_segment(y=-0.0225, x=Breaks[3]+2.5, xend=Breaks[4]-1.5,
+  geom_segment(y=-0.0225, x=Breaks[3]+2.5, xend=Breaks[4],
                linetype="solid", color="gray25") +
   geom_segment(y=-.01625, x=Breaks[4], xend=Breaks[5],
                linetype="solid", color="gray25") +
@@ -517,7 +517,7 @@ Est8 <-
                      color=Type, shape=Assumption)) +
   geom_segment(y=-0.0214, x=Breaks[3], xend=Breaks[3]+2.5,
                linetype="solid", color="gray25") +
-  geom_segment(y=-0.02, x=Breaks[3]+2.5, xend=Breaks[4]-1.5,
+  geom_segment(y=-0.02, x=Breaks[3]+2.5, xend=Breaks[4],
                linetype="solid", color="gray25") +
   geom_segment(y=-0.0105, x=Breaks[4], xend=Breaks[5],
                linetype="solid", color="gray25") +
@@ -545,7 +545,7 @@ Est9 <-
                      color=Type, shape=Assumption)) +
   geom_segment(y=-0.01, x=Breaks[3], xend=Breaks[3]+2.5,
                linetype="solid", color="gray25") +
-  geom_segment(y=-0.02, x=Breaks[3]+2.5, xend=Breaks[4]-1.5,
+  geom_segment(y=-0.02, x=Breaks[3]+2.5, xend=Breaks[4],
                linetype="solid", color="gray25") +
   geom_segment(y=-0.045, x=Breaks[4], xend=Breaks[5],
                linetype="solid", color="gray25") +
