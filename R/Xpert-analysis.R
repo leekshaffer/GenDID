@@ -434,12 +434,20 @@ TblWA5C1 <- Analysis.5$Results %>%
                                  "W_CS.W_group","W_CS.W_calendar",
                                  "W_SA.W_ATT","W_CH.W_M",
                                  "W_CO.W_CO1","W_CO.W_CO2",
-                                 "W_CO.W_CO3","W_NP_Eq",
-                                 "W_NP_ATT","W_NP_IV"),
+                                 "W_CO.W_CO3"),
                 Outcome=="Probability") %>%
   dplyr::select(Estimator,Estimate,P,CIL,CIU) %>%
   bind_rows(Comp_Results %>%
-              dplyr::filter(Method %in% c("CPI","CPI.DT","CLWP","CLWPA")) %>%
+              dplyr::filter(Method %in% c("CPI","CPI.DT.DTAvg")) %>%
+              dplyr::select(Method,Estimate,P.Perm,CIL,CIU) %>%
+              dplyr::rename(Estimator=Method,
+                            P=P.Perm),
+            Analysis.5$Results %>%
+              dplyr::filter(Estimator %in% c("W_NP_Eq","W_NP_ATT","W_NP_IV"),
+                            Outcome=="Probability") %>%
+              dplyr::select(Estimator,Estimate,P,CIL,CIU),
+            Comp_Results %>%
+              dplyr::filter(Method %in% c("CLWP","CLWPA")) %>%
               dplyr::select(Method,Estimate,P.Perm,CIL,CIU) %>%
               dplyr::rename(Estimator=Method,
                             P=P.Perm))%>%
@@ -452,30 +460,36 @@ TblWA5C2 <- Analysis.5$Results %>%
                 Outcome=="Probability") %>%
   bind_rows(Analysis.2$Results %>%
               dplyr::filter(Estimator=="CS_0_003_AvgExT8",
-                            Outcome=="Probability")) %>%
-  bind_rows(Analysis.3$Results %>%
+                            Outcome=="Probability"),
+            Analysis.3$Results %>%
               dplyr::filter(Estimator=="CS_0_003_Avg",
-                            Outcome=="Probability")) %>%
-  bind_rows(Analysis.2$Results %>%
+                            Outcome=="Probability"),
+            Analysis.2$Results %>%
               dplyr::filter(Estimator=="CS_0_003_Group",
-                            Outcome=="Probability")) %>%
-  bind_rows(Analysis.4$Results %>%
+                            Outcome=="Probability"),
+            Analysis.4$Results %>%
               dplyr::filter(Estimator=="CS_0_003_AvgEx8",
-                            Outcome=="Probability")) %>%
-  bind_rows(Analysis.2$Results %>%
+                            Outcome=="Probability"),
+            Analysis.2$Results %>%
               dplyr::filter(Estimator=="CS_0_003_AvgExT8",
-                            Outcome=="Probability")) %>%
-  bind_rows(Analysis.2$Results %>%
+                            Outcome=="Probability"),
+            Analysis.2$Results %>%
               dplyr::filter(Estimator=="CS_0_003_D.1",
-                            Outcome=="Probability")) %>%
-  bind_rows(Analysis.2$Results %>%
+                            Outcome=="Probability"),
+            Analysis.2$Results %>%
               dplyr::filter(Estimator=="CS_0_003_D.1",
-                            Outcome=="Probability")) %>%
-  bind_rows(Analysis.3$Results %>%
+                            Outcome=="Probability"),
+            Analysis.3$Results %>%
               dplyr::filter(Estimator=="CS_0_003_D.1",
-                            Outcome=="Probability")) %>%
-  bind_rows(Analysis.5$Results %>%
+                            Outcome=="Probability"),
+            Analysis.5$Results %>%
               dplyr::filter(Estimator=="CS_0_003_Single",
+                            Outcome=="Probability"),
+            Analysis.5$Results %>%
+              dplyr::filter(Estimator=="CS_0_003_Single",
+                            Outcome=="Probability"),
+            Analysis.2$Results %>%
+              dplyr::filter(Estimator=="CS_0_003_AvgExT8",
                             Outcome=="Probability")) %>%
   dplyr::select(Estimator,Estimate,P,CIL,CIU) %>%
   dplyr::mutate(Estimate=100*Estimate,
@@ -483,7 +497,7 @@ TblWA5C2 <- Analysis.5$Results %>%
                 CIU=100*CIU) %>%
   dplyr::rename_with(.fn=~paste0("GD_",.x))
 
-Padding <- dim(TblWA5C1)[1] - dim(TblWA5C2)[1]
+Padding <- nrow(TblWA5C1) - nrow(TblWA5C2)
 TblWA5 <- TblWA5C1 %>%
   bind_cols(TblWA5C2 %>%
               bind_rows(tibble(GD_Estimator=rep("-",Padding),
